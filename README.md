@@ -18,10 +18,16 @@ launcher. Python, OpenCV, and Windows SendInput through ctypes.
 [Source](https://github.com/RadislavDenisenko/AirMouse) ·
 vendored here as `projects/airmouse`
 
-### RoomMatch
+### Roomly
 
-A web app for matching roommates and apartments — profile-based compatibility
-scoring and listing search. In development, nothing worth linking yet.
+An apartment-first roommate finder. You swipe real listings, and liking a
+place surfaces the verified people who want it too. Compatibility ranks on
+budget, sleep schedule, cleanliness, pets and smoking; identity verification
+gates access to matches, and messaging is restricted to mutual matches by
+Postgres row-level security rather than by the interface. Next.js, React,
+TypeScript, Supabase, Tailwind.
+
+[Source](https://github.com/RadislavDenisenko/Roomly) — in development.
 
 ## Contact
 
