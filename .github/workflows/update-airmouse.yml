@@ -1,0 +1,36 @@
+name: Update AirMouse pointer
+
+# The AirMouse project lives in its own repository and is vendored here as a
+# submodule. A submodule records a fixed commit, so this bumps it to whatever
+# is on AirMouse's main branch and commits the move.
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Fetch latest AirMouse
+        run: git submodule update --remote projects/airmouse
+
+      - name: Commit if it moved
+        run: |
+          if git diff --quiet -- projects/airmouse; then
+            echo "Already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add projects/airmouse
+          git commit -m "Update AirMouse to latest"
+          git push

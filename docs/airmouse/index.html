@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AirMouse — gesture mouse control for Windows</title>
+<meta name="description" content="A Windows app that turns a webcam into a touch-free mouse: MediaPipe hand tracking, pinch clicks, swipe navigation, and a finger-count app launcher.">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+    <a class="wordmark" href="../">Radislav Denisenko</a>
+    <nav>
+      <a href="../">Projects</a>
+      <a href="https://github.com/RadislavDenisenko/Portfolio">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <h1>AirMouse</h1>
+    <p class="tagline">
+      Control the Windows mouse with hand gestures through a webcam. One hand
+      moves the pointer, clicks, scrolls and sets the volume; the other is a
+      four-slot app launcher. Nothing moves unless you're looking at the screen.
+    </p>
+    <div class="actions">
+      <a class="btn btn-primary" href="https://github.com/RadislavDenisenko/AirMouse">View the source</a>
+      <a class="btn" href="#install">How to run it</a>
+    </div>
+    <p class="meta">
+      Python · MediaPipe · OpenCV · Win32 <code>SendInput</code> — Windows only, beta (v0.9.0)
+    </p>
+  </div>
+
+  <section>
+    <h2>Screens</h2>
+    <div class="rule"></div>
+    <figure>
+      <img src="../assets/img/settings-gestures.png"
+           alt="The AirMouse settings app, Gestures section, showing sliders for pinch and grab thresholds.">
+      <figcaption>The settings app. Every control binds to a real key in config.json.</figcaption>
+    </figure>
+    <figure>
+      <img src="../assets/img/settings-launcher.png"
+           alt="Binding an application to a launcher slot from a searchable list of installed apps.">
+      <figcaption>Binding a launcher slot from the Start Menu app index.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>How it works</h2>
+    <div class="rule"></div>
+
+    <h3>Position, not velocity</h3>
+    <p>
+      Engaging locks an anchor circle sized to your hand as it appears on
+      camera, so control feels identical whether you're sitting close or
+      leaning back. Sensitivity ramps from the centre out to the rim —
+      precise in the middle, fast at the edge — and pushing past the rim drags
+      the circle along, so one motion crosses the whole screen.
+    </p>
+
+    <h3>Nothing fires by accident</h3>
+    <p>
+      Navigation has to be armed with a closed hand first, so an open hand
+      moving quickly is only ever cursor motion. Arming keys off finger
+      <em>count</em> rather than curl depth, which lets a loose, comfortable
+      grab arm the gesture while a peace sign never does. The minimise gesture
+      has to decelerate and land before it commits, so dropping your arm to
+      rest doesn't minimise a window.
+    </p>
+
+    <h3>Cursor magnetism</h3>
+    <p>
+      Clickable things get sticky as the pointer nears them, which makes a
+      small target like a window's close button easy to stop on. The pull is
+      scaled to motion you're already making, so a still hand never drifts and
+      sustained movement pushes straight through. Targets come from window
+      caption buttons, classic Win32 controls, and accessibility queries for
+      apps that draw their own UI.
+    </p>
+
+    <h3>It stops when you look away</h3>
+    <p>
+      A face-landmark model runs alongside the hand tracker and checks head
+      yaw and pitch. Turn to talk to someone and control pauses; look back and
+      it resumes. It's deliberately forgiving — glancing at the edge of a
+      monitor still counts as looking — and a held drag survives a quick
+      glance away before being released safely.
+    </p>
+  </section>
+
+  <section>
+    <h2>Gestures</h2>
+    <div class="rule"></div>
+    <div class="scroller">
+      <table>
+        <thead>
+          <tr><th>Gesture</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Flat spread palm, hold ~1.2&nbsp;s</td><td>Engage — an anchor circle sized to your hand locks in</td></tr>
+          <tr><td>Move hand</td><td>Move cursor — precise near the centre, faster toward the rim</td></tr>
+          <tr><td>Push past the rim</td><td>The circle follows your hand, so you can cross the whole screen</td></tr>
+          <tr><td>Thumb + index, tap</td><td>Left click</td></tr>
+          <tr><td>Thumb + index, held</td><td>Drag</td></tr>
+          <tr><td>Thumb + middle, tap</td><td>Right click</td></tr>
+          <tr><td>Thumb + ring, held + move</td><td>Volume, 1:1 — moving back down undoes it exactly</td></tr>
+          <tr><td>Closed hand</td><td>Arms navigation; the cursor holds still</td></tr>
+          <tr><td>Grab + swipe left / right</td><td>Forward / Back</td></tr>
+          <tr><td>Grab + push down, let it land</td><td>Minimise the active window</td></tr>
+          <tr><td>Peace sign</td><td>Scroll mode — a zero point locks where the sign formed</td></tr>
+          <tr><td>Peace sign held off the zero</td><td>Constant scroll — farther = faster</td></tr>
+          <tr><td>1–4 fingers, other hand</td><td>Launch a bound app</td></tr>
+          <tr><td>Lower your hand</td><td>Disengage — the cursor stays where it is</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="install">
+    <h2>Run it</h2>
+    <div class="rule"></div>
+    <p>
+      You'll need Windows, a webcam and Python 3.12. There's no packaged
+      installer yet — it runs from source.
+    </p>
+<pre><span class="c">git clone https://github.com/RadislavDenisenko/AirMouse.git</span>
+cd AirMouse
+python -m venv venv
+venv\Scripts\python.exe -m pip install -r requirements.txt
+run_airmouse.bat</pre>
+    <p>
+      A small always-on-top preview shows what the tracker sees. If it reports
+      that the camera is busy, close whatever else is holding the webcam —
+      Discord, Zoom, Teams, a browser tab — and start it again. Press
+      <strong>B</strong> for settings, <strong>D</strong> for the live gesture
+      debug readout, <strong>Q</strong> to quit.
+    </p>
+  </section>
+
+  <section>
+    <h2>Known limitations</h2>
+    <div class="rule"></div>
+    <div class="grid">
+      <div class="card"><p>Windows only — the cursor is driven through the Win32 <code>SendInput</code> API.</p></div>
+      <div class="card"><p>Needs reasonable light. In a dim room the camera stretches its exposure and drops to ~8&nbsp;fps, so the app forces a short manual exposure to hold 30.</p></div>
+      <div class="card"><p>Only one application can hold the webcam at a time.</p></div>
+      <div class="card"><p>Magnetism only sees controls an app exposes to Windows. Games and custom-drawn UIs expose nothing, so it quietly does nothing there.</p></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span><a href="../">← All projects</a></span>
+    <span><a href="mailto:raddenisenko@gmail.com">raddenisenko@gmail.com</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
