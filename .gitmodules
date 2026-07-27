@@ -1,0 +1,3 @@
+[submodule "projects/airmouse"]
+	path = projects/airmouse
+	url = https://github.com/RadislavDenisenko/AirMouse.git
