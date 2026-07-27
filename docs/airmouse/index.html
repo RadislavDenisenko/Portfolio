@@ -29,8 +29,8 @@
       four-slot app launcher. Nothing moves unless you're looking at the screen.
     </p>
     <div class="actions">
-      <a class="btn btn-primary" href="https://github.com/RadislavDenisenko/AirMouse">View the source</a>
-      <a class="btn" href="#install">How to run it</a>
+      <a class="btn btn-primary" href="https://github.com/RadislavDenisenko/AirMouse/releases/latest">Download for Windows</a>
+      <a class="btn" href="https://github.com/RadislavDenisenko/AirMouse">View the source</a>
     </div>
     <p class="meta">
       Python · MediaPipe · OpenCV · Win32 <code>SendInput</code> — Windows only, beta (v0.9.0)
@@ -127,20 +127,37 @@
     <h2>Run it</h2>
     <div class="rule"></div>
     <p>
-      You'll need Windows, a webcam and Python 3.12. There's no packaged
-      installer yet — it runs from source.
+      Windows 10 or 11 and a webcam. Nothing to install — the download
+      carries its own copy of Python, so it can't disturb anything already on
+      the machine, and uninstalling is deleting the folder.
     </p>
-<pre><span class="c">git clone https://github.com/RadislavDenisenko/AirMouse.git</span>
-cd AirMouse
-python -m venv venv
-venv\Scripts\python.exe -m pip install -r requirements.txt
-run_airmouse.bat</pre>
+    <ol>
+      <li><a href="https://github.com/RadislavDenisenko/AirMouse/releases/latest">Download the zip</a> (about 110&nbsp;MB).</li>
+      <li>Right-click it and choose <strong>Extract All</strong>.</li>
+      <li>Open the extracted folder and double-click <strong>AirMouse.exe</strong>.</li>
+    </ol>
     <p>
-      A small always-on-top preview shows what the tracker sees. If it reports
-      that the camera is busy, close whatever else is holding the webcam —
-      Discord, Zoom, Teams, a browser tab — and start it again. Press
-      <strong>B</strong> for settings, <strong>D</strong> for the live gesture
-      debug readout, <strong>Q</strong> to quit.
+      Windows will show a blue <em>"Windows protected your PC"</em> box the
+      first time. That appears for any program without a paid Microsoft
+      signing certificate — click <strong>More info</strong>, then
+      <strong>Run anyway</strong>.
+    </p>
+    <p>
+      A preview window opens showing your webcam. Hold up a flat open palm for
+      about a second to take the cursor, move your hand to move it, and touch
+      thumb to index to click. Press <strong>B</strong> for settings,
+      <strong>D</strong> for the live gesture debug readout,
+      <strong>Q</strong> to quit.
+    </p>
+    <p>
+      If it says the camera is busy, close whatever else is holding the webcam
+      — Discord, Zoom, Teams, OBS, a browser tab — and start it again. Only
+      one program can use a webcam at a time.
+    </p>
+    <p class="meta">
+      Prefer to run from source? Clone the
+      <a href="https://github.com/RadislavDenisenko/AirMouse">repository</a>
+      and follow the README.
     </p>
   </section>
 

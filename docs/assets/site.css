@@ -169,6 +169,16 @@ p { max-width: var(--measure); }
 
 section > p:first-of-type { margin-top: 0; }
 
+ol, ul {
+  max-width: var(--measure);
+  padding-left: 1.3em;
+  margin: 0 0 18px;
+}
+
+li { margin-bottom: 7px; }
+
+li::marker { color: var(--dim); }
+
 a { color: var(--text); text-decoration-color: var(--accent-soft); }
 
 a:hover { text-decoration-color: var(--accent); }
