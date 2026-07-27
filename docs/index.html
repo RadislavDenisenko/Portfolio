@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Radislav Denisenko — projects</title>
-<meta name="description" content="Projects by Radislav Denisenko, a self-taught developer in North Port, Florida.">
+<title>Radislav Denisenko — Developer</title>
+<meta name="description" content="Self-taught developer. Computer-vision desktop tools and full-stack web apps.">
 <link rel="stylesheet" href="assets/site.css">
 </head>
 <body>
 
-<header class="masthead">
+<header class="top">
   <div class="wrap">
-    <a class="wordmark" href="./">Radislav Denisenko</a>
+    <a class="mark" href="./">Radislav Denisenko</a>
     <nav>
       <a href="https://github.com/RadislavDenisenko">GitHub</a>
       <a href="mailto:raddenisenko@gmail.com">Email</a>
@@ -21,58 +21,65 @@
 
 <main class="wrap">
 
-  <div class="hero">
-    <h1>Projects</h1>
-    <p class="tagline">
-      Self-taught developer in North Port, Florida. Two years of physics and
-      computer science coursework at Penn State, currently a cable technician
-      at Comcast. I learn by building things, then rebuilding them once I
-      understand what I got wrong the first time.
-    </p>
+  <div class="hero split">
+    <div>
+      <span class="eyebrow">North Port, Florida</span>
+      <h1>Radislav Denisenko</h1>
+      <p class="lede">Self-taught developer. I build computer-vision desktop tools and full-stack web apps.</p>
+      <div class="row">
+        <a class="btn btn-go" href="airmouse/">Try AirMouse</a>
+        <a class="btn" href="https://github.com/RadislavDenisenko">GitHub</a>
+      </div>
+    </div>
+    <canvas class="hand" id="hand" aria-hidden="true"></canvas>
   </div>
 
   <section>
-    <h2>Built</h2>
-    <div class="rule"></div>
-    <figure>
-      <a href="airmouse/">
-        <img src="assets/img/settings-pointer.png"
-             alt="The AirMouse settings app, Pointer section.">
-      </a>
-      <figcaption>AirMouse — gesture mouse control for Windows</figcaption>
-    </figure>
-    <p>
-      A webcam watches your hands at 30&nbsp;fps. One hand moves the pointer,
-      clicks, scrolls and sets the volume; the other is a four-slot app
-      launcher. A face model runs alongside to check you're facing the screen,
-      so the cursor stops when you turn away. Python, MediaPipe, OpenCV, and
-      the Win32 <code>SendInput</code> API through ctypes.
-    </p>
-    <div class="actions">
-      <a class="btn btn-primary" href="airmouse/">About AirMouse</a>
-      <a class="btn" href="https://github.com/RadislavDenisenko/AirMouse">Source</a>
+    <h2 class="reveal">Projects</h2>
+    <div class="cards">
+
+      <article class="card reveal">
+        <span class="badge">v0.9.0 · beta</span>
+        <h3>AirMouse</h3>
+        <p class="dim">Your webcam becomes your mouse. Move your hand to move the cursor, pinch to click. 30 fps, no hardware.</p>
+        <div class="chips">
+          <span class="chip">Python</span>
+          <span class="chip">MediaPipe</span>
+          <span class="chip">OpenCV</span>
+          <span class="chip">Win32 API</span>
+        </div>
+        <div class="row" style="margin-top:0">
+          <a class="btn btn-go" href="https://github.com/RadislavDenisenko/AirMouse/releases/latest/download/AirMouse-0.9.0-windows-x64.zip">Download</a>
+          <a class="btn" href="airmouse/">Details</a>
+          <a class="btn" href="https://github.com/RadislavDenisenko/AirMouse">Code</a>
+        </div>
+      </article>
+
+      <article class="card reveal d1">
+        <span class="badge">In development</span>
+        <h3>Roomly</h3>
+        <p class="dim">Swipe real apartments. Liking one shows you the verified people who want it too. Identity checks gate matching; messaging is locked to mutual matches at the database level.</p>
+        <div class="chips">
+          <span class="chip">Next.js 16</span>
+          <span class="chip">React 19</span>
+          <span class="chip">TypeScript</span>
+          <span class="chip">Supabase</span>
+          <span class="chip">Tailwind</span>
+        </div>
+        <div class="row" style="margin-top:0">
+          <a class="btn" href="https://github.com/RadislavDenisenko/Roomly">Code</a>
+        </div>
+      </article>
+
     </div>
   </section>
 
   <section>
-    <h2>In progress</h2>
-    <div class="rule"></div>
-    <h3>Roomly</h3>
-    <p>
-      An apartment-first roommate finder. You swipe real listings, and liking
-      a place surfaces the verified people who want it too — so finding a
-      place and finding someone to share it with stop being two separate
-      problems. Compatibility ranks on budget, sleep schedule, cleanliness,
-      pets and smoking. Identity verification gates access to matches, and
-      messaging is restricted to mutual matches by Postgres row-level
-      security rather than by the interface.
-    </p>
-    <p class="meta">
-      Next.js 16 · React 19 · TypeScript · Supabase · Tailwind — still being
-      built.
-    </p>
-    <div class="actions">
-      <a class="btn" href="https://github.com/RadislavDenisenko/Roomly">Source</a>
+    <h2 class="reveal">Background</h2>
+    <div class="facts reveal">
+      <span class="fact"><b>Cable technician</b> at Comcast — networking in the field</span>
+      <span class="fact"><b>2 years</b> physics &amp; CS at Penn State</span>
+      <span class="fact"><b>Harvard CS50</b> — Python, Web</span>
     </div>
   </section>
 
@@ -85,5 +92,6 @@
   </div>
 </footer>
 
+<script src="assets/site.js"></script>
 </body>
 </html>
