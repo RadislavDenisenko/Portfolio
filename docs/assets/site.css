@@ -47,8 +47,8 @@
   --display: 'Fraunces', Georgia, serif;
   --body: 'Space Grotesk', ui-sans-serif, system-ui, 'Segoe UI', Roboto, sans-serif;
 
-  --paper: #f5f3ed;
-  --paper-2: #fbfaf6;
+  --paper: #eceae2;
+  --paper-2: #f6f4ee;
   --rule: rgba(122, 146, 178, .17);
   --rule-bold: rgba(122, 146, 178, .3);
 
@@ -101,6 +101,14 @@ body::after {
 }
 
 .wrap { max-width: 1180px; margin: 0 auto; padding: 0 26px; }
+
+/* headings are signage, not copy — no I-beam, no selection highlight */
+h1, h2, h3, .plank, .mark, .eyebrow, .tag, .chip, .btn, .fact b {
+  cursor: default;
+  -webkit-user-select: none;
+  user-select: none;
+}
+a, a * { cursor: pointer; }
 
 /* ------------------------------------------------------------------ header */
 
@@ -293,10 +301,11 @@ h1 { margin: 0; }
 .btn:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); background: #fff; }
 .btn:active { transform: translate(4px, 4px); box-shadow: 0 0 0 var(--ink); }
 
+/* hover inverts to white with coloured text, rather than going redder */
 .btn-go { background: var(--red); color: #fff; }
-.btn-go:hover { background: #e04b36; }
+.btn-go:hover { background: #fff; color: var(--red); }
 .btn-blue { background: var(--blue); color: #fff; }
-.btn-blue:hover { background: #2c5397; }
+.btn-blue:hover { background: #fff; color: var(--blue); }
 
 .note { font-size: 15px; font-weight: 500; color: var(--ink-2); }
 
@@ -501,6 +510,80 @@ footer .wrap { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space
 .reveal.in { opacity: 1; transform: none; transition: opacity .5s var(--ease), transform .5s var(--ease); }
 .reveal.d1 { transition-delay: .07s; }
 .reveal.d2 { transition-delay: .14s; }
+
+/* ------------------------------------------------- one-screen poster mode */
+/* On a large display the scrolling layout left most of the glass empty. Above
+   this size everything is laid out to fit the viewport once, sized in vh so it
+   grows with the screen instead of sitting in a fixed-width column. Smaller
+   screens keep the normal scrolling flow below. */
+
+@media (min-width: 1080px) and (min-height: 760px) {
+  html, body { height: 100%; }
+  body { display: block; }
+
+  /* a 27in panel was only using ~1680 of 2560px, which is what made it read
+     as empty; let it run nearly edge to edge instead */
+  .wrap { max-width: min(2280px, 95vw); padding: 0 clamp(24px, 2.4vw, 60px); }
+
+  .stage {
+    /* 58px of bar plus its 2px bottom border — subtracting only 58 left the
+       page 2px too tall, which is still a scrollbar */
+    height: calc(100vh - 60px);
+    box-sizing: border-box;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    gap: clamp(10px, 1.6vh, 24px);
+    padding: clamp(10px, 1.9vh, 26px) 0 clamp(8px, 1.4vh, 18px);
+  }
+
+  .stage .hero { padding: 0; align-items: center; }
+  .stage .hero.split { grid-template-columns: minmax(0, 1fr) auto; gap: clamp(20px, 3vw, 60px); }
+
+  .stage .plank { font-size: clamp(46px, 7.4vh, 112px); padding: .1em .26em .16em; }
+  .stage .plank.first { margin-bottom: clamp(22px, 3.4vh, 52px); }
+  .stage .eyebrow { margin-bottom: clamp(8px, 1.4vh, 18px); }
+  .stage .lede { font-size: clamp(17px, 2.1vh, 26px); margin-top: clamp(10px, 1.8vh, 22px); max-width: 30ch; }
+  .stage .row { margin-top: clamp(10px, 1.8vh, 22px); }
+  .stage .hand { width: clamp(230px, 24vw, 400px); height: clamp(170px, 26vh, 320px); }
+
+  /* projects fill the middle band, side by side, each board a full column */
+  .stage .projects { min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr); gap: clamp(6px, 1.2vh, 14px); }
+  .stage .projects h2 { margin: 0; font-size: clamp(18px, 2.4vh, 30px); }
+  .stage .boards {
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(18px, 2vw, 40px);
+    min-height: 0;
+  }
+  .stage .board {
+    display: flex;
+    flex-direction: column;
+    padding: clamp(14px, 2.2vh, 34px) clamp(20px, 1.8vw, 34px) clamp(12px, 1.8vh, 28px);
+    min-height: 0;
+  }
+  .stage .board h3 { font-size: clamp(28px, 4.7vh, 62px); margin-bottom: clamp(4px, .8vh, 12px); }
+  /* board grows with the screen, but the sentence inside stays readable */
+  .stage .board > p { font-size: clamp(15px, 1.8vh, 21px); margin-bottom: clamp(8px, 1.3vh, 18px); max-width: 52ch; }
+  .stage .board .chips { margin-bottom: clamp(8px, 1.3vh, 18px); gap: clamp(6px, .6vh, 9px); }
+  .stage .board .row { margin-top: auto; }
+  .stage .btn { padding: clamp(9px, 1.3vh, 14px) clamp(16px, 1.4vw, 24px); font-size: clamp(15px, 1.8vh, 18px); }
+
+  /* bottom strip carries the background facts and the contact line */
+  .stage .strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(10px, 1.4vw, 22px);
+    border-top: 3px solid var(--ink);
+    padding-top: clamp(10px, 1.6vh, 20px);
+  }
+  .stage .strip .facts { gap: clamp(8px, .8vw, 14px); }
+  .stage .strip .fact { font-size: clamp(13px, 1.55vh, 17px); padding: clamp(7px, 1vh, 12px) clamp(10px, .9vw, 16px); }
+  .stage .strip .contact { font-size: clamp(14px, 1.7vh, 19px); font-weight: 700; white-space: nowrap; }
+
+  .stage + footer { display: none; }
+  main { padding-bottom: 0; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
