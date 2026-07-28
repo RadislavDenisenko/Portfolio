@@ -11,7 +11,7 @@
 
 <header class="top">
   <div class="wrap">
-    <a class="mark" href="../">Radislav Denisenko</a>
+    <a class="mark" href="../">R. DENISENKO</a>
     <nav>
       <a href="../">Projects</a>
       <a href="https://github.com/RadislavDenisenko/AirMouse">Code</a>
@@ -24,81 +24,57 @@
   <div class="hero split">
     <div>
       <span class="eyebrow">Free · Windows · v0.9.0 beta</span>
-      <h1>AirMouse</h1>
-      <p class="lede">Your webcam becomes your mouse. Move your hand to move the cursor. Pinch to click.</p>
+      <h1><span class="plank"><span class="screw l"></span><span class="screw r"></span><span class="sign">AirMouse</span></span></h1>
+      <p class="lede">Your webcam becomes your mouse. Move your hand, pinch to click.</p>
       <div class="row">
-        <a class="btn btn-go" href="https://github.com/RadislavDenisenko/AirMouse/releases/latest/download/AirMouse-0.9.0-windows-x64.zip">Download for Windows</a>
+        <a class="btn btn-go" href="https://github.com/RadislavDenisenko/AirMouse/releases/latest/download/AirMouse-0.9.0-windows-x64.zip">Download</a>
         <a class="btn" href="https://github.com/RadislavDenisenko/AirMouse">Source</a>
       </div>
-      <p class="note" style="margin-top:14px">111 MB · nothing to install · delete the folder to uninstall</p>
+      <p class="note" style="margin-top:12px">111 MB · nothing to install · delete the folder to uninstall</p>
     </div>
     <canvas class="hand" id="hand" aria-hidden="true"></canvas>
   </div>
 
   <section>
-    <h2 class="reveal">Get it running</h2>
+    <h2 class="reveal">Install</h2>
     <ol class="steps reveal">
-      <li><div><b>Download the zip</b><small>Button above. 111 MB.</small></div></li>
-      <li><div><b>Right-click it → Extract All</b><small>Anywhere. Desktop is fine.</small></div></li>
-      <li><div><b>Open the folder → double-click AirMouse.exe</b><small>Windows says "Windows protected your PC" → click <b>More info</b> → <b>Run anyway</b>. That warning shows for any app without a paid certificate.</small></div></li>
+      <li><div><b>Download &amp; extract</b><small>Right-click the zip → Extract All. Anywhere.</small></div></li>
+      <li><div><b>Double-click AirMouse.exe</b><small>Windows says "Windows protected your PC" → <b>More info</b> → <b>Run anyway</b>. Every unsigned app shows that.</small></div></li>
+      <li><div><b>Hold up an open palm for 1 second</b><small>A circle locks on. You have the cursor.</small></div></li>
     </ol>
   </section>
 
   <section>
-    <h2 class="reveal">Then do this</h2>
-    <ol class="steps reveal">
-      <li><div><b>Hold up an open palm for 1 second</b><small>Like a high five. A circle locks on — you have the cursor.</small></div></li>
-      <li><div><b>Move your hand</b><small>The cursor follows.</small></div></li>
-      <li><div><b>Touch thumb to index finger</b><small>That's a click. Hold them together to drag.</small></div></li>
-      <li><div><b>Press Q to quit</b><small>B opens settings. D shows live gesture numbers.</small></div></li>
-    </ol>
-  </section>
-
-  <section>
-    <h2 class="reveal">Every gesture</h2>
+    <h2 class="reveal">Gestures</h2>
     <div class="scroller reveal">
       <table>
         <thead><tr><th>Do this</th><th>Get this</th></tr></thead>
         <tbody>
-          <tr><td>Open palm, 1s</td><td>Take control of the cursor</td></tr>
-          <tr><td>Thumb + index tap</td><td>Left click</td></tr>
-          <tr><td>Thumb + index hold</td><td>Drag</td></tr>
-          <tr><td>Thumb + middle tap</td><td>Right click</td></tr>
-          <tr><td>Thumb + ring, move up/down</td><td>Volume</td></tr>
-          <tr><td>Peace sign</td><td>Scroll — farther from centre, faster</td></tr>
-          <tr><td>Closed hand + swipe left/right</td><td>Forward / Back</td></tr>
-          <tr><td>Closed hand + push down</td><td>Minimise the window</td></tr>
-          <tr><td>1–4 fingers, other hand</td><td>Launch an app you picked</td></tr>
+          <tr><td>Open palm, 1s</td><td>Take the cursor</td></tr>
+          <tr><td>Move your hand</td><td>Move the cursor</td></tr>
+          <tr><td>Thumb + index</td><td>Click · hold to drag</td></tr>
+          <tr><td>Thumb + middle</td><td>Right click</td></tr>
+          <tr><td>Thumb + ring, move</td><td>Volume</td></tr>
+          <tr><td>Peace sign</td><td>Scroll — farther = faster</td></tr>
+          <tr><td>Fist + swipe</td><td>Forward / Back</td></tr>
+          <tr><td>Fist + push down</td><td>Minimise</td></tr>
+          <tr><td>1–4 fingers, other hand</td><td>Launch an app</td></tr>
           <tr><td>Lower your hand</td><td>Let go</td></tr>
         </tbody>
       </table>
     </div>
+    <p class="note" style="margin-top:12px"><b>Q</b> quits · <b>B</b> opens settings · <b>D</b> shows live gesture numbers</p>
   </section>
 
   <section>
-    <h2 class="reveal">What's inside</h2>
+    <h2 class="reveal">Good to know</h2>
     <div class="facts reveal">
-      <span class="fact"><b>30 fps</b> hand tracking, 21 points</span>
-      <span class="fact"><b>Stops</b> when you look away from the screen</span>
+      <span class="fact"><b>30 fps</b>, 21 tracked points</span>
+      <span class="fact"><b>Stops</b> when you look away</span>
       <span class="fact"><b>Magnetic cursor</b> sticks to buttons</span>
-      <span class="fact"><b>Own Python inside</b> — touches nothing on your PC</span>
-    </div>
-  </section>
-
-  <section>
-    <h2 class="reveal">Settings</h2>
-    <figure class="reveal">
-      <img src="../assets/img/settings-gestures.png" alt="AirMouse settings app showing gesture sensitivity controls." loading="lazy">
-      <figcaption>Press B. Seven sections, changes apply live.</figcaption>
-    </figure>
-  </section>
-
-  <section>
-    <h2 class="reveal">If it doesn't work</h2>
-    <div class="facts reveal">
-      <span class="fact"><b>"Camera is busy"</b> → close Discord, Zoom, Teams or OBS</span>
-      <span class="fact"><b>Hand not detected</b> → turn a light on</span>
-      <span class="fact"><b>No camera at all</b> → Settings → Privacy → Camera → allow desktop apps</span>
+      <span class="fact"><b>Own Python inside</b> — installs nothing</span>
+      <span class="fact"><b>"Camera busy"</b> → close Discord, Zoom, OBS</span>
+      <span class="fact"><b>Not tracking</b> → turn a light on</span>
     </div>
   </section>
 
