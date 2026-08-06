@@ -10,168 +10,177 @@
 <body>
 
 <header class="nav">
-  <div class="wrap">
-    <a class="brand" href="#top">Radislav Denisenko <span>/ Developer</span></a>
+  <div class="nav-inner">
+    <a class="brand" href="#top">Radislav&nbsp;Denisenko</a>
     <nav>
-      <a href="#work">Work</a>
-      <a href="#skills">Working with</a>
+      <a href="#airmouse">AirMouse</a>
+      <a href="#roomly">Roomly</a>
       <a href="#about">About</a>
       <a class="cta" href="mailto:raddenisenko@gmail.com">Get in touch</a>
     </nav>
   </div>
 </header>
 
+<div class="rail" aria-hidden="true">
+  <a href="#top" data-dot="top"></a>
+  <a href="#airmouse" data-dot="airmouse"></a>
+  <a href="#roomly" data-dot="roomly"></a>
+  <a href="#about" data-dot="about"></a>
+  <a href="#contact" data-dot="contact"></a>
+</div>
+
 <main id="top">
 
-  <div class="wrap hero split">
-    <div>
+  <!-- ============================== HERO ============================== -->
+  <section class="screen hero" id="hero">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+    <div class="hero-inner">
       <span class="status"><span class="dot"></span> Open to junior developer roles</span>
-      <h1>Self-taught developer. I <em>learn by building</em>.</h1>
+      <h1>I build things<br>you can <em>actually try.</em></h1>
       <p class="sub">
-        North Port, Florida. Two personal projects so far — a computer-vision desktop app you
-        can download and try right now, and a web app I'm still building.
+        Self-taught developer in North Port, Florida. One shipped computer-vision app
+        you can download right now, one full-stack app on the workbench.
       </p>
       <div class="actions">
-        <a class="btn btn-primary" href="#work">See what I've built</a>
-        <a class="btn" href="https://github.com/RadislavDenisenko">GitHub</a>
-        <a class="btn" href="mailto:raddenisenko@gmail.com">Email</a>
+        <a class="btn btn-ink" href="#airmouse">See the work ↓</a>
+        <a class="btn btn-ghost" href="https://github.com/RadislavDenisenko">GitHub</a>
       </div>
     </div>
-    <canvas class="hand" id="hand" aria-hidden="true"></canvas>
-  </div>
-
-  <section class="wrap" id="work">
-    <div class="head">
-      <h2>Projects</h2>
-      <a href="https://github.com/RadislavDenisenko">All repositories →</a>
-    </div>
-
-    <div class="projects-grid">
-      <article class="project reveal">
-        <div class="p-body">
-          <div class="p-top">
-            <h3>AirMouse</h3>
-            <span class="pill live">Downloadable</span>
-            <span class="pill">v0.9.0 beta</span>
-          </div>
-          <p class="p-what">
-            A Windows app that turns any webcam into a touch-free mouse. Move your hand to move
-            the cursor, pinch to click. No extra hardware.
-          </p>
-          <p class="p-detail">
-            Tracks 21 hand landmarks at 30&nbsp;fps and drives the real cursor through the Win32
-            <b>SendInput</b> API. Gestures arm on finger <b>count</b> rather than how curled the hand
-            is, so ordinary pointing can't accidentally fire navigation. A face-tracking
-            <b>attention gate</b> pauses control when you look away from the screen. Packaged so it
-            runs without installing Python.
-          </p>
-          <div class="stack">
-            <span class="tech">Python</span><span class="tech">MediaPipe</span><span class="tech">OpenCV</span>
-            <span class="tech">Win32 API</span><span class="tech">Tkinter</span>
-          </div>
-          <div class="p-links">
-            <a class="btn btn-primary" href="https://github.com/RadislavDenisenko/AirMouse/releases/latest">Download</a>
-            <a class="btn" href="airmouse/">How it works</a>
-            <a class="btn" href="https://github.com/RadislavDenisenko/AirMouse">Source</a>
-          </div>
-        </div>
-      </article>
-
-      <article class="project reveal d1">
-        <div class="p-body">
-          <div class="p-top">
-            <h3>Roomly</h3>
-            <span class="pill">In progress</span>
-          </div>
-          <p class="p-what">
-            An apartment-first roommate finder. Swipe real listings; liking a place shows you the
-            verified people who want it too — so finding a place and finding someone to share it
-            with stop being two separate problems.
-          </p>
-          <p class="p-detail">
-            Matches rank on the things that actually cause roommate friction: budget, sleep
-            schedule, cleanliness, pets, smoking. Identity verification gates access to matches,
-            and messaging is restricted to mutual matches <b>in the database itself</b> rather than
-            just hidden in the interface. Still building — not launched yet.
-          </p>
-          <div class="stack">
-            <span class="tech">Next.js</span><span class="tech">React</span><span class="tech">TypeScript</span>
-            <span class="tech">Supabase</span><span class="tech">Tailwind</span>
-          </div>
-          <div class="p-links">
-            <a class="btn" href="https://github.com/RadislavDenisenko/Roomly">Source</a>
-          </div>
-        </div>
-      </article>
+    <div class="hero-foot">
+      <span>scroll</span>
+      <span class="scroll-line"></span>
     </div>
   </section>
 
-  <section class="wrap" id="skills">
-    <div class="head"><h2>Working with</h2></div>
-    <div class="skills reveal">
-      <div class="skill-row">
-        <div class="label">Languages</div>
-        <div class="items">
-          <span class="tech">Python</span><span class="tech">TypeScript</span>
-          <span class="tech">JavaScript</span><span class="tech">HTML / CSS</span>
+  <!-- ============================ AIRMOUSE ============================ -->
+  <section class="screen" id="airmouse">
+    <article class="panel panel-air">
+      <div class="panel-copy">
+        <span class="eyebrow">01 · Shipped &amp; downloadable</span>
+        <h2>AirMouse</h2>
+        <p class="lede">
+          Your hand is the mouse. A Windows app that turns any webcam into touch-free
+          control — move the cursor in the air, pinch to click, swipe to switch windows.
+          No extra hardware.
+        </p>
+        <p class="detail">
+          Tracks 21 hand landmarks at 30&nbsp;fps and drives the real cursor through the
+          Win32 SendInput API. Gestures arm on finger count so ordinary pointing can't
+          misfire, and a face-tracking attention gate pauses control the moment you look
+          away. Backed by 300+ automated tests and packaged to run without installing
+          Python.
+        </p>
+        <div class="stack">
+          <span>Python</span><span>MediaPipe</span><span>OpenCV</span><span>Win32 API</span>
+        </div>
+        <div class="actions">
+          <a class="btn btn-light" href="https://github.com/RadislavDenisenko/AirMouse/releases/latest">Download for Windows</a>
+          <a class="btn btn-glass" href="airmouse/">How it works</a>
+          <a class="btn btn-glass" href="https://github.com/RadislavDenisenko/AirMouse">Source</a>
         </div>
       </div>
-      <div class="skill-row">
-        <div class="label">Frontend</div>
-        <div class="items">
-          <span class="tech">React</span><span class="tech">Next.js</span><span class="tech">Tailwind</span>
+      <div class="panel-vis">
+        <div class="cam-frame">
+          <span class="cam-tag">HAND_DETECTED · conf 0.98</span>
+          <canvas id="hand" aria-hidden="true"></canvas>
+          <span class="cam-cursor" id="cam-cursor"></span>
         </div>
       </div>
-      <div class="skill-row">
-        <div class="label">Tools</div>
-        <div class="items">
-          <span class="tech">Git / GitHub</span><span class="tech">Supabase</span><span class="tech">OpenCV</span>
+    </article>
+  </section>
+
+  <!-- ============================= ROOMLY ============================= -->
+  <section class="screen" id="roomly">
+    <article class="panel panel-roomly">
+      <div class="panel-copy">
+        <span class="eyebrow">02 · Work in progress</span>
+        <h2>Roomly</h2>
+        <p class="lede">
+          Finding an apartment and finding a roommate are the same problem — so why are
+          they two different apps? Swipe real listings; liking a place surfaces the
+          verified people who want it too.
+        </p>
+        <p class="detail">
+          Matches rank on what actually causes roommate friction: budget, sleep schedule,
+          cleanliness, pets, smoking. Messaging opens only on mutual match, enforced in
+          the database itself — not just hidden in the interface. First working draft
+          built solo; currently being reworked, not launched yet.
+        </p>
+        <div class="stack">
+          <span>Next.js</span><span>React</span><span>TypeScript</span><span>PostgreSQL</span>
+        </div>
+        <div class="actions">
+          <a class="btn btn-light" href="https://github.com/RadislavDenisenko/Roomly">Follow the build</a>
+        </div>
+      </div>
+      <div class="panel-vis">
+        <div class="deck" aria-hidden="true">
+          <div class="cardx c3"></div>
+          <div class="cardx c2"></div>
+          <div class="cardx c1">
+            <div class="cardx-img"></div>
+            <div class="cardx-body">
+              <b>2BR · Sarasota</b>
+              <span>$1,450 / mo · 3 verified people want this place</span>
+              <div class="match-pips"><i></i><i></i><i></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ============================== ABOUT ============================= -->
+  <section class="screen screen-flow" id="about">
+    <div class="about-wrap">
+      <span class="eyebrow eyebrow-ink">The person behind it</span>
+      <h2 class="about-h">Field tech by day,<br>developer every other hour.</h2>
+      <div class="about-grid">
+        <div class="acard">
+          <h3>Comcast — Cable Technician</h3>
+          <span class="when">Oct 2023 – Present · North Port, FL</span>
+          <p>Diagnosing internet, TV and voice in the field: signal testing, coax and fiber,
+          and explaining every fix in plain language to people who aren't technical.
+          Troubleshooting under pressure is the day job. Code is evenings and weekends.</p>
+        </div>
+        <div class="acard">
+          <h3>Penn State — Physics coursework, CS minor</h3>
+          <span class="when">2020 – 2022 · degree not completed</span>
+          <p>Two years of mechanics, electricity &amp; magnetism, and programming. Finished
+          Harvard's CS50 Python and CS50 Web certificates on my own after leaving.</p>
+        </div>
+        <div class="acard">
+          <h3>How I work</h3>
+          <span class="when">Every day</span>
+          <p>I build with AI tools the way earlier developers built with Stack Overflow —
+          fast drafts, then I rebuild once I understand what I got wrong. Python,
+          TypeScript, React, Next.js, OpenCV, Git.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="wrap" id="about">
-    <div class="head"><h2>Background</h2></div>
-    <div class="cols reveal">
-      <div class="card">
-        <h4>Cable Technician — Comcast</h4>
-        <div class="when">Oct 2023 – Present · North Port, FL</div>
-        <p>
-          Diagnose and repair residential internet, TV and voice in the field: signal testing,
-          coax and fiber work, router provisioning, and explaining every fix in plain language
-          to customers who aren't technical. Coding evenings and weekends.
-        </p>
+  <!-- ============================= CONTACT ============================ -->
+  <section class="screen" id="contact">
+    <article class="panel panel-contact">
+      <span class="eyebrow">Say hi</span>
+      <h2 class="contact-h">Let's build<br><em>something.</em></h2>
+      <p class="lede">Looking for a junior or entry-level developer role. Happy to walk
+      through how any of this works, line by line.</p>
+      <div class="actions">
+        <a class="btn btn-light" href="mailto:raddenisenko@gmail.com">raddenisenko@gmail.com</a>
+        <a class="btn btn-glass" href="https://github.com/RadislavDenisenko">GitHub</a>
       </div>
-      <div class="card">
-        <h4>Penn State — Eberly College of Science</h4>
-        <div class="when">2020 – 2022 · Physics, CS minor</div>
-        <p>
-          Two years of coursework in mechanical physics, electricity &amp; magnetism, and
-          programming. Harvard CS50 certificates in Python and Web Programming.
-        </p>
-      </div>
-    </div>
+      <footer class="foot">
+        <span>North Port, Florida</span>
+        <span>Designed &amp; built by me · <a href="https://github.com/RadislavDenisenko/Portfolio">source</a></span>
+      </footer>
+    </article>
   </section>
 
 </main>
-
-<div class="contact">
-  <div class="wrap">
-    <h2>Get in touch.</h2>
-    <p>I'm looking for a junior or entry-level developer role. Happy to walk through how any of this works.</p>
-    <div class="actions" style="margin-top:0">
-      <a class="btn btn-primary" href="mailto:raddenisenko@gmail.com">raddenisenko@gmail.com</a>
-      <a class="btn" href="https://github.com/RadislavDenisenko">github.com/RadislavDenisenko</a>
-    </div>
-  </div>
-  <footer>
-    <div class="wrap">
-      <span>North Port, Florida</span>
-      <span>Built and deployed by me · <a href="https://github.com/RadislavDenisenko/Portfolio">source</a></span>
-    </div>
-  </footer>
-</div>
 
 <script src="assets/site.js"></script>
 </body>

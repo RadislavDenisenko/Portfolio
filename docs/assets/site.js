@@ -1,8 +1,8 @@
 var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// Reveal sections as they scroll in.
+// Reveal panels/sections as they scroll in.
 (function () {
-  var items = document.querySelectorAll('.reveal');
+  var items = document.querySelectorAll('.panel, .reveal');
   if (!items.length) return;
   if (REDUCE || !('IntersectionObserver' in window)) {
     items.forEach(function (el) { el.classList.add('in'); });
@@ -12,7 +12,7 @@ var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     entries.forEach(function (e) {
       if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
     });
-  }, { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
+  }, { rootMargin: '0px 0px -8% 0px', threshold: 0.1 });
   items.forEach(function (el) { io.observe(el); });
 
   // Backstop: in a frame that never scrolls the observer may never fire, and
@@ -22,10 +22,33 @@ var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }, 2500);
 })();
 
-// Drifting hand skeleton — the same 21 landmarks AirMouse tracks.
+// Side-rail dots track the active screen.
+(function () {
+  var map = {
+    hero: 'top', airmouse: 'airmouse', roomly: 'roomly',
+    about: 'about', contact: 'contact'
+  };
+  var dots = document.querySelectorAll('.rail a');
+  if (!dots.length || !('IntersectionObserver' in window)) return;
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      var key = map[e.target.id];
+      dots.forEach(function (d) { d.classList.toggle('on', d.dataset.dot === key); });
+    });
+  }, { threshold: 0.45 });
+  Object.keys(map).forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) io.observe(el);
+  });
+})();
+
+// Drifting hand skeleton — the same 21 landmarks AirMouse tracks — plus a
+// "cursor" that follows the index fingertip, the way the real app drives yours.
 (function () {
   var canvas = document.getElementById('hand');
   if (!canvas || !canvas.getContext) return;
+  var cursor = document.getElementById('cam-cursor');
 
   var BONES = [
     [0,1],[1,2],[2,3],[3,4],
@@ -43,11 +66,9 @@ var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     [0.64,0.54],[0.67,0.35],[0.69,0.23],[0.71,0.12],
     [0.76,0.61],[0.82,0.47],[0.86,0.38],[0.90,0.29]
   ];
+  var TIP = 8; // index fingertip drives the cursor
 
   var ctx = canvas.getContext('2d');
-  var css = getComputedStyle(document.documentElement);
-  var accent = css.getPropertyValue('--accent').trim() || '#1d4ed8';
-  var line = css.getPropertyValue('--line-2').trim() || '#c9d0da';
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
   var w = 0, h = 0;
 
@@ -61,15 +82,19 @@ var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   function draw(t) {
     ctx.clearRect(0, 0, w, h);
-    var pad = 18;
+    var pad = 30;
+    // The whole hand wanders slowly; individual joints jitter a little on top,
+    // which reads as live tracking rather than a looping GIF.
+    var gx = Math.sin(t / 2600) * w * 0.07;
+    var gy = Math.cos(t / 3100) * h * 0.05;
     var pts = BASE.map(function (p, i) {
       var dx = Math.sin(t / 1500 + i * 0.7) * 4;
       var dy = Math.cos(t / 1800 + i * 0.5) * 4;
-      return [pad + p[0] * (w - pad * 2) + dx, pad + p[1] * (h - pad * 2) + dy];
+      return [pad + p[0] * (w - pad * 2) + dx + gx, pad + p[1] * (h - pad * 2) + dy + gy];
     });
 
-    ctx.strokeStyle = line;
-    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = 'rgba(255,255,255,.75)';
+    ctx.lineWidth = 1.7;
     ctx.beginPath();
     BONES.forEach(function (b) {
       ctx.moveTo(pts[b[0]][0], pts[b[0]][1]);
@@ -80,11 +105,15 @@ var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     pts.forEach(function (p, i) {
       var tip = i === 4 || i === 8 || i === 12 || i === 16 || i === 20;
       ctx.beginPath();
-      ctx.arc(p[0], p[1], tip ? 4 : 2.8, 0, Math.PI * 2);
-      ctx.fillStyle = tip ? accent : '#fff';
+      ctx.arc(p[0], p[1], tip ? 4.5 : 3, 0, Math.PI * 2);
+      ctx.fillStyle = tip ? '#C8F542' : '#fff';
       ctx.fill();
-      if (!tip) { ctx.lineWidth = 1.6; ctx.strokeStyle = line; ctx.stroke(); }
     });
+
+    if (cursor) {
+      cursor.style.transform =
+        'translate(' + (pts[TIP][0] - 7) + 'px,' + (pts[TIP][1] - 7) + 'px)';
+    }
   }
 
   size();
