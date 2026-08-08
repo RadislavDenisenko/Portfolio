@@ -68,24 +68,59 @@ Full-viewport section per project, scroll-snap proximity (never JS-hijacked):
    landmarks are children of the rig's joints — anatomically exact by
    construction and they track the pinch — sitting proud of the surface on the
    pad normal, with soft radial-gradient halos and an aqua skeleton overlay.
-   Every additive overlay uses CustomBlending that adds RGB but not alpha:
-   plain additive blending on an alpha canvas attenuates the room photo as much
-   as it lights it, and a cyan glow arrives as grey haze. Skin is
-   MeshPhysicalMaterial — warm mid tone, sheen, a whisper of clearcoat, plus
-   tileable albedo/normal/roughness maps (at a low repeat, so no tile is
-   countable) and a PMREM environment derived from the room photo — under ACES
-   filmic tone mapping. The key is a shadow-casting spot from the beam side, so
-   the fingers shade each other and the forearm fades out of frame instead of
-   ending in a stump; the fill is a COOL room bounce, because in a navy room the
-   shadow side has to be cooler than the light, and the key and exposure come
-   down on phone widths where the hand sits below the beam. Copy sits directly
-   on the scene behind a left scrim (≥4.5:1 verified); spec chips are glass
-   pills. Three.js ships as one tree-shaken vendored bundle (531KB, ~133KB
-   gzipped, rebuilt from tools/three-bundle-entry.js) — down from 754KB of
-   three + GLTFLoader + hand.glb before the scan was deleted — lazy-loaded;
-   static open-palm frame on coarse-pointer devices and under reduced motion.
-   The airmouse/ case study reuses the same module on its framed navy stage.
-   Palette: navy room + aqua + mint.
+   The skeleton is drawn THROUGH the hand rather than depth-tested: an
+   instrumentation layer is either drawn or it isn't, and half-buried
+   connectors emerge from under the mesh and die in mid-palm. Every additive
+   overlay uses CustomBlending that adds RGB but not alpha: plain additive
+   blending on an alpha canvas attenuates the room photo as much as it lights
+   it, and a cyan glow arrives as grey haze. Skin is MeshPhysicalMaterial —
+   warm mid tone, sheen, a whisper of clearcoat, plus tileable
+   albedo/normal/roughness maps — under ACES filmic tone mapping. Those maps
+   are **synthesised, not photographic** (tools/make_skin_maps.py, 3 × 256px,
+   66KB): a cellular micro-furrow network with a mean flattened to under 1%
+   block-to-block, because the macro-of-a-palm they were derived from contained
+   only 20–40mm flexion creases, and tiled at any repeat those lined up
+   tile-to-tile into a plaid — the hand read as burlap.
+
+   **Light is measured off the plate, never dialled by eye.** That photograph
+   has median luma 41 and p95 125; its brightest surface is the pool the beam
+   makes on the floor at #5E6D76. So: the key is a shadow-casting spot that
+   TRAVELS across the hand from the upper left and passes behind it (the
+   housing is at 22%/10% of the plate, its pool at 55%/88%) — never one that
+   faces the hand, which brightens both silhouettes and leaves the centre dark,
+   the signature of a ring light. Skin's median sits near the plate's own upper
+   range rather than above the brightest thing the beam can make, and the
+   terminator runs down the palm. Nothing warm is ever *added*: skin's albedo is
+   warm enough (R/B = 1.32) that neutral and even cool light returns warm, and
+   this room contains no warm source. The PMREM environment is BUILT from the
+   plate's sampled values with the beam, the wall tube and the floor in their
+   real directions — feeding a 1.79:1 rectilinear photo to an equirectangular
+   mapping smears it over 360°, and the near-black patches it lands on turn
+   shadowed skin slate-teal. Fingertip translucency is baked into the vertex
+   colours, not faked with a lamp; a light cannot express thickness, and one
+   aimed from below only ever paints an orange ring at each knuckle. The
+   forearm fades out of frame instead of ending in a stump — vertex alpha plus a
+   mask on the canvas, since the plate's floor mist only covers the terminus at
+   desktop crops. The floor shadow is a CSS **cast** shadow raking down-beam,
+   offset and skewed, not a centred puddle (a puddle is a light directly
+   overhead, which contradicts the plate). Copy sits directly on the scene
+   behind a left scrim (≥4.5:1 verified); spec chips are glass pills, and the
+   secondary button takes the system's on-dark `.btn-outline-light` treatment —
+   the paper-ground `.btn-ghost` fill makes the secondary action the brightest
+   object in a night photograph. On phones the copy is cut to fit ABOVE the
+   hand (two sentences, chips collapse to one mono line, Case study becomes an
+   inline link) so the 3D object the section exists for gets ~46% of the
+   viewport instead of a cropped bottom quarter. Three.js ships as one
+   tree-shaken vendored bundle rebuilt from tools/three-bundle-entry.js
+   (529KB, ~133KB gzipped — down from the 754KB of three + GLTFLoader +
+   hand.glb the scanned mesh needed, all three of which are now deleted),
+   lazy-loaded; static open-palm frame on coarse-pointer devices and under
+   reduced motion, and a real 21-landmark SVG diagram (with matching label and
+   caption) where WebGL is unavailable — never a button that announces a pinch
+   demo and does nothing. The airmouse/ case study reuses the same module on its
+   framed navy stage, whose backdrop glow is a CSS gradient rather than a disc
+   in the scene: a disc has a silhouette, and it cut a hard arc across the
+   stage corner. Palette: navy room + aqua + mint.
 3. **Roomly** — swipe-card stack that tears the top card off on a loop, clipped
    inside its own area (never across copy). Honest copy: first working draft,
    being reworked, not launched. Palette: white + coral + sun (two accent

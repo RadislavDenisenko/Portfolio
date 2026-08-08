@@ -703,12 +703,22 @@ section{position:relative}
   .proj-grid-flip .proj-copy{order:1}
   .navy-inner{aspect-ratio:4/3;max-height:400px}
   .about-grid{grid-template-columns:1fr}
-  /* room scene stacks: copy starts below the camera housing, tight rhythm so
-     the whole scene composes inside ~100svh; the hand sits below it */
-  .scene{align-content:start;padding-top:120px;padding-bottom:calc(44svh + 76px)}
-  .scene .proj-h{margin-bottom:10px}
+  /* Room scene stacks: copy above, hand below, the whole thing composing inside
+     one 100svh screen. --handH is the contract between the two — the section
+     reserves exactly that much padding for the hand, and the hand takes exactly
+     that much height. It is capped by what is LEFT after the copy rather than
+     by svh alone, because on a short landscape tablet a fixed 46svh plus the
+     copy adds up to more than the viewport and the section silently grows past
+     the fold, taking the hand with it. */
+  .scene{
+    --handH:min(46svh, calc(100svh - 462px));
+    align-content:start;
+    padding-top:104px;padding-bottom:calc(var(--handH) + 76px);
+  }
+  .scene .proj-h{font-size:clamp(32px,4.6vw,44px);margin-bottom:10px}
   .scene .lead{margin-bottom:12px}
-  .scene .specs{gap:8px}
+  /* the fourth sentence duplicates a spec chip; the chips carry it below 960 */
+  .scene .lead .sm-drop{display:none}
   .scene .tags{margin:10px 0 14px}
   /* Portrait, and tall enough that the forearm runs PAST the bottom edge and is
      clipped by the canvas instead of terminating in mid-air. On this crop of the
@@ -716,8 +726,22 @@ section{position:relative}
   .scene-hand{
     left:50%;bottom:64px;
     transform:translateX(-50%);
-    width:min(60vw,420px);height:min(46svh,460px);
+    width:min(62vw,420px);height:var(--handH);
   }
+  /* four glass pills cost ~80px of a budget the hand needs; one mono line of the
+     same words costs 20px and reads as a spec strip, which is what it is */
+  .scene .specs{
+    display:block;max-width:none;margin:14px 0 0;
+    font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.8);
+    letter-spacing:.02em;line-height:1.7;
+  }
+  .scene .specs li{
+    display:inline;background:none;border:0;padding:0;color:inherit;
+    font-size:inherit;-webkit-backdrop-filter:none;backdrop-filter:none;
+  }
+  .scene .specs li:hover{transform:none;box-shadow:none}
+  .scene .specs li .dot{display:none}
+  .scene .specs li + li::before{content:' · ';color:rgba(255,255,255,.45)}
   .scene-hand canvas{
     -webkit-mask-image:linear-gradient(#000 74%,transparent 100%);
     mask-image:linear-gradient(#000 74%,transparent 100%);
@@ -737,45 +761,31 @@ section{position:relative}
   /* ---- room scene on a phone: the hand is the point of the section ----
      It used to get ~200px in the bottom quarter under 594px of copy stack, so
      the reading order was Case-study slab, cobalt slab, headline, and only then
-     the 3D object the whole section exists for. The copy is cut to fit above
-     the hand: two sentences, the chips collapse from four pills to one mono
-     line, and Case study drops from a full-width slab to an inline text link
-     beside the primary button. */
-  .scene{padding-top:96px;padding-bottom:calc(46svh + 68px)}
+     the 3D object the whole section exists for. On top of the ≤960 compaction,
+     Case study drops from a full-width white slab to an inline text link beside
+     the primary button. */
+  /* a phone in portrait is the shortest budget the section gets, so the hand's
+     cap leans harder on "what is left" and less on svh */
+  .scene{
+    --handH:min(46svh, calc(100svh - 470px));
+    padding-top:96px;padding-bottom:calc(var(--handH) + 62px);
+  }
   .scene .proj-h{font-size:clamp(30px,8.4vw,38px)}
   .scene .lead{font-size:15px;line-height:1.5;margin-bottom:10px}
-  .scene .lead .sm-drop{display:none}
   .scene .tags{margin:8px 0 12px;font-size:12px}
-  .scene .specs{
-    display:block;max-width:none;margin:12px 0 0;
-    font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.8);
-    letter-spacing:.02em;line-height:1.7;
-  }
-  .scene .actions .btn-primary{padding:12px 18px;font-size:15px;white-space:nowrap}
-  .scene .specs li{
-    display:inline;background:none;border:0;padding:0;color:inherit;
-    font-size:inherit;-webkit-backdrop-filter:none;backdrop-filter:none;
-  }
-  .scene .specs li .dot,.scene .specs .sm-drop{display:none}
-  .scene .specs li + li::before{content:' · ';color:rgba(255,255,255,.45)}
+  .scene .specs{font-size:11px;margin-top:12px}
+  .scene .specs .sm-drop{display:none}
   .scene .actions{gap:20px;flex-wrap:nowrap;align-items:center}
-  .scene .actions .btn-primary{flex:0 1 auto}
+  .scene .actions .btn-primary{
+    flex:0 1 auto;padding:12px 18px;font-size:15px;white-space:nowrap;
+  }
   .scene .actions .btn-ghost{
     flex:0 0 auto;background:none;border:0;padding:0;min-height:0;
     font-size:15px;font-weight:600;color:#fff;text-decoration:underline;
     text-underline-offset:4px;text-decoration-thickness:1.5px;
   }
   .scene .actions .btn-ghost:hover{box-shadow:none;transform:none}
-  .scene-hand{bottom:56px;width:min(78vw,340px);height:46svh}
-}
-/* Tablets and coarse-pointer laptops: the single ≤960px rule collapsed the hero
-   image to a 110x180 thumbnail at exactly the widths with the most room for it.
-   Above 640px the copy is short enough that the hand can take a real share. */
-@media (min-width:641px) and (max-width:960px){
-  .scene-hand{
-    left:50%;bottom:72px;
-    width:min(58vw,430px);height:min(48svh,470px);
-  }
+  .scene-hand{bottom:56px;width:min(78vw,340px)}
 }
 
 /* ------------------------------ reduced motion ----------------------------- */
