@@ -422,9 +422,11 @@ section{position:relative}
 /* coarse-pointer / reduced-motion: one polished frame, not a button */
 .navy-inner.is-static{cursor:default}
 .navy-inner canvas{width:100%!important;height:100%!important}
+/* same component as .scene-cap, so same alignment and same measure — it used to
+   be centred here and left-aligned there, which gave one component two rags */
 .stage-cap{
   font-family:var(--mono);font-size:12px;color:var(--soft);
-  letter-spacing:.03em;text-align:center;margin-top:12px;
+  letter-spacing:.03em;text-align:left;max-width:40ch;margin-top:12px;
 }
 .hand-fallback{
   display:grid;place-items:center;
@@ -472,16 +474,35 @@ section{position:relative}
   width:min(44vw,640px);
   height:min(80svh,740px);
 }
-.scene-hand #hand-stage{position:absolute;inset:0;cursor:pointer;touch-action:pan-y}
+/* the focus ring follows the section's rounded language (chips, buttons and
+   badge are all pills); a square box around a 634x720 stage is off-system */
+.scene-hand #hand-stage{
+  position:absolute;inset:0;cursor:pointer;touch-action:pan-y;border-radius:20px;
+}
 .scene-hand #hand-stage.is-static{cursor:default}
 .scene-hand canvas{width:100%!important;height:100%!important}
+/* DESIGN.md asks the forearm to fade out of frame rather than end in a stump.
+   On desktop the plate's own floor mist covers the terminus; this is the belt
+   to that pair of braces, and on mobile (below) it does the whole job. */
+.scene-hand canvas{
+  -webkit-mask-image:linear-gradient(#000 88%,transparent 100%);
+  mask-image:linear-gradient(#000 88%,transparent 100%);
+}
 .scene-hand .hand-fallback{position:absolute;inset:0}
-/* soft floor shadow under the hand — hand.js nudges it with the follow motion */
+/* Floor shadow under the hand. A CAST shadow, raking down-beam — not a contact
+   pad: the hand floats in the beam by design, so there is no hard core under
+   the wrist. Offset along the beam and skewed, because a centred puddle is a
+   shadow from a light directly overhead, which contradicts the whole plate.
+   hand.js writes --drift/--near as the hand follows the cursor; the rotation
+   and skew stay here so a transform written from JS cannot wipe them. */
 .hand-shadow{
-  position:absolute;left:22%;bottom:1.5%;
-  width:56%;height:6.5%;border-radius:50%;
-  background:radial-gradient(50% 50% at 50% 50%,rgba(3,6,13,.6),rgba(3,6,13,0) 70%);
-  filter:blur(7px);
+  --drift:0px; --near:1;
+  position:absolute;left:34%;bottom:1.5%;
+  width:62%;height:13%;border-radius:50%;
+  background:radial-gradient(46% 52% at 38% 42%,
+    rgba(2,5,11,.92),rgba(2,5,11,.45) 42%,rgba(2,5,11,0) 78%);
+  filter:blur(14px);
+  transform:translateX(var(--drift)) scale(var(--near)) rotate(-9deg) skewX(-16deg);
   will-change:transform;
 }
 
@@ -504,16 +525,33 @@ section{position:relative}
   -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
 }
 .scene .specs li:hover{box-shadow:0 10px 22px -12px rgba(38,217,163,.6)}
+/* four chips in a 560px column break 3+1, which orphans the last one on its own
+   row and leaves a ragged L. Capped here so they break 2+2 at every desktop
+   width instead. */
+.scene .specs{max-width:470px}
+/* The scene is a night photograph. .btn-ghost's paper-ground treatment (solid
+   white fill, ink text) makes the SECONDARY action the brightest object in the
+   frame — brighter than the 64px headline — which inverts the intended
+   type-then-hand-then-room hierarchy and pastes a hard white UI chip onto the
+   plate. The design system already ships the on-dark variant; use it. */
+.scene .btn-ghost{
+  background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.75);
+}
+.scene .btn-ghost:hover{
+  border-color:#fff;box-shadow:0 12px 26px -12px rgba(9,20,60,.5);
+}
 /* focus on the dark scene: white ring + dark halo */
 .scene :focus-visible{outline-color:#fff;box-shadow:0 0 0 3px rgba(4,8,16,.5)}
 
 /* honest mono caption — bottom-LEFT, under the scrim and clear of the hand's
-   whole travel envelope, so its contrast never depends on where the hand is */
+   whole travel envelope, so its contrast never depends on where the hand is.
+   One sentence, two lines max, left-aligned — the same component on the case
+   study page is left-aligned too, rather than centred with its own rag. */
 .scene-cap{
   position:absolute;z-index:2;
-  left:clamp(16px,3vw,40px);bottom:14px;
+  left:clamp(16px,3vw,40px);bottom:12px;
   font-family:var(--mono);font-size:12px;letter-spacing:.03em;
-  color:rgba(255,255,255,.85);text-align:left;max-width:46ch;
+  color:rgba(255,255,255,.85);text-align:left;max-width:40ch;
   text-shadow:0 1px 10px rgba(3,6,13,.9),0 0 22px rgba(3,6,13,.7);
 }
 
@@ -660,18 +698,25 @@ section{position:relative}
   .navy-inner{aspect-ratio:4/3;max-height:400px}
   .about-grid{grid-template-columns:1fr}
   /* room scene stacks: copy starts below the camera housing, tight rhythm so
-     the whole scene composes inside ~100svh; static hand centered below */
-  .scene{align-content:start;padding-top:138px;padding-bottom:calc(28svh + 12px)}
+     the whole scene composes inside ~100svh; the hand sits below it */
+  .scene{align-content:start;padding-top:120px;padding-bottom:calc(44svh + 76px)}
   .scene .proj-h{margin-bottom:10px}
   .scene .lead{margin-bottom:12px}
   .scene .specs{gap:8px}
   .scene .tags{margin:10px 0 14px}
+  /* Portrait, and tall enough that the forearm runs PAST the bottom edge and is
+     clipped by the canvas instead of terminating in mid-air. On this crop of the
+     plate there is no floor mist under the hand to hide a terminus. */
   .scene-hand{
-    left:50%;bottom:4svh;
+    left:50%;bottom:64px;
     transform:translateX(-50%);
-    width:min(86vw,400px);height:30svh;
+    width:min(60vw,420px);height:min(46svh,460px);
   }
-  .scene-cap{left:16px;bottom:8px;max-width:80vw}
+  .scene-hand canvas{
+    -webkit-mask-image:linear-gradient(#000 74%,transparent 100%);
+    mask-image:linear-gradient(#000 74%,transparent 100%);
+  }
+  .scene-cap{left:16px;bottom:12px;max-width:min(40ch,86vw)}
 }
 @media (max-width:640px){
   .top-links a:not(.top-cta){display:none}
@@ -679,9 +724,51 @@ section{position:relative}
   .hero-h{font-size:clamp(34px,10.4vw,44px)}
   .stage-tilt{height:auto;width:100%;aspect-ratio:16/10}
   .hero .actions .btn{width:100%;max-width:360px}
-  .proj .actions .btn,.scene .actions .btn,.cs-dl-actions .btn{flex:1 1 auto;min-width:0}
+  .proj .actions .btn,.cs-dl-actions .btn{flex:1 1 auto;min-width:0}
   .contact-card{border-radius:26px}
   .scroll-hint{display:none}
+
+  /* ---- room scene on a phone: the hand is the point of the section ----
+     It used to get ~200px in the bottom quarter under 594px of copy stack, so
+     the reading order was Case-study slab, cobalt slab, headline, and only then
+     the 3D object the whole section exists for. The copy is cut to fit above
+     the hand: two sentences, the chips collapse from four pills to one mono
+     line, and Case study drops from a full-width slab to an inline text link
+     beside the primary button. */
+  .scene{padding-top:96px;padding-bottom:calc(46svh + 68px)}
+  .scene .proj-h{font-size:clamp(30px,8.4vw,38px)}
+  .scene .lead{font-size:15px;line-height:1.5;margin-bottom:10px}
+  .scene .lead .sm-drop{display:none}
+  .scene .tags{margin:8px 0 12px;font-size:12px}
+  .scene .specs{
+    display:block;max-width:none;margin:12px 0 0;
+    font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.8);
+    letter-spacing:.02em;line-height:1.7;
+  }
+  .scene .specs li{
+    display:inline;background:none;border:0;padding:0;color:inherit;
+    font-size:inherit;-webkit-backdrop-filter:none;backdrop-filter:none;
+  }
+  .scene .specs li .dot,.scene .specs .sm-drop{display:none}
+  .scene .specs li + li::before{content:' · ';color:rgba(255,255,255,.45)}
+  .scene .actions{gap:20px;flex-wrap:nowrap;align-items:center}
+  .scene .actions .btn-primary{flex:0 1 auto}
+  .scene .actions .btn-ghost{
+    flex:0 0 auto;background:none;border:0;padding:0;min-height:0;
+    font-size:15px;font-weight:600;color:#fff;text-decoration:underline;
+    text-underline-offset:4px;text-decoration-thickness:1.5px;
+  }
+  .scene .actions .btn-ghost:hover{box-shadow:none;transform:none}
+  .scene-hand{bottom:56px;width:min(78vw,340px);height:46svh}
+}
+/* Tablets and coarse-pointer laptops: the single ≤960px rule collapsed the hero
+   image to a 110x180 thumbnail at exactly the widths with the most room for it.
+   Above 640px the copy is short enough that the hand can take a real share. */
+@media (min-width:641px) and (max-width:960px){
+  .scene-hand{
+    left:50%;bottom:72px;
+    width:min(58vw,430px);height:min(48svh,470px);
+  }
 }
 
 /* ------------------------------ reduced motion ----------------------------- */

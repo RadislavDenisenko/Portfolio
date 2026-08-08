@@ -44,27 +44,48 @@ Full-viewport section per project, scroll-snap proximity (never JS-hijacked):
    framed-stage exception above): a moody blue room photo where a surveillance
    camera (blinking CSS REC dot on its housing) casts a volumetric beam onto
    the floor. Floating in the beam on a transparent canvas: a **procedural
-   rigged hand we generate in code — no GLB, no scan, no texture**. A lofted
-   superellipse palm with real muscle relief (thenar, hypothenar, knuckle pads,
-   palmar creases baked into vertex colours), four three-bone fingers and an
-   opposed three-bone thumb, each segment parented to its own joint group.
-   Anthropometric phalanx lengths, so middle > ring > index > pinky reads
-   right. Rest pose is an open palm to the viewer; it follows the cursor with
-   spring lag plus a per-finger sway, breathes when idle, and **click / Enter
-   is a real pinch** — the index curls, the thumb rotates in, and the two
-   fingertips meet (the angles are solved against the rig at build time, so the
-   tips always touch). That's the product's actual click gesture, so the copy
-   says so. All 21 landmarks are children of the rig's joints — anatomically
-   exact by construction and they track the pinch — drawn proud of the surface
-   with an aqua skeleton overlay. Skin is MeshPhysicalMaterial (warm mid tone,
-   sheen, a whisper of clearcoat) under ACES filmic tone mapping; the key is a
-   spot from the beam side so the fingers stay bright and the forearm fades
-   out of frame instead of ending in a stump. Copy sits directly on the scene
-   behind a left scrim (≥4.5:1 verified); spec chips are glass pills. Three.js
-   ships as one tree-shaken vendored bundle (522KB, ~131KB gzipped),
-   lazy-loaded; static open-palm frame on coarse-pointer devices and under
-   reduced motion. The airmouse/ case study reuses the same module on its
-   framed navy stage. Palette: navy room + aqua + mint.
+   rigged hand we generate in code — no GLB, no scan**. A lofted
+   superellipse palm with real muscle relief (thenar, hypothenar, knuckle pads),
+   four three-bone fingers and an opposed three-bone thumb, each segment
+   parented to its own joint group. It is a RIGHT hand shown palm-first, so the
+   thumb is on the viewer's right. Anthropometric phalanx lengths and a
+   metacarpal arch that descends from the middle, so middle > ring ≈ index >
+   pinky reads right. Joints swell into knuckles and the shafts waist between
+   them; fingertips narrow and then fatten into a palmar pulp. The anatomy the
+   tiling skin map cannot supply is baked into the vertex colours and the loft
+   itself: palmar creases cut into the form as well as darkened, flexion creases
+   at every knuckle, low-frequency pad whorls on the fingertips. Rest pose is an
+   open palm to the viewer; it follows the cursor with spring lag plus a
+   per-finger sway, breathes when idle, and **click / Enter is a real pinch** —
+   the index curls to a textbook 45/54/17° tip pinch and the thumb swings up and
+   across until the two pads touch. The thumb angles are solved against the rig
+   at build time, and what is measured is the SURFACE gap between the two distal
+   phalanges (each sampled as the tapered capsule the loft actually builds), not
+   the distance between landmarks — landmarks live under the skin, so closing
+   *them* buries one finger inside the other. Retune the anatomy and the thumb
+   re-finds contact; if it ever cannot reach, the module says so in the console.
+   That's the product's actual click gesture, so the copy says so. All 21
+   landmarks are children of the rig's joints — anatomically exact by
+   construction and they track the pinch — sitting proud of the surface on the
+   pad normal, with soft radial-gradient halos and an aqua skeleton overlay.
+   Every additive overlay uses CustomBlending that adds RGB but not alpha:
+   plain additive blending on an alpha canvas attenuates the room photo as much
+   as it lights it, and a cyan glow arrives as grey haze. Skin is
+   MeshPhysicalMaterial — warm mid tone, sheen, a whisper of clearcoat, plus
+   tileable albedo/normal/roughness maps (at a low repeat, so no tile is
+   countable) and a PMREM environment derived from the room photo — under ACES
+   filmic tone mapping. The key is a shadow-casting spot from the beam side, so
+   the fingers shade each other and the forearm fades out of frame instead of
+   ending in a stump; the fill is a COOL room bounce, because in a navy room the
+   shadow side has to be cooler than the light, and the key and exposure come
+   down on phone widths where the hand sits below the beam. Copy sits directly
+   on the scene behind a left scrim (≥4.5:1 verified); spec chips are glass
+   pills. Three.js ships as one tree-shaken vendored bundle (531KB, ~133KB
+   gzipped, rebuilt from tools/three-bundle-entry.js) — down from 754KB of
+   three + GLTFLoader + hand.glb before the scan was deleted — lazy-loaded;
+   static open-palm frame on coarse-pointer devices and under reduced motion.
+   The airmouse/ case study reuses the same module on its framed navy stage.
+   Palette: navy room + aqua + mint.
 3. **Roomly** — swipe-card stack that tears the top card off on a loop, clipped
    inside its own area (never across copy). Honest copy: first working draft,
    being reworked, not launched. Palette: white + coral + sun (two accent
