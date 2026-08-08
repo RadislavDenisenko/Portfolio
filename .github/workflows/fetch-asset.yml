@@ -1,0 +1,24 @@
+name: Fetch generated 3D asset
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/portfolio-website-design-gtyyvt
+      - name: Download hand model
+        run: |
+          mkdir -p docs/assets/models
+          curl -fsSL -o docs/assets/models/hand.glb \
+            "https://d8j0ntlcm91z4.cloudfront.net/user_3HZ0JQlgAU4k3mOD6iFcEj825Wj/hf_20260808_015749_fcfb6b78-9065-4e73-9e7f-1001c05e6fdb.glb"
+          ls -la docs/assets/models/
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/assets/models/hand.glb
+          git commit -m "Add generated 3D hand model (Higgsfield sam_3_3d)"
+          git push
