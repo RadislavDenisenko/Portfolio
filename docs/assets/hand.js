@@ -350,7 +350,11 @@ function palmGeometry() {
      LOW on purpose — past ~2.6 the palm grows a flat side wall, and that wall
      faces away from the key, so it reads as a hard dark outline down the ulnar
      edge instead of a form turning away. */
-  const NE = [[0, 2.0], [0.5, 2.25], [1, 2.5]];
+  /* Dropped from a 2.5 max: past ~2.2 the palm grows a flat side wall, and that
+     wall faces away from the key, so instead of a form turning away it reads as
+     a hard desaturated slab down the ulnar edge — an outline stroke, not light.
+     Rounder in section, the terminator has somewhere to travel. */
+  const NE = [[0, 2.0], [0.5, 2.08], [1, 2.15]];
   const CUP = [[0, 0], [0.3, 0.05], [0.6, 0.085], [0.88, 0.035], [1, 0]];
   const CB = 0.10, CT = 0.10;      // rounded cap ramps at both ends
   const rows = [];
@@ -546,14 +550,14 @@ export function initHand(target, opts = {}) {
      is an outline stroke, not light wrapping a form. The velvety part of the
      edge comes from the material's sheen, which is silhouette-weighted by
      construction and much cheaper than winding this up. */
-  const rim = new THREE.DirectionalLight(0xBFE6FF, room ? 3.4 : 2.4);
+  const rim = new THREE.DirectionalLight(0xBFE6FF, room ? 3.4 : 1.5);
   rim.position.set(-4.6, 3.4, -4.2);
   scene.add(rim);
 
   /* The wall tube, camera-right and behind, sampled from the plate (#6DAAC4).
      Grazing from back-right it catches the thumb-side silhouette only — which
      is the edge the key can never reach — instead of washing the palm. */
-  const kick = new THREE.DirectionalLight(room ? 0x6DAAC4 : 0x7FD8F5, room ? 1.9 : 1.2);
+  const kick = new THREE.DirectionalLight(room ? 0x6DAAC4 : 0x7FD8F5, room ? 1.9 : 0.6);
   kick.position.set(room ? 5.4 : 2.8, room ? 1.6 : -0.3, room ? -2.4 : 0.7);
   scene.add(kick);
 
@@ -587,15 +591,11 @@ export function initHand(target, opts = {}) {
   sub.position.set(-1.4, 3.4, -3.6);
   scene.add(sub);
 
-  if (!room) {
-    /* the navy stage's own glow disc, behind the hand instead of a room */
-    const glow = new THREE.Mesh(
-      new THREE.CircleGeometry(3.0, 48),
-      new THREE.MeshBasicMaterial({ color: 0x1B2456, transparent: true, opacity: 0.62 })
-    );
-    glow.position.set(0.05, 0.5, -1.9);
-    scene.add(glow);
-  }
+  /* The navy stage's glow behind the hand is a CSS radial-gradient on
+     .navy-inner, not a disc in the scene. A 3D disc has a silhouette, and at
+     several stage aspect ratios that silhouette crossed the rounded corner as a
+     hard 1–2px geometric arc — an edge no lighting change can soften. A
+     gradient painted behind a transparent canvas cannot produce an edge. */
 
   /* ------------------------------- skin ---------------------------------- */
   /* Three layers stack into the final colour, and each one earns its place:
@@ -789,8 +789,16 @@ export function initHand(target, opts = {}) {
     blendSrcAlpha: THREE.ZeroFactor, blendDstAlpha: THREE.OneFactor
   };
 
-  const aquaDot = new THREE.MeshBasicMaterial({ color: 0x37D6FF });
-  const mintDot = new THREE.MeshBasicMaterial({ color: 0x26D9A3 });
+  /* The dots are an OVERLAY, like the skeleton they connect to, so they draw on
+     top of the skin rather than being depth-tested against it. Tested, a dot
+     whose joint has turned away gets sliced in half by its own limb — or, mid
+     pinch, by the opposing one — and lands as a teardrop. On a section whose
+     headline claim is "tracks 21 hand landmarks", a landmark rendered as a
+     paint drip is a credibility problem, not a cosmetic one. transparent:true
+     is what puts them in the pass that respects renderOrder. */
+  const DOT = { transparent: true, depthTest: false, depthWrite: false };
+  const aquaDot = new THREE.MeshBasicMaterial(Object.assign({ color: 0x37D6FF }, DOT));
+  const mintDot = new THREE.MeshBasicMaterial(Object.assign({ color: 0x26D9A3 }, DOT));
   const dotGeo = {};
 
   /* A soft radial falloff, not a solid sphere. An additive sphere over bright
@@ -818,6 +826,7 @@ export function initHand(target, opts = {}) {
     const k = r.toFixed(3);
     dotGeo[k] = dotGeo[k] || new THREE.SphereGeometry(r, 18, 14);
     const m = new THREE.Mesh(dotGeo[k], mat);
+    m.renderOrder = 8;                    // skeleton 6 · halo 7 · dot 8 · ripple 9
     m.position.set(x, y, z);
     /* depthTest off, or the halo loses: the dot centre sits ON the skin, so a
        camera-facing quad through it is co-planar with the surface all around it
@@ -826,7 +835,7 @@ export function initHand(target, opts = {}) {
     const halo = new THREE.Sprite(new THREE.SpriteMaterial(Object.assign({
       map: HALO_TEX, color: mat.color, opacity: 0.30, depthTest: false
     }, GLOW)));
-    halo.renderOrder = 7;                 // under the skeleton, over the skin
+    halo.renderOrder = 7;                 // over the skeleton, under the dot
     halo.userData.base = r * 6.2;
     halo.scale.setScalar(halo.userData.base);
     m.add(halo);
@@ -860,7 +869,7 @@ export function initHand(target, opts = {}) {
   const skeleton = new THREE.LineSegments(skelGeo, new THREE.LineBasicMaterial(
     Object.assign({ color: 0x37D6FF, opacity: 0.30, depthTest: false }, GLOW)));
   skeleton.frustumCulled = false;
-  skeleton.renderOrder = 8;
+  skeleton.renderOrder = 6;
   scene.add(skeleton);
 
   const _va = new THREE.Vector3();
@@ -1225,7 +1234,7 @@ export function initHand(target, opts = {}) {
        brightest thing the beam could produce. 0.80 lands skin's median in the
        120s, i.e. lit by that beam rather than pasted over it. The navy stage is
        measured separately: its ground is far lighter, so it keeps its own. */
-    renderer.toneMappingExposure = room ? (narrow ? 0.88 : 0.78) : 1.02;
+    renderer.toneMappingExposure = room ? (narrow ? 0.88 : 0.78) : 0.94;
   }
   fitFrame();
 
