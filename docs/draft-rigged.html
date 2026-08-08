@@ -22,7 +22,7 @@
 <body>
 <div id="stage"></div>
 <canvas id="c"></canvas>
-<p class="note">DRAFT · photo-scanned mesh, cursor-follow only (no rig, no pinch)</p>
+<p class="note">DRAFT · WebXR reference hand · 25 joints · bind pose, untextured</p>
 <div class="ctl">
   <label>rot X <input type="range" id="rx" min="-180" max="180" value="-90"><span id="vx">-90</span></label>
   <label>rot Y <input type="range" id="ry" min="-180" max="180" value="0"><span id="vy">0</span></label>
@@ -50,24 +50,34 @@ async function loadScan(url) {
   /* The vendored bundle is tree-shaken to 30 exports, so this builds everything
      from Float32BufferAttribute + a canvas-backed texture rather than pulling
      BufferAttribute / Texture / GLTFLoader back into the build. */
-  const typed = (accIdx, size, Ctor) => {
+  const CTOR = { 5120: Int8Array, 5121: Uint8Array, 5122: Int16Array,
+                 5123: Uint16Array, 5125: Uint32Array, 5126: Float32Array };
+  const typed = (accIdx, size) => {
     const acc = gltf.accessors[accIdx];
     const raw = view(acc.bufferView);
+    const Ctor = CTOR[acc.componentType];
     return new Ctor(raw.buffer, raw.byteOffset + (acc.byteOffset || 0), acc.count * size);
   };
 
   const prim = gltf.meshes[0].primitives[0];
   const geo = new T.BufferGeometry();
   geo.setAttribute('position',
-    new T.Float32BufferAttribute(typed(prim.attributes.POSITION, 3, Float32Array).slice(), 3));
+    new T.Float32BufferAttribute(typed(prim.attributes.POSITION, 3).slice(), 3));
   if (prim.attributes.TEXCOORD_0 !== undefined) {
     geo.setAttribute('uv',
-      new T.Float32BufferAttribute(typed(prim.attributes.TEXCOORD_0, 2, Float32Array).slice(), 2));
+      new T.Float32BufferAttribute(typed(prim.attributes.TEXCOORD_0, 2).slice(), 2));
   }
-  geo.setIndex(Array.from(typed(prim.indices, 1, Uint32Array)));
-  geo.computeVertexNormals();          // the scan ships none, so it flat-shades without this
+  geo.setIndex(Array.from(typed(prim.indices, 1)));
+  if (prim.attributes.NORMAL === undefined) geo.computeVertexNormals();
   geo.computeBoundingBox();
 
+  if (!gltf.images) {
+    if (gltf.meshes[0].primitives[0].attributes.NORMAL !== undefined) {
+      geo.setAttribute('normal', new T.Float32BufferAttribute(
+        typed(gltf.meshes[0].primitives[0].attributes.NORMAL, 3).slice(), 3));
+    }
+    return { geo, tex: null };
+  }
   const img = gltf.images[0];
   const blob = new Blob([view(img.bufferView)], { type: img.mimeType });
   const bitmap = await createImageBitmap(blob);
@@ -110,8 +120,9 @@ scene.add(wrap);
 const spin = new T.Group();
 wrap.add(spin);
 
-const { geo, tex } = await loadScan('assets/models/hand-fixed.glb');
-const mat = new T.MeshPhysicalMaterial({ map: tex, roughness: 0.72, metalness: 0.0, clearcoat: 0.05, clearcoatRoughness: 0.7 });
+const { geo, tex } = await loadScan('assets/models/hand-rigged.glb');
+const mat = new T.MeshPhysicalMaterial({ color: 0xE9B79A, roughness: 0.62, metalness: 0.0, clearcoat: 0.06, clearcoatRoughness: 0.65, sheen: 0.3, sheenColor: 0xffd9c4 });
+if (tex) mat.map = tex;
 const mesh = new T.Mesh(geo, mat);
 spin.add(mesh);
 
