@@ -49,9 +49,9 @@ css = asciify_code(css)
 hand = asciify_code(open('assets/hand.js').read())
 hand = hand.replace("from './vendor/three-slim.min.js'",
                     "from '%s'" % js_uri(open('assets/vendor/three-slim.min.js').read()))
-hand = hand.replace("'assets/models/hand-rigged.glb'", "'%s'" % datauri('assets/models/hand-rigged.glb'))
+hand = hand.replace("asset('models/hand-rigged.glb')", "'%s'" % datauri('assets/models/hand-rigged.glb'))
 for rel in ('skin-albedo.jpg', 'skin-normal.jpg', 'skin-rough.jpg'):
-    hand = hand.replace("'assets/img/%s'" % rel, "'%s'" % datauri('assets/img/' + rel))
+    hand = hand.replace("asset('img/%s')" % rel, "'%s'" % datauri('assets/img/' + rel))
 
 site = asciify_code(open('assets/site.js').read()).replace("import('./hand.js')", "import('%s')" % js_uri(hand))
 

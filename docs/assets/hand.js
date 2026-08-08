@@ -13,11 +13,14 @@
 
 import * as T from './vendor/three-slim.min.js';
 
-const MODEL = 'assets/models/hand-rigged.glb';
+/* Resolved against this module, not the page: the case study lives at
+   /airmouse/, so page-relative asset paths point one directory too deep. */
+const asset = rel => new URL(rel, import.meta.url).href;
+const MODEL = asset('models/hand-rigged.glb');
 const SKIN = {
-  map: 'assets/img/skin-albedo.jpg',
-  normalMap: 'assets/img/skin-normal.jpg',
-  roughnessMap: 'assets/img/skin-rough.jpg',
+  map: asset('img/skin-albedo.jpg'),
+  normalMap: asset('img/skin-normal.jpg'),
+  roughnessMap: asset('img/skin-rough.jpg'),
 };
 
 /* Palm to camera, fingers up, thumb splayed — found by rendering the sweep. */
