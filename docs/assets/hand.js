@@ -12,8 +12,12 @@
    rig at build time, so the tips always touch.
 
    Geometry is generated here (lofted superellipse palm, tangent-hull tapered
-   limbs), so there is no GLB, no loader and no texture to ship. Vendored,
-   tree-shaken three bundle (no CDN). Lazy-imported by site.js. */
+   limbs), so there is no GLB and no scan. The SKIN, though, is photographic:
+   three 512px tileable maps (albedo / tangent-space normal / roughness) drive a
+   MeshPhysicalMaterial, and the room photo itself is turned into a PMREM
+   environment so the hand reflects the room it is standing in. Everything is
+   loaded from inside this module, which site.js lazy-imports, so none of it can
+   block first paint. Vendored, tree-shaken three bundle (no CDN). */
 import * as THREE from './vendor/three-slim.min.js';
 
 const DEG = Math.PI / 180;
@@ -73,8 +77,26 @@ function curve(tab, u) {
   return tab[tab.length - 1][1];
 }
 
+const dist3 = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+
 /* loft(rows) — rows of ring vertices bottom-to-top into one indexed, smooth
-   surface. A row of length 1 is a pole and gets fanned. Winding is CCW out. */
+   surface. A row of length 1 is a pole and gets fanned. Winding is CCW out.
+
+   Two passes, because the skin maps want a seam-free UV *and* the shading has to
+   stay continuous around the limb:
+
+   · pass 1 welds the rings (the last column shares vertices with the first) and
+     computes the vertex normals there, so nothing shades differently at the
+     wrap.
+   · pass 2 re-emits the rings with that first column duplicated at the far end,
+     carrying pass 1's normal, so U can climb to the ring's real circumference
+     instead of snapping back to 0 inside one quad — which is what a welded ring
+     does, and it squeezes a whole tile of pores into a stripe down the +X side.
+
+   UVs are in OBJECT UNITS (1 unit = 4 cm): U is arc length around the ring, V is
+   arc length up the profile. Deliberately NOT normalised per part — a single
+   texture.repeat then puts the same pore size on a fingertip, a knuckle and the
+   heel of the palm, instead of ballooning the pores on the big pieces. */
 function loft(rows, tint) {
   const P = [], I = [], start = [];
   rows.forEach((r) => {
@@ -91,11 +113,63 @@ function loft(rows, tint) {
       else I.push(sa + j, sb + j, sb + k, sa + j, sb + k, sa + k);
     }
   }
+  const weld = new THREE.BufferGeometry();
+  weld.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
+  weld.setIndex(I);
+  weld.computeVertexNormals();
+  const WN = weld.attributes.normal.array;
+
+  const P2 = [], N2 = [], UV = [], I2 = [], st = [], cnt = [];
+  let prevV = null;
+  for (let i = 0; i < rows.length; i++) {
+    const r = rows[i], len = r.length, prev = rows[i - 1];
+    const V = new Array(len);
+    for (let j = 0; j < len; j++) {
+      /* V accumulates per column up the profile; either end of a band can be a
+         pole, in which case every column measures from that one point. */
+      const k = !prev || prev.length === 1 || len === 1 ? 0 : j;
+      V[j] = prev ? prevV[k] + dist3(r[j], prev[k]) : 0;
+    }
+    const m = len > 1 ? len + 1 : 1;      // +1 = the duplicated seam column
+    st.push(P2.length / 3);
+    cnt.push(m);
+    for (let j = 0, u = 0; j < m; j++) {
+      const q = j % len;
+      if (j > 0) u += dist3(r[q], r[(j - 1) % len]);
+      const s = (start[i] + q) * 3;
+      P2.push(P[s], P[s + 1], P[s + 2]);
+      N2.push(WN[s], WN[s + 1], WN[s + 2]);
+      UV.push(u, V[q]);
+    }
+    prevV = V;
+  }
+  for (let i = 0; i < rows.length - 1; i++) {
+    const ca = cnt[i], cb = cnt[i + 1], sa = st[i], sb = st[i + 1];
+    if (ca === 1) for (let j = 0; j < cb - 1; j++) I2.push(sa, sb + j, sb + j + 1);
+    else if (cb === 1) for (let j = 0; j < ca - 1; j++) I2.push(sa + j, sb, sa + j + 1);
+    else {
+      const n = Math.min(ca, cb) - 1;
+      for (let j = 0; j < n; j++) {
+        I2.push(sa + j, sb + j, sb + j + 1, sa + j, sb + j + 1, sa + j + 1);
+      }
+    }
+  }
   const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
-  g.setIndex(I);
-  g.computeVertexNormals();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(P2, 3));
+  g.setAttribute('normal', new THREE.Float32BufferAttribute(N2, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(UV, 2));
+  g.setIndex(I2);
   return tint ? paint(g, tint) : g;
+}
+
+/* scaleUV — lift a stock geometry's normalised 0..1 UVs into the same
+   object-unit space loft() emits, by handing it the surface's real arc lengths.
+   Without this the one bought-in sphere in the hand would wear pores at its own
+   private scale. */
+function scaleUV(geo, su, sv) {
+  const uv = geo.attributes.uv;
+  for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * su, uv.getY(i) * sv);
+  return geo;
 }
 
 /* Per-vertex skin tint. The material has vertexColors on, so EVERY geometry it
@@ -137,7 +211,7 @@ function creaseFinger(y, z, len, out) {
    phalanx read as bone-and-flesh rather than as a lathe-turned dowel: the joints
    swell, the shaft doesn't, and consecutive segments meet without a seam. */
 function limb(r0, r1, len, o) {
-  const seg = o.seg || 30, cap = o.cap || 8, lat = o.lat || 7;
+  const seg = o.seg || 34, cap = o.cap || 9, lat = o.lat || 9;
   const sx = o.sx || 1, sz = o.sz || 1, waist = o.waist === undefined ? 0.09 : o.waist;
   const th0 = Math.asin(clamp((r0 - r1) / len, -0.96, 0.96));
   const prof = [];
@@ -201,7 +275,7 @@ const CREASES = [
    the palm side. Its distal edge follows the knuckle arc (middle highest,
    pinky lowest), so the finger roots emerge out of the form, not off a lid. */
 function palmGeometry() {
-  const seg = 46, N = 32, Y0 = -0.42, Y1 = 2.60;
+  const seg = 54, N = 38, Y0 = -0.42, Y1 = 2.60;
   const W = [[0, 0.0], [0.06, 0.44], [0.15, 0.62], [0.3, 0.72], [0.5, 0.82],
              [0.7, 0.90], [0.86, 0.98], [1, 1.00]];
   const DF = [[0, 0.16], [0.18, 0.27], [0.44, 0.30], [0.72, 0.27], [1, 0.225]];
@@ -307,9 +381,12 @@ export function initHand(target, opts = {}) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(W, H, false);
   /* filmic response: keeps the key light's highlights on skin from clipping to
-     paper white, which is most of what separates "premium" from "plastic toy" */
+     paper white, which is most of what separates "premium" from "plastic toy".
+     Exposure sits a touch above 1 because the albedo map multiplies the tint
+     down — this puts the mid tone back where it was before the maps landed. */
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = room ? 1.0 : 0.98;
+  renderer.toneMappingExposure = room ? 1.14 : 1.08;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.domElement.style.width = '100%';
   renderer.domElement.style.height = '100%';
   renderer.domElement.style.display = 'block';
@@ -329,9 +406,13 @@ export function initHand(target, opts = {}) {
      falling away into the dark — which is also what sells the forearm
      dissolving out of frame. Then a cool rim from behind that same side, a
      faint kicker on the far edge, and a low warm bounce. Warm skin core against
-     cool edges is most of what reads as "lit by that room". */
+     cool edges is most of what reads as "lit by that room".
+
+     The hemisphere is the cheap stand-in for ambient, and the PMREM environment
+     below now does that job properly, so this is pulled back to a fill — left
+     any brighter, the two ambients stack and the form goes flat. */
   scene.add(new THREE.HemisphereLight(
-    room ? 0xCBDEF7 : 0xBFD2F2, room ? 0x3C6390 : 0x243768, room ? 0.66 : 0.42));
+    room ? 0xCBDEF7 : 0xBFD2F2, room ? 0x3C6390 : 0x243768, room ? 0.34 : 0.20));
 
   const key = new THREE.SpotLight(room ? 0xFFFFFF : 0xFFF6EE,
     room ? 96 : 104, 0, 0.46, 0.88, 1.4);
@@ -356,6 +437,17 @@ export function initHand(target, opts = {}) {
   warm.position.set(-3.1, -1.5, 3.0);
   scene.add(warm);
 
+  /* Fake subsurface. Real transmission would cost a second full render pass for
+     a canvas that is already compositing over a photo, so instead the light
+     comes from BEHIND and BELOW in deep blood red: it can only reach the
+     surfaces that curve away from us, which is exactly the fingertips, the
+     web of the thumb and the outer edge of the pinky. Those are the parts that
+     glow when you hold a hand up to a lamp, and this is the cheapest honest way
+     to say so. */
+  const sub = new THREE.DirectionalLight(0xFF4A28, room ? 2.4 : 2.0);
+  sub.position.set(-1.0, -2.6, -3.0);
+  scene.add(sub);
+
   if (!room) {
     /* the navy stage's own glow disc, behind the hand instead of a room */
     const glow = new THREE.Mesh(
@@ -367,32 +459,133 @@ export function initHand(target, opts = {}) {
   }
 
   /* ------------------------------- skin ---------------------------------- */
-  /* Warm mid tone, mid roughness, a whisper of clearcoat + sheen for the soft
-     wrap-around falloff real skin has at grazing angles. Per-vertex tint does
-     the redder knuckles and fingertips for free. */
+  /* Three layers stack into the final colour, and each one earns its place:
+       map            — the photographic albedo (pores, fine wrinkle noise)
+       vertexColors   — the baked anatomy: redder knuckles, crease occlusion,
+                        the wrist's alpha fade. Free, and it moves with nothing.
+       color          — a warm tint that MULTIPLIES both. The albedo already is
+                        a light skin tone, so this stays near-white with a peach
+                        bias; a saturated tint here would double up and go clay.
+     roughness/metalness are the map's multipliers: roughnessMap ships 0.42–0.72,
+     which is damp skin, so `roughness: 1` keeps that range verbatim. */
   const skin = new THREE.MeshPhysicalMaterial({
-    color: 0xCE9E8A,
-    roughness: 0.58,
+    color: 0xFFE2D2,
+    roughness: 1.0,
     metalness: 0.0,
-    /* Clearcoat stays a whisper on purpose. There is no environment map here
-       (nothing to reflect), and a strong coat suppresses the diffuse layer by
-       its Fresnel term at grazing angles — which paints a dark band right around
-       the silhouette. 0.1 gives the soft second highlight without the halo. */
-    clearcoat: 0.1,
-    clearcoatRoughness: 0.42,
-    sheen: 0.62,
-    sheenRoughness: 0.8,
-    sheenColor: 0xFFC2AE,
+    /* Sheen is the peach-fuzz layer: a wide, warm, retro-reflective lobe that
+       only shows near the silhouette, which is where real skin goes velvety.
+       Clearcoat is the sweat film — barely there, and rough, because skin is
+       damp, not wet. A tight coat would ring the whole silhouette with its
+       Fresnel term and read as shrink-wrap. */
+    sheen: 0.3,
+    sheenRoughness: 0.62,
+    sheenColor: 0xFFB79B,
+    clearcoat: 0.08,
+    clearcoatRoughness: 0.6,
+    envMapIntensity: room ? 0.85 : 0.7,
     vertexColors: true
   });
+  skin.normalScale.set(0.6, 0.6);
   /* the forearm uses the same skin, but with a per-vertex alpha so it dissolves
      into the room's darkness instead of ending in a cut-off stump */
   const skinFade = new THREE.MeshPhysicalMaterial({
     color: skin.color, roughness: skin.roughness, metalness: 0,
     clearcoat: skin.clearcoat, clearcoatRoughness: skin.clearcoatRoughness,
     sheen: skin.sheen, sheenRoughness: skin.sheenRoughness,
-    sheenColor: skin.sheenColor, vertexColors: true, transparent: true
+    sheenColor: skin.sheenColor, envMapIntensity: skin.envMapIntensity,
+    vertexColors: true, transparent: true
   });
+  skinFade.normalScale.copy(skin.normalScale);
+  const skins = [skin, skinFade];
+
+  /* --------------------- skin maps + the room as IBL ----------------------- */
+  /* This is where the hand stops being a shaded blob. 146KB of 512px tileable
+     maps for the microsurface, and one PMREM environment so the specular has
+     something real to reflect — on the homepage that environment IS the room
+     photo behind the canvas, which is what makes the hand sit *in* the picture
+     rather than on top of it.
+
+     All of it is fetched from inside this module, and site.js only imports the
+     module when the section is ~600px away, so none of it touches first paint. */
+  const IMG = new URL('./img/', import.meta.url);
+  const loader = new THREE.TextureLoader();
+  const ANISO = renderer.capabilities.getMaxAnisotropy();
+  /* Tiles per object unit. 1 unit = 4cm and loft() writes UVs in units, so this
+     is a real-world pore pitch: 4.6 tiles/unit ≈ one 512px tile per 8.7mm of
+     skin. Around a finger (circumference ≈ 1.6 units) that lands near 7 wraps;
+     across the palm it is closer to 20, so the palm automatically gets the
+     bigger repeat it needs without a second material. */
+  const REPEAT = 4.6;
+
+  let waiting = 3;
+  const maps = {};
+  function mapDone(key, tex) {
+    maps[key] = tex || null;
+    if (--waiting) return;
+    for (const m of skins) {
+      m.map = maps.albedo;
+      m.normalMap = maps.normal;
+      m.roughnessMap = maps.rough;
+      m.needsUpdate = true;
+    }
+    render();
+  }
+  function loadMap(key, file, srgb) {
+    loader.load(new URL(file, IMG).href, (t) => {
+      t.wrapS = t.wrapT = THREE.RepeatWrapping;
+      t.repeat.set(REPEAT, REPEAT);
+      t.anisotropy = ANISO;              // crisp pores at grazing angles
+      /* colour data is sRGB-encoded; normals and roughness are raw numbers and
+         must stay linear or the creases lighten and the gloss lifts */
+      if (srgb) t.colorSpace = THREE.SRGBColorSpace;
+      mapDone(key, t);
+    }, undefined, () => mapDone(key, null));
+  }
+  loadMap('albedo', 'skin-albedo.jpg', true);
+  loadMap('normal', 'skin-normal.jpg', false);
+  loadMap('rough', 'skin-rough.jpg', false);
+
+  /* The navy stage has no photographed room, so it gets one built from its own
+     palette instead of paying 80KB for a photo it never shows: an inverted
+     vertex-coloured sphere — pale cool overhead where the key is, navy at the
+     horizon, near-black underneath, one aqua band on the rim side. PMREM turns
+     that into the same kind of irradiance the photo gives the homepage. */
+  function paletteRoom() {
+    const dome = new THREE.SphereGeometry(12, 24, 18);
+    paint(dome, (x, y, z, out) => {
+      const up = clamp(y / 12 * 0.5 + 0.5, 0, 1);
+      const sky = smooth(clamp((up - 0.44) / 0.5, 0, 1));
+      const aqua = 0.16 * gauss(x / 12 + 0.7, y / 12 - 0.1, 0.5, 0.7);
+      out[0] = 0.020 + 0.30 * sky;
+      out[1] = 0.030 + 0.34 * sky + aqua * 0.9;
+      out[2] = 0.055 + 0.40 * sky + aqua;
+    });
+    const s = new THREE.Scene();
+    s.add(new THREE.Mesh(dome, new THREE.MeshBasicMaterial({
+      vertexColors: true, side: THREE.DoubleSide
+    })));
+    return s;
+  }
+
+  function useEnv(rt, pmrem) {
+    for (const m of skins) { m.envMap = rt.texture; m.needsUpdate = true; }
+    pmrem.dispose();                     // the render target itself stays: it IS the env
+    render();
+  }
+  function buildEnv() {
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    if (!room) { useEnv(pmrem.fromScene(paletteRoom(), 0, 0.1, 40), pmrem); return; }
+    /* Same URL the <img> behind the canvas already uses, so on the homepage the
+       environment map costs zero extra bytes — it is a cache hit. */
+    loader.load(new URL('airmouse-room.jpg', IMG).href, (t) => {
+      t.mapping = THREE.EquirectangularReflectionMapping;
+      t.colorSpace = THREE.SRGBColorSpace;
+      const rt = pmrem.fromEquirectangular(t);
+      t.dispose();
+      useEnv(rt, pmrem);
+    }, undefined, () => useEnv(pmrem.fromScene(paletteRoom(), 0, 0.1, 40), pmrem));
+  }
+  buildEnv();
 
   /* --------------------- landmark dots + skeleton ------------------------- */
   const aquaDot = new THREE.MeshBasicMaterial({ color: 0x37D6FF });
@@ -481,7 +674,10 @@ export function initHand(target, opts = {}) {
   /* The one mass the palm loft can't carry, because it spans two chains: the
      first web space, the sail of skin between the thumb's metacarpal and the
      index. Buried deep in both so only its outer curve shows. */
-  const pad = new THREE.SphereGeometry(1, 28, 20);
+  const pad = new THREE.SphereGeometry(1, 32, 22);
+  /* the arc lengths of the ellipsoid it becomes once scaled below, so its pores
+     match the palm's instead of running at the unit sphere's own scale */
+  scaleUV(pad, 1.73, 1.29);
   paint(pad, (x, y, z, out) => skinTint(0.25, out));
   const web1 = new THREE.Mesh(pad, skin);
   web1.position.set(-0.80, 1.72, 0.16);
@@ -493,7 +689,7 @@ export function initHand(target, opts = {}) {
      dissolves into shadow rather than ending in an amputation */
   const stump = new THREE.Mesh(
     limb(0.50, 0.62, 2.6, {
-      seg: 34, cap: 7, sx: 1.30, sz: 0.68,
+      seg: 36, cap: 8, sx: 1.30, sz: 0.68,
       tint: (x, y, z, out) => {
         const d = clamp(y / 2.2, 0, 1);            // 0 at the wrist, 1 far out
         skinTint(0.18 * (1 - d), out);
@@ -522,7 +718,7 @@ export function initHand(target, opts = {}) {
   thumbSwing.rotation.z = THUMB.swing;
   thumbOpp.add(thumbSwing);
   thumbSwing.add(new THREE.Mesh(limb(THUMB.R[0], THUMB.R[1], THUMB.L[0], {
-    seg: 30, sx: 1.02, sz: 0.94,
+    seg: 34, sx: 1.02, sz: 0.94,
     tint: (x, y, z, out) => skinTint(0.3 * (1 - clamp(y / THUMB.L[0], 0, 1)), out)
   }), skin));
 
@@ -531,7 +727,7 @@ export function initHand(target, opts = {}) {
   thumbMCP.rotation.x = THUMB.mcp;
   thumbSwing.add(thumbMCP);
   thumbMCP.add(new THREE.Mesh(limb(THUMB.R[1] * KNUCKLE, THUMB.R[2], THUMB.L[1], {
-    seg: 30, sx: 1.06, sz: 0.95,
+    seg: 34, sx: 1.06, sz: 0.95,
     tint: (x, y, z, out) => skinTint(0.26 * Math.abs(1 - 2 * clamp(y / THUMB.L[1], 0, 1)), out)
   }), skin));
 
@@ -540,7 +736,7 @@ export function initHand(target, opts = {}) {
   thumbIP.rotation.x = THUMB.ip;
   thumbMCP.add(thumbIP);
   thumbIP.add(new THREE.Mesh(limb(THUMB.R[2] * KNUCKLE, THUMB.R[3], THUMB.L[2], {
-    seg: 30, sx: 1.1, sz: 0.94,
+    seg: 34, sx: 1.1, sz: 0.94,
     tint: (x, y, z, out) => skinTint(0.35 + 0.5 * clamp(y / THUMB.L[2], 0, 1), out)
   }), skin));
 
@@ -557,7 +753,7 @@ export function initHand(target, opts = {}) {
     mcpJ.rotation.x = F.rest[0];
     wrist.add(mcpJ);
     mcpJ.add(new THREE.Mesh(limb(F.R[0], F.R[1], F.L[0], {
-      seg: 28, sx: 1.06, sz: 0.94,
+      seg: 32, sx: 1.06, sz: 0.94,
       tint: (x, y, z, out) => {
         skinTint(0.42 * (1 - smooth(clamp(y / (F.L[0] * 0.5), 0, 1))), out);
         creaseFinger(y, z, F.L[0], out);
@@ -569,7 +765,7 @@ export function initHand(target, opts = {}) {
     pipJ.rotation.x = F.rest[1];
     mcpJ.add(pipJ);
     pipJ.add(new THREE.Mesh(limb(F.R[1] * KNUCKLE, F.R[2], F.L[1], {
-      seg: 28, sx: 1.06, sz: 0.94,
+      seg: 32, sx: 1.06, sz: 0.94,
       tint: (x, y, z, out) => {
         const t = clamp(y / F.L[1], 0, 1);
         skinTint(0.4 * (1 - smooth(t)) + 0.3 * smooth(t), out);
@@ -582,7 +778,7 @@ export function initHand(target, opts = {}) {
     dipJ.rotation.x = F.rest[2];
     pipJ.add(dipJ);
     dipJ.add(new THREE.Mesh(limb(F.R[2] * KNUCKLE, F.R[3], F.L[2], {
-      seg: 28, sx: 1.10, sz: 0.90,
+      seg: 32, sx: 1.10, sz: 0.90,
       tint: (x, y, z, out) => {
         skinTint(0.32 + 0.6 * smooth(clamp(y / F.L[2], 0, 1)), out);
         creaseFinger(y, z, F.L[2], out);
@@ -661,9 +857,11 @@ export function initHand(target, opts = {}) {
     S = Math.min(visH * (room ? 0.70 : 0.76) / HAND_H, visW * (room ? 0.62 : 0.72) / HAND_W);
     wrap.scale.setScalar(S);
     wrap.position.y = -PIVOT_Y * S;
-    /* hang the fingertips just inside the top edge, leaving room for the
-       upward cursor travel; the forearm then runs off the bottom */
-    BASE.y = CAM_Y + visH * 0.46 - (HAND_H - PIVOT_Y) * S - TRAVEL_UP;
+    /* Hang the fingertips just inside the top edge, leaving room for the upward
+       cursor travel; the forearm then runs off the bottom. The static frame sits
+       a little lower: on narrow layouts the copy column's buttons overlap the
+       top of this canvas, and fingertips must not tuck under one. */
+    BASE.y = CAM_Y + visH * (statik ? 0.40 : 0.46) - (HAND_H - PIVOT_Y) * S - TRAVEL_UP;
   }
   fitFrame();
 
