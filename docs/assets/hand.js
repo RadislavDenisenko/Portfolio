@@ -8,8 +8,7 @@ const EASE_OUT = (t) => 1 - Math.pow(1 - t, 3);
 
 export function initHand(target, opts = {}) {
   const statik = !!opts.statik;
-  const isCanvas = target.tagName === 'CANVAS';
-  const host = isCanvas ? target.parentElement : target;
+  const host = target;
   const sizeEl = target;
 
   const rect = sizeEl.getBoundingClientRect();
@@ -19,19 +18,16 @@ export function initHand(target, opts = {}) {
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
     alpha: true,
-    canvas: isCanvas ? target : undefined,
     powerPreference: 'low-power'
   });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(W, H, false);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFShadowMap;
-  if (!isCanvas) {
-    renderer.domElement.style.width = '100%';
-    renderer.domElement.style.height = '100%';
-    renderer.domElement.style.display = 'block';
-    target.appendChild(renderer.domElement);
-  }
+  renderer.domElement.style.width = '100%';
+  renderer.domElement.style.height = '100%';
+  renderer.domElement.style.display = 'block';
+  target.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(32, W / H, 0.1, 40);
@@ -279,7 +275,13 @@ export function initHand(target, opts = {}) {
   let tNow = 0, last = performance.now();
   let pinchStart = -1;
   const PINCH_DUR = 0.62;
-  const triggerPinch = () => { if (pinchStart < 0 || tNow - pinchStart > PINCH_DUR * 0.6) pinchStart = tNow; };
+  /* case-study hero owns a choreography: it pinches on its own shortly after
+     entering view, then every few seconds — a user pinch defers the next one */
+  let nextAuto = opts.autoPinch ? 1.1 : Infinity;
+  const triggerPinch = () => {
+    if (pinchStart < 0 || tNow - pinchStart > PINCH_DUR * 0.6) pinchStart = tNow;
+    if (opts.autoPinch) nextAuto = tNow + 4.6;
+  };
   sizeEl.addEventListener('pointerdown', triggerPinch);
   sizeEl.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); triggerPinch(); }
@@ -295,6 +297,7 @@ export function initHand(target, opts = {}) {
     last = now;
     tNow += dt;
     const t = tNow;
+    if (t >= nextAuto) triggerPinch();
 
     // spring toward the cursor — dt-scaled so 60Hz and 120Hz+ feel identical
     const s = dt * 60;

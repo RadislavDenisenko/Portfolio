@@ -3,107 +3,217 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AirMouse — control your mouse with hand gestures</title>
-<meta name="description" content="A free Windows app that turns your webcam into a touch-free mouse. Download, extract, run. Nothing to install.">
+<title>AirMouse — your webcam becomes your mouse</title>
+<meta name="description" content="AirMouse is a free Windows app that turns your webcam into a touch-free mouse. Download, extract, run — delete the folder to uninstall.">
+<meta property="og:title" content="AirMouse — your webcam becomes your mouse">
+<meta property="og:description" content="A free Windows app that tracks your hand and moves your real cursor. Pinch to click. Nothing gets installed.">
+<meta property="og:url" content="https://radislavdenisenko.github.io/Portfolio/airmouse/">
+<meta property="og:image" content="https://radislavdenisenko.github.io/Portfolio/assets/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232B5CFF'/%3E%3Ctext x='32' y='44' font-family='Arial,sans-serif' font-size='36' font-weight='700' fill='white' text-anchor='middle'%3ER%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="../assets/site.css">
 </head>
 <body>
 
-<a class="skip" href="#top">Skip to content</a>
+<a class="skip" href="#main">Skip to content</a>
 
-<header class="nav">
-  <div class="wrap">
-    <a class="brand" href="../">Radislav Denisenko <span>/ Developer</span></a>
-    <nav>
-      <a href="../">Projects</a>
+<header class="top" id="top">
+  <nav class="top-nav" aria-label="Primary">
+    <a class="brand" href="../">Radislav Denisenko</a>
+    <div class="top-links">
+      <a href="../#airmouse">Projects</a>
       <a href="https://github.com/RadislavDenisenko/AirMouse">Source</a>
-      <a class="cta" href="https://github.com/RadislavDenisenko/AirMouse/releases/latest">Download</a>
-    </nav>
-  </div>
+      <a class="top-cta" href="https://github.com/RadislavDenisenko/AirMouse/releases/latest">Download</a>
+    </div>
+  </nav>
 </header>
 
-<main id="top">
+<main id="main">
 
-  <div class="wrap hero split">
-    <div>
-      <span class="status"><span class="dot"></span> Shipped · Free · Windows · v0.9.0</span>
-      <h1>Your webcam becomes your <em>mouse</em>.</h1>
-      <p class="sub">
-        Move your hand to move the cursor. Pinch to click. No extra hardware, and nothing
-        gets installed on your machine.
-      </p>
-      <div class="actions">
-        <a class="btn btn-primary" href="https://github.com/RadislavDenisenko/AirMouse/releases/latest">Download for Windows</a>
-        <a class="btn btn-ghost" href="https://github.com/RadislavDenisenko/AirMouse">Source</a>
+  <!-- ============ HERO ============ -->
+  <section class="proj snap" aria-labelledby="cs-hero-h">
+    <div class="wrap proj-grid">
+      <div class="proj-copy">
+        <p class="eyebrow" data-reveal>Case study · shipped — Windows · free</p>
+        <h1 class="proj-h" id="cs-hero-h" data-reveal>Your webcam becomes your <em class="hl">mouse</em>. <span class="badge badge-mint">v0.9</span></h1>
+        <p class="lead" data-reveal>
+          Move your hand to move the cursor. <strong>Pinch to click.</strong>
+          No extra hardware, and nothing gets installed — AirMouse is one folder
+          you run, and delete to uninstall.
+        </p>
+        <p class="tags" data-reveal>Python · MediaPipe · OpenCV · Win32</p>
+        <div class="actions" data-reveal>
+          <a class="btn btn-primary" href="https://github.com/RadislavDenisenko/AirMouse/releases/latest">Download for Windows</a>
+          <a class="btn btn-ghost" href="https://github.com/RadislavDenisenko/AirMouse">Source on GitHub</a>
+        </div>
+        <p class="cs-note" data-reveal>111 MB · delete the folder to uninstall</p>
       </div>
-      <p class="sub note">111 MB · delete the folder to uninstall</p>
-    </div>
-    <canvas class="hand" id="hand" aria-hidden="true"></canvas>
-  </div>
 
-  <section class="wrap">
-    <div class="head"><h2>Getting started</h2></div>
-    <ol class="steps reveal">
-      <li><div><b>Download and extract</b><small>Right-click the zip → Extract All. Anywhere is fine.</small></div></li>
-      <li><div><b>Double-click AirMouse.exe</b><small>Windows shows "Windows protected your PC" → <b>More info</b> → <b>Run anyway</b>. Every unsigned app does this.</small></div></li>
-      <li><div><b>Hold up an open palm for a second</b><small>A circle locks onto your hand. You have the cursor.</small></div></li>
-    </ol>
+      <figure class="proj-visual" data-reveal>
+        <div class="stage stage-navy">
+          <div class="stage-inner navy-inner" id="hand-stage" role="button" tabindex="0" data-auto-pinch
+               aria-label="Interactive 3D hand demo. It follows your cursor and pinches every few seconds; click, or press Enter, to pinch it yourself."></div>
+        </div>
+        <figcaption class="stage-cap" data-cap-static="The 21 tracked landmarks, rendered over a stylized hand.">It follows your cursor and pinches on its own — click (or press Enter) to pinch it yourself.</figcaption>
+      </figure>
+    </div>
   </section>
 
-  <section class="wrap">
-    <div class="head"><h2>Gestures</h2></div>
-    <div class="scroller reveal">
-      <table>
-        <thead><tr><th>Do this</th><th>Get this</th></tr></thead>
-        <tbody>
-          <tr><td>Open palm, 1s</td><td>Take the cursor</td></tr>
-          <tr><td>Move your hand</td><td>Move the cursor</td></tr>
-          <tr><td>Thumb + index</td><td>Click · hold to drag</td></tr>
-          <tr><td>Thumb + middle</td><td>Right click</td></tr>
-          <tr><td>Thumb + ring, move</td><td>Volume</td></tr>
-          <tr><td>Peace sign</td><td>Scroll — farther = faster</td></tr>
-          <tr><td>Fist + swipe</td><td>Forward / Back</td></tr>
-          <tr><td>Fist + push down</td><td>Minimise</td></tr>
-          <tr><td>1–4 fingers, other hand</td><td>Launch an app</td></tr>
-          <tr><td>Lower your hand</td><td>Let go</td></tr>
-        </tbody>
-      </table>
+  <!-- ============ WHAT IT DOES ============ -->
+  <section class="cs" aria-labelledby="what-h">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal>01 · what it does</p>
+      <h2 class="cs-h" id="what-h" data-reveal>A mouse, minus the mouse.</h2>
+      <p class="lead" data-reveal>
+        AirMouse reads your webcam and drives the <strong>real Windows
+        cursor</strong> — every app sees ordinary mouse input. Click, drag,
+        right-click, scroll, volume, forward/back, minimise, and app launching
+        are all hand gestures. A magnetic cursor sticks lightly to buttons so
+        small targets stay easy to hit.
+      </p>
+      <ul class="specs" data-reveal aria-label="Good to know">
+        <li><i class="dot dot-aqua"></i>Magnetic cursor sticks to buttons</li>
+        <li><i class="dot dot-mint"></i>Pauses when you look away</li>
+        <li><i class="dot dot-aqua"></i>Carries its own Python — installs nothing</li>
+        <li><i class="dot dot-mint"></i>Any ordinary webcam works</li>
+      </ul>
     </div>
-    <p class="sub note">
-      <b>Q</b> quits · <b>B</b> opens settings · <b>D</b> shows live gesture numbers
-    </p>
   </section>
 
-  <section class="wrap">
-    <div class="head"><h2>Good to know</h2></div>
-    <div class="facts reveal">
-      <span class="fact"><b>30 fps</b> tracking, 21 points</span>
-      <span class="fact"><b>Pauses</b> when you look away</span>
-      <span class="fact"><b>Magnetic cursor</b> sticks to buttons</span>
-      <span class="fact"><b>Carries its own Python</b> — installs nothing</span>
-      <span class="fact"><b>"Camera busy"</b> → close Discord, Zoom, OBS</span>
-      <span class="fact"><b>Not tracking</b> → turn a light on</span>
+  <!-- ============ HOW THE TRACKING WORKS ============ -->
+  <section class="cs" aria-labelledby="how-h">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal>02 · how the tracking works</p>
+      <h2 class="cs-h" id="how-h" data-reveal>Three ideas keep it steady.</h2>
+      <div class="about-grid">
+        <article class="acard" data-reveal>
+          <p class="acard-kicker">21 landmarks</p>
+          <h3>Your hand as a skeleton</h3>
+          <p class="acard-when">30 fps · MediaPipe</p>
+          <p>Every frame, a hand-tracking model returns 21 points — wrist,
+             knuckles, fingertips. Gestures are just distances and angles
+             between those points, so which fingers you raise or pinch
+             decides what happens.</p>
+        </article>
+        <article class="acard" data-reveal>
+          <p class="acard-kicker">Arming</p>
+          <h3>The engage circle</h3>
+          <p class="acard-when">Open palm · 1 second</p>
+          <p>Hold up an open palm and a circle locks onto your hand — only then
+             do you have the cursor. The circle scales itself to your distance
+             from the camera, so a hand wandering into frame never grabs
+             control by accident.</p>
+        </article>
+        <article class="acard" data-reveal>
+          <p class="acard-kicker">Attention gate</p>
+          <h3>It knows when you look away</h3>
+          <p class="acard-when">Face check · auto-pause</p>
+          <p>When you turn from the screen, AirMouse pauses; look back and
+             control returns. Scratching your head or reaching for coffee
+             doesn't click anything.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GESTURES ============ -->
+  <section class="cs" aria-labelledby="gestures-h">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal>03 · gestures</p>
+      <h2 class="cs-h" id="gestures-h" data-reveal>Ten gestures. All tunable.</h2>
+      <div class="scroller" data-reveal>
+        <table>
+          <thead><tr><th>Do this</th><th>Get this</th></tr></thead>
+          <tbody>
+            <tr><td>Open palm, 1s</td><td>Take the cursor</td></tr>
+            <tr><td>Move your hand</td><td>Move the cursor</td></tr>
+            <tr><td>Thumb + index</td><td>Click · hold to drag</td></tr>
+            <tr><td>Thumb + middle</td><td>Right click</td></tr>
+            <tr><td>Thumb + ring, move</td><td>Volume</td></tr>
+            <tr><td>Peace sign</td><td>Scroll — farther = faster</td></tr>
+            <tr><td>Fist + swipe</td><td>Forward / Back</td></tr>
+            <tr><td>Fist + push down</td><td>Minimise</td></tr>
+            <tr><td>1–4 fingers, other hand</td><td>Launch an app</td></tr>
+            <tr><td>Lower your hand</td><td>Let go</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="cs-note" data-reveal><b>Q</b> quits · <b>B</b> opens settings · <b>D</b> shows live numbers</p>
+
+      <div class="shots">
+        <figure class="shot" data-reveal>
+          <div class="stage shot-frame">
+            <img src="../assets/img/settings-pointer.png" width="880" height="660" loading="lazy"
+                 alt="AirMouse Pointer settings: sliders for cursor speed, edge boost, and engage-circle size, each with a plain-language explanation.">
+          </div>
+          <figcaption class="stage-cap">Pointer — speed, edge boost, circle size.</figcaption>
+        </figure>
+        <figure class="shot" data-reveal>
+          <div class="stage shot-frame">
+            <img src="../assets/img/settings-gestures.png" width="880" height="660" loading="lazy"
+                 alt="AirMouse Gestures settings: the pinch ladder (thumb to index clicks, to middle right-clicks, to ring is volume), armed navigation, grab looseness and swipe distance sliders.">
+          </div>
+          <figcaption class="stage-cap">Gestures — the pinch ladder, tuned to taste.</figcaption>
+        </figure>
+        <figure class="shot" data-reveal>
+          <div class="stage shot-frame">
+            <img src="../assets/img/settings-launcher.png" width="880" height="660" loading="lazy"
+                 alt="AirMouse Launcher settings: four slots bound to holding one to four fingers up on the left hand, with hold-time and re-fire lockout sliders.">
+          </div>
+          <figcaption class="stage-cap">Launcher — 1–4 fingers up, four app slots.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DOWNLOAD ============ -->
+  <section class="cs" aria-labelledby="dl-h">
+    <div class="wrap">
+      <p class="eyebrow" data-reveal>04 · download</p>
+      <h2 class="cs-h" id="dl-h" data-reveal>Running in three steps.</h2>
+      <ol class="steps">
+        <li data-reveal><div><b>Download and extract</b><small>One 111&thinsp;MB zip. Right-click → Extract All. Anywhere is fine.</small></div></li>
+        <li data-reveal><div><b>Double-click AirMouse.exe</b><small>Windows shows “Windows protected your PC” → <b>More info</b> → <b>Run anyway</b>. Every unsigned app does this.</small></div></li>
+        <li data-reveal><div><b>Hold up an open palm for a second</b><small>The circle locks onto your hand. You have the cursor.</small></div></li>
+      </ol>
+      <div class="actions cs-dl-actions" data-reveal>
+        <a class="btn btn-primary" href="https://github.com/RadislavDenisenko/AirMouse/releases/latest">Download for Windows</a>
+        <a class="btn btn-ghost" href="https://github.com/RadislavDenisenko/AirMouse">Source on GitHub</a>
+      </div>
+      <p class="cs-note" data-reveal>
+        Uninstall = delete the folder. “Camera busy”? Close Discord, Zoom or OBS.
+        Not tracking? Turn a light on.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ OUTRO ============ -->
+  <section class="contact-s" aria-labelledby="outro-h">
+    <div class="wrap">
+      <div class="contact-card" data-reveal>
+        <p class="eyebrow eyebrow-light">05 · about the build</p>
+        <h2 id="outro-h">Built by Radislav Denisenko.</h2>
+        <p class="contact-sub">Python, MediaPipe and the Win32 API — with 300+ automated
+           tests behind it. Happy to explain how any of it works.</p>
+        <div class="actions">
+          <a class="btn btn-onblue" href="../">See my other work</a>
+          <a class="btn btn-outline-light" href="mailto:raddenisenko@gmail.com">raddenisenko@gmail.com</a>
+        </div>
+      </div>
     </div>
   </section>
 
 </main>
 
-<div class="contact">
-  <div class="wrap">
-    <h2>Built by Radislav Denisenko.</h2>
-    <p>Python, MediaPipe and the Win32 API. Happy to explain how any of it works.</p>
-    <div class="actions">
-      <a class="btn btn-primary" href="../">See my other work</a>
-      <a class="btn" href="mailto:raddenisenko@gmail.com">raddenisenko@gmail.com</a>
-    </div>
+<footer class="foot">
+  <div class="wrap foot-row">
+    <a href="../">← All projects</a>
+    <span>North Port, Florida</span>
+    <a href="https://github.com/RadislavDenisenko/AirMouse">GitHub</a>
   </div>
-  <footer>
-    <div class="wrap">
-      <span><a href="../">← All projects</a></span>
-      <span>North Port, Florida</span>
-    </div>
-  </footer>
-</div>
+</footer>
 
 <script src="../assets/site.js" defer></script>
 </body>

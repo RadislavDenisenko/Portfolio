@@ -25,7 +25,7 @@
   }
 
   /* ---------- entrance reveals (fade + 28px rise, 60ms stagger) ---------- */
-  var revealables = $$('[data-reveal], .reveal');
+  var revealables = $$('[data-reveal]');
   var revealNow = function (el, delay) {
     el.style.transitionDelay = delay + 'ms';
     el.classList.add('is-in');
@@ -50,7 +50,7 @@
     /* backstop: only elements at or above the current viewport get force-shown;
        everything below the fold stays with the observer so its entrance plays */
     setTimeout(function () {
-      $$('[data-reveal]:not(.is-in), .reveal:not(.is-in)').forEach(function (el) {
+      $$('[data-reveal]:not(.is-in)').forEach(function (el) {
         if (el.getBoundingClientRect().top < window.innerHeight) {
           io.unobserve(el);
           revealNow(el, 0);
@@ -184,15 +184,26 @@
     import('./hand.js')
       .then(function (m) { m.initHand(el, opts); })
       .catch(function (err) {
-        /* ::after can't render on a replaced element — fall back on its frame */
-        var fb = el.tagName === 'CANVAS' ? (el.parentElement || el) : el;
-        fb.classList.add('hand-fallback');
+        el.classList.add('hand-fallback');
         if (window.console) console.warn('hand scene unavailable', err);
       });
   };
-  var handStage = $('#hand-stage') || $('canvas.hand'); /* airmouse/ page reuses this */
+  var handStage = $('#hand-stage'); /* homepage and airmouse/ both use this id */
   if (handStage) {
-    var opts = { statik: !FINE || REDUCE };
+    var opts = {
+      statik: !FINE || REDUCE,
+      autoPinch: handStage.hasAttribute('data-auto-pinch')
+    };
+    if (opts.statik) {
+      /* static frame = not a button. Tell the truth to AT and in the caption. */
+      handStage.removeAttribute('tabindex');
+      handStage.setAttribute('role', 'img');
+      handStage.setAttribute('aria-label',
+        'Stylized 3D hand with the 21 tracked landmarks highlighted.');
+      handStage.classList.add('is-static');
+      var cap = $('[data-cap-static]');
+      if (cap) cap.textContent = cap.getAttribute('data-cap-static');
+    }
     if ('IntersectionObserver' in window) {
       var hio = new IntersectionObserver(function (entries) {
         entries.forEach(function (en) {
