@@ -110,11 +110,14 @@ Full-viewport section per project, scroll-snap proximity (never JS-hijacked):
    object in a night photograph. On phones the copy is cut to fit ABOVE the
    hand (two sentences, chips collapse to one mono line, Case study becomes an
    inline link) so the 3D object the section exists for gets ~46% of the
-   viewport instead of a cropped bottom quarter. Three.js ships as one
-   tree-shaken vendored bundle rebuilt from tools/three-bundle-entry.js
-   (529KB, ~133KB gzipped — down from the 754KB of three + GLTFLoader +
-   hand.glb the scanned mesh needed, all three of which are now deleted),
-   lazy-loaded; static open-palm frame on coarse-pointer devices and under
+   viewport instead of a cropped bottom quarter. The stacked layout sizes the
+   hand from the space the copy leaves (`--handH`), not from `svh` alone — a
+   fixed fraction plus the copy adds up to more than a short landscape tablet
+   has, and the section grows past the fold taking the hand with it. Three.js
+   ships as one tree-shaken vendored bundle rebuilt from
+   tools/three-bundle-entry.js (529KB, ~133KB gzipped — down from the 754KB of
+   three + GLTFLoader + hand.glb the scanned mesh needed, all three of which are
+   now deleted), lazy-loaded; static open-palm frame on coarse-pointer devices and under
    reduced motion, and a real 21-landmark SVG diagram (with matching label and
    caption) where WebGL is unavailable — never a button that announces a pinch
    demo and does nothing. The airmouse/ case study reuses the same module on its
@@ -146,9 +149,19 @@ Banned: passionate, seamless, cutting-edge, "coming soon".
 
 ## Build
 Static HTML/CSS/JS in `docs/`, GitHub Pages, zero third-party requests, keyboard
-focus visible on every ground, mobile-first reflow. Page weight ≤ 600KB transfer.
+focus visible on every ground, mobile-first reflow.
 Console stays clean (no deprecation warnings). `og:image` ships so pasted links
 unfurl with a card.
+
+**Page weight ≤ 600KB transfer**, and "transfer" means what crosses the wire.
+Measured on the built tree: **`/` is 705KB of bytes on disk, 361KB gzipped**
+(11 requests, zero third-party). GitHub Pages serves `Content-Encoding: gzip`
+for text, so the shipped figure is the gzipped one — but that is a *host*
+behaviour, not something this repo controls, so both numbers are recorded and
+the uncompressed one is kept honest rather than quietly dropped. Roughly 60% of
+it is the three.js bundle, which is why nothing else is allowed to be careless:
+the skin maps went 512px → 256px and photographic → synthesised (146KB → 66KB)
+in the same pass that fixed how they looked.
 
 Live spec with rendered swatches, worlds and motion demos:
 https://claude.ai/code/artifact/25179477-9f96-42a7-9165-d0a3f26959fc
