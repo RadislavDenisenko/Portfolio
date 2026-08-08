@@ -21,7 +21,7 @@
     will-change:transform;
     filter:drop-shadow(0 40px 46px rgba(0,0,0,.55));
   }
-  .hand img{display:block;width:100%;height:auto}
+  .hand picture,.hand img{display:block;width:100%;height:auto}
 
   /* beam-side edge light, masked to the hand's own silhouette */
   .hand .rim{
@@ -54,7 +54,10 @@
 <div class="scene" id="scene">
   <div class="floor"></div>
   <div class="hand" id="hand">
-    <img src="assets/img/hand-cutout.png" alt="A hand held up, palm toward you">
+    <picture>
+      <source srcset="assets/img/hand-cutout.webp" type="image/webp">
+      <img src="assets/img/hand-cutout.png" alt="A hand held up, palm toward you">
+    </picture>
     <span class="cool"></span>
     <span class="rim"></span>
   </div>
