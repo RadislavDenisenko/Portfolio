@@ -1,105 +1,316 @@
-var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-// Reveal sections as they scroll in.
+/* Radislav Denisenko — portfolio behavior.
+   Plain script, no dependencies. The 3D hand lives in hand.js (ES module,
+   lazy-imported only when the AirMouse section scrolls near). */
 (function () {
-  var items = document.querySelectorAll('.reveal');
-  if (!items.length) return;
-  if (REDUCE || !('IntersectionObserver' in window)) {
-    items.forEach(function (el) { el.classList.add('in'); });
-    return;
+  'use strict';
+
+  /* JS marker: the hidden [data-reveal] initial state only applies with JS on,
+     so the page is fully readable for crawlers / blocked scripts. */
+  document.documentElement.classList.add('js');
+
+  var REDUCE = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* A fine pointer anywhere (mouse/trackpad) gets the cursor interactions —
+     touchscreen laptops included. Coarse-only devices get static/calm modes. */
+  var FINE = window.matchMedia('(any-pointer: fine)').matches ||
+             window.matchMedia('(pointer: fine)').matches;
+  var $ = function (s, c) { return (c || document).querySelector(s); };
+  var $$ = function (s, c) { return Array.prototype.slice.call((c || document).querySelectorAll(s)); };
+
+  /* ---------- header hairline on scroll ---------- */
+  var top = $('.top');
+  if (top) {
+    var darkSection = $('#airmouse');
+    var onScroll = function () {
+      top.classList.toggle('scrolled', window.scrollY > 8);
+      /* dark glass header while the dark room scene sits under the bar */
+      if (darkSection) {
+        var r = darkSection.getBoundingClientRect();
+        top.classList.toggle('over-dark', r.top <= 64 && r.bottom >= 32);
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
   }
-  var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (e) {
-      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+
+  /* ---------- entrance reveals (fade + 28px rise, 60ms stagger) ---------- */
+  var revealables = $$('[data-reveal]');
+  var revealNow = function (el, delay) {
+    el.style.transitionDelay = delay + 'ms';
+    el.classList.add('is-in');
+    /* clear the stagger delay once the entrance lands, so hover transitions
+       (which share the same transition) start instantly afterwards */
+    setTimeout(function () { el.style.transitionDelay = ''; }, delay + 600);
+  };
+  if (REDUCE) {
+    revealables.forEach(function (el) { el.classList.add('is-in'); });
+  } else if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function (entries) {
+      var batch = 0;
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var el = en.target;
+        revealNow(el, batch++ * 60);
+        io.unobserve(el);
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+    revealables.forEach(function (el) { io.observe(el); });
+
+    /* backstop: only elements at or above the current viewport get force-shown;
+       everything below the fold stays with the observer so its entrance plays */
+    setTimeout(function () {
+      $$('[data-reveal]:not(.is-in)').forEach(function (el) {
+        if (el.getBoundingClientRect().top < window.innerHeight) {
+          io.unobserve(el);
+          revealNow(el, 0);
+        }
+      });
+    }, 2500);
+  } else {
+    revealables.forEach(function (el) { el.classList.add('is-in'); });
+  }
+
+  /* ---------- hero headline: letters spring in one-by-one ---------- */
+  var heroH = $('.hero-h');
+  if (heroH && !REDUCE) {
+    var idx = 0;
+    var split = function (node) {
+      Array.prototype.slice.call(node.childNodes).forEach(function (n) {
+        if (n.nodeType === 3) {
+          var frag = document.createDocumentFragment();
+          n.textContent.split(/(\s+)/).forEach(function (part) {
+            if (!part) return;
+            if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(' ')); return; }
+            var w = document.createElement('span');
+            w.className = 'w';
+            part.split('').forEach(function (ch) {
+              var s = document.createElement('span');
+              s.className = 'ch';
+              s.style.setProperty('--i', idx++);
+              s.textContent = ch;
+              w.appendChild(s);
+            });
+            frag.appendChild(w);
+          });
+          node.replaceChild(frag, n);
+        } else if (n.nodeType === 1) {
+          split(n);
+        }
+      });
+    };
+    heroH.setAttribute('aria-label', heroH.textContent.replace(/\s+/g, ' ').trim());
+    split(heroH);
+    $$('.w', heroH).forEach(function (w) { w.setAttribute('aria-hidden', 'true'); });
+    /* the sun highlight paints itself only after its own letters have landed.
+       The delay rides a custom property consumed by the .letters-in .hl rule —
+       setting an inline transition-delay here would spawn a phantom 'all 0s'
+       transition when .letters commits the 0% state, pinning the bar at 100%
+       and killing the wipe. Custom-property writes never start transitions. */
+    $$('.hl', heroH).forEach(function (hl) {
+      var chs = $$('.ch', hl);
+      if (!chs.length) return;
+      var lastI = parseInt(chs[chs.length - 1].style.getPropertyValue('--i'), 10) || 0;
+      hl.style.setProperty('--hl-delay', (lastI * 26 + 140) + 'ms');
     });
-  }, { rootMargin: '0px 0px -6% 0px', threshold: 0.05 });
-  items.forEach(function (el) { io.observe(el); });
+    heroH.classList.add('letters');
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { heroH.classList.add('letters-in'); });
+    });
+  }
 
-  // Backstop: in a frame that never scrolls the observer may never fire, and
-  // permanently invisible content is worse than un-animated content.
-  setTimeout(function () {
-    items.forEach(function (el) { el.classList.add('in'); });
-  }, 2500);
-})();
+  /* ---------- hero stage: spring-smoothed 3D tilt toward the cursor ---------- */
+  var tiltStage = $('#tilt-stage');
+  var hero = $('.hero');
+  if (tiltStage && hero && !REDUCE && FINE) {
+    var tx = 0, ty = 0, cx = 0, cy = 0, vx = 0, vy = 0, tiltRaf = null;
+    var tiltStep = function () {
+      vx += (tx - cx) * 0.055; vx *= 0.84; cx += vx;
+      vy += (ty - cy) * 0.055; vy *= 0.84; cy += vy;
+      tiltStage.style.transform =
+        'rotateX(' + cx.toFixed(3) + 'deg) rotateY(' + cy.toFixed(3) + 'deg)';
+      if (Math.abs(tx - cx) > 0.002 || Math.abs(ty - cy) > 0.002 ||
+          Math.abs(vx) > 0.002 || Math.abs(vy) > 0.002) {
+        tiltRaf = requestAnimationFrame(tiltStep);
+      } else { tiltRaf = null; }
+    };
+    var kick = function () { if (tiltRaf === null) tiltRaf = requestAnimationFrame(tiltStep); };
+    hero.addEventListener('mousemove', function (e) {
+      var r = tiltStage.getBoundingClientRect();
+      var nx = (e.clientX - (r.left + r.width / 2)) / Math.max(r.width, 1);
+      var ny = (e.clientY - (r.top + r.height / 2)) / Math.max(r.height, 1);
+      ty = Math.max(-1, Math.min(1, nx)) * 7;    /* rotateY follows x */
+      tx = Math.max(-1, Math.min(1, ny)) * -5;   /* rotateX opposes y */
+      kick();
+    });
+    hero.addEventListener('mouseleave', function () { tx = 0; ty = 0; kick(); });
+  }
 
-// Drifting hand skeleton — the same 21 landmarks AirMouse tracks.
-(function () {
-  var canvas = document.getElementById('hand');
-  if (!canvas || !canvas.getContext) return;
+  /* ---------- Roomly: tear the top card off on a loop ---------- */
+  var deck = $('#deck');
+  if (deck && !REDUCE) {
+    var cards = $$('.rcard', deck);
+    var timer = null;
+    var tearing = false;
+    var deckVisible = false;
+    var restack = function () {
+      cards.forEach(function (c, i) {
+        c.className = 'rcard c' + Math.min(i, 3);
+      });
+    };
+    var tick = function () {
+      if (tearing || document.hidden) return;
+      tearing = true;
+      var topCard = cards[0];
+      topCard.classList.add('tear');
+      setTimeout(function () {
+        topCard.style.transition = 'none';
+        deck.appendChild(topCard);
+        cards.push(cards.shift());
+        restack();
+        /* force reflow, then restore the transition so it settles in place */
+        void topCard.offsetWidth;
+        topCard.style.transition = '';
+        tearing = false;
+      }, 700);
+    };
+    var start = function () { if (!timer) timer = setInterval(tick, 4000); };
+    var stop = function () { if (timer) { clearInterval(timer); timer = null; } };
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          deckVisible = en.isIntersecting;
+          deckVisible ? start() : stop();
+        });
+      }, { threshold: 0.2 }).observe(deck);
+    } else { deckVisible = true; start(); }
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) stop(); else if (deckVisible) start();
+    });
+  }
 
-  var BONES = [
-    [0,1],[1,2],[2,3],[3,4],
-    [0,5],[5,6],[6,7],[7,8],
-    [0,9],[9,10],[10,11],[11,12],
-    [0,13],[13,14],[14,15],[15,16],
-    [0,17],[17,18],[18,19],[19,20],
-    [5,9],[9,13],[13,17]
+  /* ---------- AirMouse room: cover-fit the photo box ---------- */
+  /* The photo and the REC dot share one box sized like background-size:cover,
+     so the dot's percentage coordinates always land on the camera housing.
+     Focal x keeps the camera (left) and the beam pool (right of center) in
+     frame; narrow screens bias harder toward the camera corner. */
+  var sceneBg = $('.scene-bg');
+  var sceneImg = $('.scene-bg-img');
+  if (sceneBg && sceneImg) {
+    var ROOM_AR = 1376 / 768;
+    var fitRoom = function () {
+      var w = sceneBg.clientWidth, h = sceneBg.clientHeight;
+      if (!w || !h) return;
+      var iw = Math.max(w, h * ROOM_AR), ih = iw / ROOM_AR;
+      var fx = w < 720 ? 0.22 : 0.4;
+      sceneImg.style.width = iw + 'px';
+      sceneImg.style.height = ih + 'px';
+      sceneImg.style.left = ((w - iw) * fx) + 'px';
+      sceneImg.style.top = ((h - ih) * 0.5) + 'px';
+    };
+    if ('ResizeObserver' in window) new ResizeObserver(fitRoom).observe(sceneBg);
+    else window.addEventListener('resize', fitRoom);
+    fitRoom();
+  }
+
+  /* ---------- AirMouse: lazy-init the 3D hand when the section nears ---------- */
+
+  /* A stage that will not animate is NOT a button, and must not claim to be
+     one. Both downgrade paths — coarse pointer / reduced motion, and no WebGL
+     at all — come through here, so neither can leave a tabbable control that
+     announces an interactive pinch demo and then does nothing. */
+  var makeStatic = function (el, label, capAttr) {
+    el.removeAttribute('tabindex');
+    el.removeAttribute('role');
+    el.setAttribute('role', 'img');
+    el.setAttribute('aria-label', label);
+    el.classList.add('is-static');
+    var cap = $('[data-cap-static]');
+    if (cap) {
+      cap.textContent = capAttr || cap.getAttribute('data-cap-static') || cap.textContent;
+    }
+  };
+  var STATIC_LABEL = '3D hand, palm open, with the 21 tracked landmarks highlighted.';
+
+  /* The 21-landmark topology, in MediaPipe's own normalised coordinates for an
+     open right palm. Used only when WebGL is unavailable — it draws the same
+     diagram the tracker works from, so the fallback shows something true
+     instead of a caption describing a hand that is not on screen. */
+  var LM = [
+    [50, 96], [30, 84], [20, 71], [14, 60], [9, 51],
+    [40, 55], [37, 39], [35, 29], [34, 20],
+    [50, 52], [50, 34], [50, 23], [50, 13],
+    [60, 54], [62, 37], [63, 26], [64, 17],
+    [70, 59], [74, 45], [77, 36], [79, 27]
   ];
-  var BASE = [
-    [0.50,0.96],
-    [0.31,0.85],[0.20,0.72],[0.13,0.60],[0.08,0.49],
-    [0.37,0.55],[0.33,0.37],[0.31,0.25],[0.29,0.14],
-    [0.51,0.51],[0.51,0.31],[0.51,0.18],[0.51,0.07],
-    [0.64,0.54],[0.67,0.35],[0.69,0.23],[0.71,0.12],
-    [0.76,0.61],[0.82,0.47],[0.86,0.38],[0.90,0.29]
-  ];
-
-  var ctx = canvas.getContext('2d');
-  var css = getComputedStyle(document.documentElement);
-  var accent = css.getPropertyValue('--accent').trim() || '#1d4ed8';
-  var line = css.getPropertyValue('--line-2').trim() || '#c9d0da';
-  var dpr = Math.min(window.devicePixelRatio || 1, 2);
-  var w = 0, h = 0;
-
-  function size() {
-    var r = canvas.getBoundingClientRect();
-    w = r.width; h = r.height;
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  }
-
-  function draw(t) {
-    ctx.clearRect(0, 0, w, h);
-    var pad = 18;
-    var pts = BASE.map(function (p, i) {
-      var dx = Math.sin(t / 1500 + i * 0.7) * 4;
-      var dy = Math.cos(t / 1800 + i * 0.5) * 4;
-      return [pad + p[0] * (w - pad * 2) + dx, pad + p[1] * (h - pad * 2) + dy];
+  var LINKS = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8],
+    [5, 9], [9, 10], [10, 11], [11, 12], [9, 13], [13, 14], [14, 15], [15, 16],
+    [13, 17], [17, 18], [18, 19], [19, 20], [0, 17]];
+  var landmarkDiagram = function () {
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 100 110');
+    svg.setAttribute('class', 'lm-diagram');
+    svg.setAttribute('aria-hidden', 'true');
+    LINKS.forEach(function (l) {
+      var ln = document.createElementNS(ns, 'line');
+      ln.setAttribute('x1', LM[l[0]][0]); ln.setAttribute('y1', LM[l[0]][1]);
+      ln.setAttribute('x2', LM[l[1]][0]); ln.setAttribute('y2', LM[l[1]][1]);
+      svg.appendChild(ln);
     });
-
-    ctx.strokeStyle = line;
-    ctx.lineWidth = 1.6;
-    ctx.beginPath();
-    BONES.forEach(function (b) {
-      ctx.moveTo(pts[b[0]][0], pts[b[0]][1]);
-      ctx.lineTo(pts[b[1]][0], pts[b[1]][1]);
+    LM.forEach(function (p, i) {
+      var c = document.createElementNS(ns, 'circle');
+      c.setAttribute('cx', p[0]); c.setAttribute('cy', p[1]);
+      c.setAttribute('r', i === 4 || i === 8 ? 2.6 : 2.0);
+      if (i === 4 || i === 8) c.setAttribute('class', 'tip');
+      svg.appendChild(c);
     });
-    ctx.stroke();
+    return svg;
+  };
 
-    pts.forEach(function (p, i) {
-      var tip = i === 4 || i === 8 || i === 12 || i === 16 || i === 20;
-      ctx.beginPath();
-      ctx.arc(p[0], p[1], tip ? 4 : 2.8, 0, Math.PI * 2);
-      ctx.fillStyle = tip ? accent : '#fff';
-      ctx.fill();
-      if (!tip) { ctx.lineWidth = 1.6; ctx.strokeStyle = line; ctx.stroke(); }
-    });
+  /* Ask before importing. three.js logs its own console.error when it cannot
+     create a context, and DESIGN.md's clean-console rule outranks the
+     convenience of finding out by failing. */
+  var hasWebGL = function () {
+    try {
+      var c = document.createElement('canvas');
+      return !!(c.getContext('webgl2') || c.getContext('webgl'));
+    } catch (e) { return false; }
+  };
+
+  var handFallback = function (el) {
+    el.classList.add('hand-fallback');
+    if (!el.querySelector('.lm-diagram')) el.appendChild(landmarkDiagram());
+    /* honest on both counts: it is a diagram, and the 3D version is missing */
+    makeStatic(el, 'Diagram of the 21 hand landmarks AirMouse tracks, on an open palm.',
+      'The 21 landmarks AirMouse tracks. The 3D version needs WebGL, which this browser has turned off.');
+  };
+
+  var initHandOn = function (el, opts) {
+    if (!hasWebGL()) { handFallback(el); return; }
+    import('./hand.js')
+      .then(function (m) { m.initHand(el, opts); })
+      .catch(function () { handFallback(el); });
+  };
+  var handStage = $('#hand-stage'); /* homepage and airmouse/ both use this id */
+  if (handStage) {
+    var opts = {
+      statik: !FINE || REDUCE,
+      autoPulse: handStage.hasAttribute('data-auto-pulse'),
+      /* homepage room scene: transparent canvas floating over the photo */
+      room: handStage.hasAttribute('data-room'),
+      shadowEl: $('#hand-shadow')
+    };
+    if (opts.statik) makeStatic(handStage, STATIC_LABEL);
+    if ('IntersectionObserver' in window) {
+      var hio = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (!en.isIntersecting) return;
+          hio.disconnect();
+          initHandOn(handStage, opts);
+        });
+      }, { rootMargin: '600px 0px 600px 0px' });
+      hio.observe(handStage);
+    } else {
+      initHandOn(handStage, opts);
+    }
   }
-
-  size();
-  window.addEventListener('resize', size);
-  if (REDUCE) { draw(0); return; }
-
-  var running = true;
-  document.addEventListener('visibilitychange', function () {
-    running = !document.hidden;
-    if (running) requestAnimationFrame(loop);
-  });
-  function loop(t) {
-    if (!running) return;
-    draw(t);
-    requestAnimationFrame(loop);
-  }
-  requestAnimationFrame(loop);
 })();
