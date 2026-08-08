@@ -1,0 +1,40 @@
+name: Fetch generated asset
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Source URL to download
+        required: true
+      path:
+        description: Repo path to save the file to
+        required: true
+      jpeg_quality:
+        description: If set, convert image to JPEG at this quality
+        required: false
+        default: ""
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/portfolio-website-design-gtyyvt
+      - name: Download
+        run: |
+          mkdir -p "$(dirname "${{ inputs.path }}")"
+          curl -fsSL -o /tmp/asset "${{ inputs.url }}"
+          if [ -n "${{ inputs.jpeg_quality }}" ]; then
+            convert /tmp/asset -quality "${{ inputs.jpeg_quality }}" "${{ inputs.path }}"
+          else
+            mv /tmp/asset "${{ inputs.path }}"
+          fi
+          ls -la "${{ inputs.path }}"
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "${{ inputs.path }}"
+          git commit -m "Add generated asset: ${{ inputs.path }}"
+          git push
