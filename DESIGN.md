@@ -154,14 +154,20 @@ Console stays clean (no deprecation warnings). `og:image` ships so pasted links
 unfurl with a card.
 
 **Page weight ≤ 600KB transfer**, and "transfer" means what crosses the wire.
-Measured on the built tree: **`/` is 705KB of bytes on disk, 361KB gzipped**
-(11 requests, zero third-party). GitHub Pages serves `Content-Encoding: gzip`
-for text, so the shipped figure is the gzipped one — but that is a *host*
-behaviour, not something this repo controls, so both numbers are recorded and
-the uncompressed one is kept honest rather than quietly dropped. Roughly 60% of
-it is the three.js bundle, which is why nothing else is allowed to be careless:
-the skin maps went 512px → 256px and photographic → synthesised (146KB → 66KB)
-in the same pass that fixed how they looked.
+Measured request-by-request on the built tree, everything lazy included:
+
+| page | requests | third-party | bytes on disk | over the wire |
+|---|---|---|---|---|
+| `/` | 11 | 0 | 852KB | **370KB** |
+| `/airmouse/` | 13 | 0 | 904KB | **414KB** |
+
+The budget is met on the wire and *not* met on disk, so both are written down.
+The gap is `Content-Encoding: gzip`, which GitHub Pages applies to text —
+a host behaviour this repo does not control and could not verify from the build
+sandbox, so it is stated as the assumption it is rather than folded silently
+into one flattering number. 62% of `/` is the three.js bundle, which is why
+nothing else may be careless: in the same pass that fixed how they *looked*,
+the skin maps went 512px → 256px and photographic → synthesised, 146KB → 66KB.
 
 Live spec with rendered swatches, worlds and motion demos:
 https://claude.ai/code/artifact/25179477-9f96-42a7-9165-d0a3f26959fc
