@@ -37,12 +37,15 @@ Full-viewport section per project, scroll-snap proximity (never JS-hijacked):
    button, flips a toggle. Headline letters spring in; frame tilts toward cursor.
    Never ship placeholder copy ("coming soon") anywhere on the page.
    Palette: paper + cobalt + sun.
-2. **AirMouse** — Three.js stylized primitive hand (capsules + spheres — blessed;
-   no GLB) on a navy stage that follows the visitor's cursor with spring lag and
-   truly pinches (thumb tip meets index tip) on click. All 21 landmarks rendered
-   proud of the surface with an aqua skeleton overlay, so the tracking story reads
-   at a glance. Three.js ships as one tree-shaken vendored bundle, lazy-loaded;
-   static poster on coarse-pointer devices. Palette: navy stage + aqua + mint.
+2. **AirMouse** — Three.js real scanned hand (hand.glb, 146KB, single static
+   mesh — unrigged, so no fake finger articulation) on a navy stage that follows
+   the visitor's cursor with spring lag; click = a press pulse toward the camera
+   with an index-fingertip flash + ripple. All 21 landmarks rendered proud of the
+   surface with an aqua skeleton overlay, so the tracking story reads at a
+   glance. If the GLB fails, the stylized primitive hand (capsules + spheres)
+   steps in silently. Three.js + GLTFLoader ship as tree-shaken vendored
+   bundles, lazy-loaded; static poster on coarse-pointer devices.
+   Palette: navy stage + aqua + mint.
 3. **Roomly** — swipe-card stack that tears the top card off on a loop, clipped
    inside its own area (never across copy). Honest copy: first working draft,
    being reworked, not launched. Palette: white + coral + sun (two accent

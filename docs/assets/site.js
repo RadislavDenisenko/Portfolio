@@ -192,14 +192,14 @@
   if (handStage) {
     var opts = {
       statik: !FINE || REDUCE,
-      autoPinch: handStage.hasAttribute('data-auto-pinch')
+      autoPulse: handStage.hasAttribute('data-auto-pulse')
     };
     if (opts.statik) {
       /* static frame = not a button. Tell the truth to AT and in the caption. */
       handStage.removeAttribute('tabindex');
       handStage.setAttribute('role', 'img');
       handStage.setAttribute('aria-label',
-        'Stylized 3D hand with the 21 tracked landmarks highlighted.');
+        'Scanned 3D hand with the 21 tracked landmarks highlighted.');
       handStage.classList.add('is-static');
       var cap = $('[data-cap-static]');
       if (cap) cap.textContent = cap.getAttribute('data-cap-static');
