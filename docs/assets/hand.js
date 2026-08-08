@@ -650,7 +650,7 @@ export function initHand(target, opts = {}) {
     }
     return best;
   }
-  const pinchGap = solvePinch();
+  solvePinch();
 
   /* ------------------------- frame fit + posing --------------------------- */
   const TRAVEL_UP = room ? 0.26 : 0.3;
@@ -706,6 +706,7 @@ export function initHand(target, opts = {}) {
   /* set once the follow springs exist, so a resize re-bases them instead of
      fighting them (the fit changes where "rest" is) */
   let onRefit = null;
+  let running = false, rafId = 0;
   function resize() {
     const r = sizeEl.getBoundingClientRect();
     if (r.width < 5 || r.height < 5) return;
@@ -728,7 +729,7 @@ export function initHand(target, opts = {}) {
   /* ---------- static mode: one open-palm frame, no loop, no motion -------- */
   if (statik) {
     render();
-    return { statik: true, pinchGap };
+    return { statik: true };
   }
 
   /* ---------------------------- interactive ------------------------------- */
@@ -774,7 +775,6 @@ export function initHand(target, opts = {}) {
     if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); triggerPulse(); }
   });
 
-  let running = false, rafId = 0;
   const _vb = new THREE.Vector3(), _vc = new THREE.Vector3();
 
   function frame() {
@@ -865,5 +865,5 @@ export function initHand(target, opts = {}) {
   });
 
   render(); // first frame immediately, loop takes over when visible
-  return { setRunning, pinchGap };
+  return { setRunning };
 }
