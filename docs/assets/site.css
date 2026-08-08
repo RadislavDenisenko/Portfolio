@@ -102,9 +102,13 @@ p{margin:0}
   background:color-mix(in srgb, var(--paper) 82%, transparent);
   -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
   border-bottom:1px solid transparent;
-  transition:border-color .3s;
+  transition:border-color .3s,background-color .35s;
 }
 .top.scrolled{border-bottom-color:var(--line)}
+/* over the dark room scene the header goes dark glass, not a milky strip */
+.top.over-dark{background:rgba(8,12,22,.55);border-bottom-color:rgba(255,255,255,.08)}
+.top.over-dark .brand,
+.top.over-dark .top-links a:not(.top-cta){color:#fff}
 .top-nav{
   max-width:1160px;margin-inline:auto;
   padding:0 clamp(20px,4vw,48px);
@@ -428,6 +432,91 @@ section{position:relative}
 }
 .hand-fallback::after{content:'✋ 21 landmarks · 30 fps'}
 
+/* --------------------- AirMouse — full-bleed room scene -------------------- */
+/* One cinematic room (owner-approved): the surveillance camera top-left casts
+   a beam that pools on the floor right-of-center; the real 3D hand floats in
+   it. Copy sits directly on the scene behind a left scrim. */
+.scene{
+  position:relative;
+  min-height:100svh;
+  display:grid;align-content:center;
+  padding-block:clamp(84px,10svh,120px) clamp(48px,7svh,80px);
+  background:#0A101E; /* navy under the photo — no white flash while it loads */
+  overflow:hidden;
+}
+.scene-bg{position:absolute;inset:0;overflow:hidden}
+/* cover-fit box (sized by JS) shared by the photo and the REC dot, so the dot
+   can ride percentage coordinates that always match the camera housing */
+.scene-bg-img{position:absolute;left:0;top:0;width:100%;height:100%}
+.scene-bg-img img{width:100%;height:100%;object-fit:cover;object-position:40% 50%}
+/* left scrim: guarantees ≥4.5:1 for every line of copy without walling the room off */
+.scene-bg::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,
+    rgba(6,10,20,.8) 0%,rgba(6,10,20,.62) 30%,rgba(6,10,20,.28) 47%,transparent 62%);
+}
+/* blinking REC dot on the camera housing (percentage coords over the photo) */
+.rec-dot{
+  position:absolute;left:22%;top:9.4%;z-index:1; /* above the scrim */
+  width:8px;height:8px;border-radius:50%;
+  background:#FF3B30;
+  box-shadow:0 0 10px 3px rgba(255,59,48,.65);
+  animation:recBlink 1.2s ease-in-out infinite;
+}
+@keyframes recBlink{0%,58%{opacity:1}66%,92%{opacity:.12}100%{opacity:1}}
+
+/* the hand floats in the beam, right of center */
+.scene-hand{
+  position:absolute;
+  left:52%;bottom:5svh;
+  width:min(44vw,640px);
+  height:min(80svh,740px);
+}
+.scene-hand #hand-stage{position:absolute;inset:0;cursor:pointer;touch-action:pan-y}
+.scene-hand #hand-stage.is-static{cursor:default}
+.scene-hand canvas{width:100%!important;height:100%!important}
+.scene-hand .hand-fallback{position:absolute;inset:0}
+/* soft floor shadow under the hand — hand.js nudges it with the follow motion */
+.hand-shadow{
+  position:absolute;left:22%;bottom:1.5%;
+  width:56%;height:6.5%;border-radius:50%;
+  background:radial-gradient(50% 50% at 50% 50%,rgba(3,6,13,.6),rgba(3,6,13,0) 70%);
+  filter:blur(7px);
+  will-change:transform;
+}
+
+/* copy directly on the scene — no cards. The block spans the scene, so it
+   must not eat pointer events meant for the hand canvas beneath it */
+.scene-copy{position:relative;z-index:2;width:100%;pointer-events:none}
+.scene-copy a,.scene-copy .specs li{pointer-events:auto}
+.scene-copy > *{max-width:560px}
+.scene .eyebrow{color:rgba(255,255,255,.78)}
+.scene .proj-h{color:#fff;font-size:clamp(38px,5vw,64px)}
+.scene .lead{color:rgba(255,255,255,.92)}
+.scene .lead strong{color:#fff}
+.scene .tags{color:rgba(255,255,255,.66)}
+.scene .badge-mint{background:rgba(38,217,163,.18);color:#6FF5C8;border-color:rgba(38,217,163,.5)}
+/* spec chips as glass pills */
+.scene .specs li{
+  background:rgba(255,255,255,.12);
+  border-color:rgba(255,255,255,.3);
+  color:#fff;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+}
+.scene .specs li:hover{box-shadow:0 10px 22px -12px rgba(38,217,163,.6)}
+/* focus on the dark scene: white ring + dark halo */
+.scene :focus-visible{outline-color:#fff;box-shadow:0 0 0 3px rgba(4,8,16,.5)}
+
+/* honest mono caption — bottom-LEFT, under the scrim and clear of the hand's
+   whole travel envelope, so its contrast never depends on where the hand is */
+.scene-cap{
+  position:absolute;z-index:2;
+  left:clamp(16px,3vw,40px);bottom:14px;
+  font-family:var(--mono);font-size:12px;letter-spacing:.03em;
+  color:rgba(255,255,255,.85);text-align:left;max-width:46ch;
+  text-shadow:0 1px 10px rgba(3,6,13,.9),0 0 22px rgba(3,6,13,.7);
+}
+
 /* ------------------------------ roomly ------------------------------------ */
 /* overflow clipped so the tearing card never crosses the copy column.
    The top/left padding pockets are sized to contain the tearing card's full
@@ -570,6 +659,19 @@ section{position:relative}
   .proj-grid-flip .proj-copy{order:1}
   .navy-inner{aspect-ratio:4/3;max-height:400px}
   .about-grid{grid-template-columns:1fr}
+  /* room scene stacks: copy starts below the camera housing, tight rhythm so
+     the whole scene composes inside ~100svh; static hand centered below */
+  .scene{align-content:start;padding-top:138px;padding-bottom:calc(28svh + 12px)}
+  .scene .proj-h{margin-bottom:10px}
+  .scene .lead{margin-bottom:12px}
+  .scene .specs{gap:8px}
+  .scene .tags{margin:10px 0 14px}
+  .scene-hand{
+    left:50%;bottom:4svh;
+    transform:translateX(-50%);
+    width:min(86vw,400px);height:30svh;
+  }
+  .scene-cap{left:16px;bottom:8px;max-width:80vw}
 }
 @media (max-width:640px){
   .top-links a:not(.top-cta){display:none}
@@ -577,7 +679,7 @@ section{position:relative}
   .hero-h{font-size:clamp(34px,10.4vw,44px)}
   .stage-tilt{height:auto;width:100%;aspect-ratio:16/10}
   .hero .actions .btn{width:100%;max-width:360px}
-  .proj .actions .btn,.cs-dl-actions .btn{flex:1 1 auto;min-width:0}
+  .proj .actions .btn,.scene .actions .btn,.cs-dl-actions .btn{flex:1 1 auto;min-width:0}
   .contact-card{border-radius:26px}
   .scroll-hint{display:none}
 }

@@ -19,7 +19,15 @@
   /* ---------- header hairline on scroll ---------- */
   var top = $('.top');
   if (top) {
-    var onScroll = function () { top.classList.toggle('scrolled', window.scrollY > 8); };
+    var darkSection = $('#airmouse');
+    var onScroll = function () {
+      top.classList.toggle('scrolled', window.scrollY > 8);
+      /* dark glass header while the dark room scene sits under the bar */
+      if (darkSection) {
+        var r = darkSection.getBoundingClientRect();
+        top.classList.toggle('over-dark', r.top <= 64 && r.bottom >= 32);
+      }
+    };
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
   }
@@ -179,6 +187,30 @@
     });
   }
 
+  /* ---------- AirMouse room: cover-fit the photo box ---------- */
+  /* The photo and the REC dot share one box sized like background-size:cover,
+     so the dot's percentage coordinates always land on the camera housing.
+     Focal x keeps the camera (left) and the beam pool (right of center) in
+     frame; narrow screens bias harder toward the camera corner. */
+  var sceneBg = $('.scene-bg');
+  var sceneImg = $('.scene-bg-img');
+  if (sceneBg && sceneImg) {
+    var ROOM_AR = 1376 / 768;
+    var fitRoom = function () {
+      var w = sceneBg.clientWidth, h = sceneBg.clientHeight;
+      if (!w || !h) return;
+      var iw = Math.max(w, h * ROOM_AR), ih = iw / ROOM_AR;
+      var fx = w < 720 ? 0.22 : 0.4;
+      sceneImg.style.width = iw + 'px';
+      sceneImg.style.height = ih + 'px';
+      sceneImg.style.left = ((w - iw) * fx) + 'px';
+      sceneImg.style.top = ((h - ih) * 0.5) + 'px';
+    };
+    if ('ResizeObserver' in window) new ResizeObserver(fitRoom).observe(sceneBg);
+    else window.addEventListener('resize', fitRoom);
+    fitRoom();
+  }
+
   /* ---------- AirMouse: lazy-init the 3D hand when the section nears ---------- */
   var initHandOn = function (el, opts) {
     import('./hand.js')
@@ -192,7 +224,10 @@
   if (handStage) {
     var opts = {
       statik: !FINE || REDUCE,
-      autoPulse: handStage.hasAttribute('data-auto-pulse')
+      autoPulse: handStage.hasAttribute('data-auto-pulse'),
+      /* homepage room scene: transparent canvas floating over the photo */
+      room: handStage.hasAttribute('data-room'),
+      shadowEl: $('#hand-shadow')
     };
     if (opts.statik) {
       /* static frame = not a button. Tell the truth to AT and in the caption. */

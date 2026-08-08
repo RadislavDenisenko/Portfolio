@@ -7,6 +7,9 @@ hiring manager to download AirMouse or email me. Fun and professional at once.
 - Paper `#FAF8F4` page ground · White `#FFFFFF` surfaces · Ink `#101014` text
 - Soft `#63636E` secondary · Hairline `#E8E4DC` borders
 - Never pure black grounds. Dark appears only inside framed demo stages (`#0E1230`).
+  **Documented exception (owner decision):** project-world *scenes* — currently
+  the homepage AirMouse room — may go full-bleed dark: an unframed 100svh
+  cinematic photo ground with copy sitting directly on a scrim.
 
 ## Accents (2–3 per section, never all at once)
 - Cobalt `#2B5CFF` — site primary: buttons, links, focus rings
@@ -37,15 +40,22 @@ Full-viewport section per project, scroll-snap proximity (never JS-hijacked):
    button, flips a toggle. Headline letters spring in; frame tilts toward cursor.
    Never ship placeholder copy ("coming soon") anywhere on the page.
    Palette: paper + cobalt + sun.
-2. **AirMouse** — Three.js real scanned hand (hand.glb, 146KB, single static
-   mesh — unrigged, so no fake finger articulation) on a navy stage that follows
-   the visitor's cursor with spring lag; click = a press pulse toward the camera
-   with an index-fingertip flash + ripple. All 21 landmarks rendered proud of the
-   surface with an aqua skeleton overlay, so the tracking story reads at a
-   glance. If the GLB fails, the stylized primitive hand (capsules + spheres)
-   steps in silently. Three.js + GLTFLoader ship as tree-shaken vendored
-   bundles, lazy-loaded; static poster on coarse-pointer devices.
-   Palette: navy stage + aqua + mint.
+2. **AirMouse** — a full-bleed 100svh cinematic room scene (owner decision, the
+   framed-stage exception above): a moody blue room photo where a surveillance
+   camera (blinking CSS REC dot on its housing) casts a volumetric beam onto
+   the floor. The Three.js real scanned hand (hand.glb, 146KB, single static
+   mesh — unrigged, so no fake finger articulation) floats in the beam on a
+   transparent canvas, palm to the viewer, lit neutral-white so its own texture
+   reads as skin, with an aqua rim from the beam side and a CSS ellipse shadow
+   on the floor. It follows the visitor's cursor with spring lag; click = a
+   press pulse toward the camera with an index-fingertip flash + ripple. All 21
+   landmarks rendered proud of the surface with an aqua skeleton overlay, so
+   the tracking story reads at a glance. Copy sits directly on the scene behind
+   a left scrim (≥4.5:1 verified); spec chips are glass pills. If the GLB
+   fails, the stylized primitive hand (capsules + spheres) steps in silently.
+   Three.js + GLTFLoader ship as tree-shaken vendored bundles, lazy-loaded;
+   static poster on coarse-pointer devices. The airmouse/ case study keeps the
+   framed navy stage. Palette: navy room + aqua + mint.
 3. **Roomly** — swipe-card stack that tears the top card off on a loop, clipped
    inside its own area (never across copy). Honest copy: first working draft,
    being reworked, not launched. Palette: white + coral + sun (two accent

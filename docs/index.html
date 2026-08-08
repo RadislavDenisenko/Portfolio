@@ -68,39 +68,45 @@
     <a class="scroll-hint" href="#airmouse" aria-label="Scroll to AirMouse"><span></span></a>
   </section>
 
-  <!-- ============ AIRMOUSE ============ -->
-  <section class="proj snap" id="airmouse" aria-labelledby="airmouse-h">
-    <div class="wrap proj-grid">
-      <div class="proj-copy">
-        <p class="eyebrow" data-reveal>01 · shipped — Windows</p>
-        <h2 class="proj-h" id="airmouse-h" data-reveal>AirMouse <span class="badge badge-mint">Shipped · v0.9</span></h2>
-        <p class="lead" data-reveal>
-          Your hand becomes the mouse. A webcam tracks
-          <strong>21 hand landmarks at 30&thinsp;fps</strong> and moves your real
-          Windows cursor. <strong>Pinch to click.</strong>
-          Backed by <strong>300+ automated tests</strong>.
-        </p>
-        <ul class="specs" data-reveal aria-label="Technical specs">
-          <li><i class="dot dot-aqua"></i>21 landmarks</li>
-          <li><i class="dot dot-mint"></i>30 fps tracking</li>
-          <li><i class="dot dot-aqua"></i>Win32 SendInput</li>
-          <li><i class="dot dot-mint"></i>300+ tests</li>
-        </ul>
-        <p class="tags" data-reveal>Python · MediaPipe · OpenCV · Win32</p>
-        <div class="actions" data-reveal>
-          <a class="btn btn-primary" href="https://github.com/RadislavDenisenko/AirMouse/releases/latest">Download for Windows</a>
-          <a class="btn btn-ghost" href="airmouse/">Case study <span aria-hidden="true">→</span></a>
-        </div>
+  <!-- ============ AIRMOUSE — full-bleed room scene ============ -->
+  <section class="scene snap" id="airmouse" aria-labelledby="airmouse-h">
+    <div class="scene-bg" aria-hidden="true">
+      <div class="scene-bg-img">
+        <img src="assets/img/airmouse-room.jpg" alt="" width="1376" height="768"
+             loading="lazy" decoding="async">
+        <span class="rec-dot"></span>
       </div>
-
-      <figure class="proj-visual" data-reveal>
-        <div class="stage stage-navy">
-          <div class="stage-inner navy-inner" id="hand-stage" role="button" tabindex="0"
-               aria-label="Interactive 3D demo: a scanned hand under the tracking overlay. It follows your cursor; click, or press Enter, for a click pulse on the index fingertip."></div>
-        </div>
-        <figcaption class="stage-cap" data-cap-static="The 21 tracked landmarks, rendered over a scanned hand.">A real scanned hand under the tracking overlay. It follows your cursor — click (or press Enter) for a click pulse.</figcaption>
-      </figure>
     </div>
+
+    <div class="scene-hand">
+      <span class="hand-shadow" id="hand-shadow" aria-hidden="true"></span>
+      <div id="hand-stage" data-room role="button" tabindex="0"
+           aria-label="Interactive 3D demo: a scanned hand under the tracking overlay, floating in a camera's light beam. It follows your cursor; click, or press Enter, for a click pulse on the index fingertip."></div>
+    </div>
+
+    <div class="wrap scene-copy">
+      <p class="eyebrow" data-reveal>01 · shipped — Windows</p>
+      <h2 class="proj-h" id="airmouse-h" data-reveal>AirMouse <span class="badge badge-mint">Shipped · v0.9</span></h2>
+      <p class="lead" data-reveal>
+        Your hand becomes the mouse. A webcam tracks
+        <strong>21 hand landmarks at 30&thinsp;fps</strong> and moves your real
+        Windows cursor. <strong>Pinch to click.</strong>
+        Backed by <strong>300+ automated tests</strong>.
+      </p>
+      <ul class="specs" data-reveal aria-label="Technical specs">
+        <li><i class="dot dot-mint"></i>21 landmarks</li>
+        <li><i class="dot dot-mint"></i>30 fps tracking</li>
+        <li><i class="dot dot-mint"></i>Win32 SendInput</li>
+        <li><i class="dot dot-mint"></i>300+ tests</li>
+      </ul>
+      <p class="tags" data-reveal>Python · MediaPipe · OpenCV · Win32</p>
+      <div class="actions" data-reveal>
+        <a class="btn btn-primary" href="https://github.com/RadislavDenisenko/AirMouse/releases/latest">Download for Windows</a>
+        <a class="btn btn-ghost" href="airmouse/">Case study <span aria-hidden="true">→</span></a>
+      </div>
+    </div>
+
+    <p class="scene-cap" data-cap-static="The 21 tracked landmarks, rendered over a scanned hand.">A real scanned hand under the tracking overlay. It follows your cursor — click (or press Enter) for a click pulse.</p>
   </section>
 
   <!-- ============ ROOMLY ============ -->
