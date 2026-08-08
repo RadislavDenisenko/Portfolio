@@ -234,7 +234,7 @@
       handStage.removeAttribute('tabindex');
       handStage.setAttribute('role', 'img');
       handStage.setAttribute('aria-label',
-        'Scanned 3D hand with the 21 tracked landmarks highlighted.');
+        '3D hand, palm open, with the 21 tracked landmarks highlighted.');
       handStage.classList.add('is-static');
       var cap = $('[data-cap-static]');
       if (cap) cap.textContent = cap.getAttribute('data-cap-static');

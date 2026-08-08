@@ -43,18 +43,27 @@ Full-viewport section per project, scroll-snap proximity (never JS-hijacked):
 2. **AirMouse** — a full-bleed 100svh cinematic room scene (owner decision, the
    framed-stage exception above): a moody blue room photo where a surveillance
    camera (blinking CSS REC dot on its housing) casts a volumetric beam onto
-   the floor. The Three.js real scanned hand (hand.glb, 146KB, single static
-   mesh — unrigged, so no fake finger articulation) floats in the beam on a
-   transparent canvas, palm to the viewer, lit neutral-white so its own texture
-   reads as skin, with an aqua rim from the beam side and a CSS ellipse shadow
-   on the floor. It follows the visitor's cursor with spring lag; click = a
-   press pulse toward the camera with an index-fingertip flash + ripple. All 21
-   landmarks rendered proud of the surface with an aqua skeleton overlay, so
-   the tracking story reads at a glance. Copy sits directly on the scene behind
-   a left scrim (≥4.5:1 verified); spec chips are glass pills. If the GLB
-   fails, the stylized primitive hand (capsules + spheres) steps in silently.
-   Three.js + GLTFLoader ship as tree-shaken vendored bundles, lazy-loaded;
-   static poster on coarse-pointer devices. The airmouse/ case study keeps the
+   the floor. Floating in the beam on a transparent canvas: a **procedural
+   rigged hand we generate in code — no GLB, no scan, no texture**. A lofted
+   superellipse palm with real muscle relief (thenar, hypothenar, knuckle pads,
+   palmar creases baked into vertex colours), four three-bone fingers and an
+   opposed three-bone thumb, each segment parented to its own joint group.
+   Anthropometric phalanx lengths, so middle > ring > index > pinky reads
+   right. Rest pose is an open palm to the viewer; it follows the cursor with
+   spring lag plus a per-finger sway, breathes when idle, and **click / Enter
+   is a real pinch** — the index curls, the thumb rotates in, and the two
+   fingertips meet (the angles are solved against the rig at build time, so the
+   tips always touch). That's the product's actual click gesture, so the copy
+   says so. All 21 landmarks are children of the rig's joints — anatomically
+   exact by construction and they track the pinch — drawn proud of the surface
+   with an aqua skeleton overlay. Skin is MeshPhysicalMaterial (warm mid tone,
+   sheen, a whisper of clearcoat) under ACES filmic tone mapping; the key is a
+   spot from the beam side so the fingers stay bright and the forearm fades
+   out of frame instead of ending in a stump. Copy sits directly on the scene
+   behind a left scrim (≥4.5:1 verified); spec chips are glass pills. Three.js
+   ships as one tree-shaken vendored bundle (522KB, ~131KB gzipped),
+   lazy-loaded; static open-palm frame on coarse-pointer devices and under
+   reduced motion. The airmouse/ case study reuses the same module on its
    framed navy stage. Palette: navy room + aqua + mint.
 3. **Roomly** — swipe-card stack that tears the top card off on a loop, clipped
    inside its own area (never across copy). Honest copy: first working draft,

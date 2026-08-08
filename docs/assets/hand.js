@@ -206,7 +206,11 @@ function palmGeometry() {
              [0.7, 0.90], [0.86, 0.98], [1, 1.00]];
   const DF = [[0, 0.16], [0.18, 0.27], [0.44, 0.30], [0.72, 0.27], [1, 0.225]];
   const DB = [[0, 0.16], [0.18, 0.26], [0.44, 0.29], [0.72, 0.24], [1, 0.195]];
-  const NE = [[0, 2.2], [0.5, 2.7], [1, 3.2]];
+  /* Superellipse exponent: 2 is a plain ellipse, higher is more slab-like. Kept
+     LOW on purpose — past ~2.6 the palm grows a flat side wall, and that wall
+     faces away from the key, so it reads as a hard dark outline down the ulnar
+     edge instead of a form turning away. */
+  const NE = [[0, 2.0], [0.5, 2.25], [1, 2.5]];
   const CUP = [[0, 0], [0.3, 0.05], [0.6, 0.085], [0.88, 0.035], [1, 0]];
   const CB = 0.10, CT = 0.10;      // rounded cap ramps at both ends
   const rows = [];
@@ -250,9 +254,9 @@ function palmGeometry() {
          away to both sides — hardest toward the pinky, exactly like the real
          metacarpal arch — and rises again between the fingers, which is the
          web of skin that keeps the roots from looking like rods in a slab. */
-      let arc = 0.04 - 0.26 * Math.pow((x + 0.20) / 0.98, 2) * (1 + 0.5 * Math.max(0, x));
-      arc += 0.13 * (gauss(x + 0.50, 0, 0.17, 1) + gauss(x, 0, 0.17, 1) +
-                     gauss(x - 0.475, 0, 0.18, 1));
+      let arc = 0.04 - 0.26 * Math.pow((x + 0.20) / 0.98, 2) * (1 + 0.32 * Math.max(0, x));
+      arc += 0.13 * (gauss(x + 0.50, 0, 0.17, 1) + gauss(x, 0, 0.17, 1)) +
+             0.17 * gauss(x - 0.47, 0, 0.20, 1);
       ring.push([x, y0 + arc * smooth(clamp((u - 0.40) / 0.60, 0, 1)), z]);
     }
     rows.push(ring);
@@ -342,14 +346,14 @@ export function initHand(target, opts = {}) {
 
   /* room: the wall neon saves the right silhouette. navy: a pale mint kicker —
      saturated mint at this angle paints a green outline instead of bouncing. */
-  const kick = new THREE.DirectionalLight(room ? 0x6FD8FF : 0x9FF0DC, room ? 1.0 : 0.55);
-  kick.position.set(room ? 4.2 : 2.8, room ? 0.6 : -0.6, room ? -1.9 : -1.6);
+  const kick = new THREE.DirectionalLight(room ? 0x6FD8FF : 0x7FD8F5, room ? 1.0 : 1.35);
+  kick.position.set(room ? 4.2 : 2.8, room ? 0.6 : -0.3, room ? -1.9 : 0.7);
   scene.add(kick);
 
   /* the shelf lamp, low and to the left: lifts the undersides of the fingers
      and the thumb out of black instead of letting them die */
-  const warm = new THREE.DirectionalLight(0xFFC79A, 1.2);
-  warm.position.set(-3.6, -1.1, 2.6);
+  const warm = new THREE.DirectionalLight(0xF6DDC6, 1.9);
+  warm.position.set(-3.1, -1.5, 3.0);
   scene.add(warm);
 
   if (!room) {
