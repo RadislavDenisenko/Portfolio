@@ -8,10 +8,6 @@ on:
       path:
         description: Repo path to save the file to
         required: true
-      jpeg_quality:
-        description: If set, convert image to JPEG at this quality
-        required: false
-        default: ""
 permissions:
   contents: write
 jobs:
@@ -24,17 +20,13 @@ jobs:
       - name: Download
         run: |
           mkdir -p "$(dirname "${{ inputs.path }}")"
-          curl -fsSL -o /tmp/asset "${{ inputs.url }}"
-          if [ -n "${{ inputs.jpeg_quality }}" ]; then
-            convert /tmp/asset -quality "${{ inputs.jpeg_quality }}" "${{ inputs.path }}"
-          else
-            mv /tmp/asset "${{ inputs.path }}"
-          fi
+          curl -fsSL -o "${{ inputs.path }}" "${{ inputs.url }}"
           ls -la "${{ inputs.path }}"
       - name: Commit
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin claude/portfolio-website-design-gtyyvt || true
           git add "${{ inputs.path }}"
           git commit -m "Add generated asset: ${{ inputs.path }}"
           git push
