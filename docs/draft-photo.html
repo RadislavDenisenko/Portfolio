@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Draft — photographic hand, cursor follow</title>
+<style>
+  :root{ --tiltX:0deg; --tiltY:0deg; --shiftX:0px; --shiftY:0px }
+  html,body{margin:0;height:100%;background:#0A101E;overflow:hidden;
+    font:400 12px/1.6 ui-monospace,Menlo,Consolas,monospace;color:rgba(255,255,255,.75)}
+  .scene{position:fixed;inset:0;perspective:1400px;
+    background:url('assets/img/airmouse-room.jpg') center/cover no-repeat #0A101E}
+
+  /* the hand is the photograph itself; only its orientation is synthetic */
+  .hand{
+    position:absolute;left:56%;top:50%;
+    width:min(34vw,430px);
+    transform:translate3d(calc(-50% + var(--shiftX)), calc(-50% + var(--shiftY)), 0)
+              rotateX(var(--tiltX)) rotateY(var(--tiltY));
+    transform-style:preserve-3d;
+    will-change:transform;
+    filter:drop-shadow(0 40px 46px rgba(0,0,0,.55));
+  }
+  .hand img{display:block;width:100%;height:auto}
+
+  /* beam-side edge light, masked to the hand's own silhouette */
+  .hand .rim{
+    position:absolute;inset:0;
+    background:linear-gradient(105deg, rgba(150,220,255,.55) 0%, rgba(150,220,255,.10) 26%, transparent 46%);
+    -webkit-mask:url('assets/img/hand-cutout.png') center/contain no-repeat;
+    mask:url('assets/img/hand-cutout.png') center/contain no-repeat;
+    mix-blend-mode:screen;pointer-events:none;
+  }
+  /* room colour spill on the shadow side, same mask */
+  .hand .cool{
+    position:absolute;inset:0;
+    background:linear-gradient(255deg, rgba(40,90,150,.40) 0%, transparent 55%);
+    -webkit-mask:url('assets/img/hand-cutout.png') center/contain no-repeat;
+    mask:url('assets/img/hand-cutout.png') center/contain no-repeat;
+    mix-blend-mode:multiply;pointer-events:none;
+  }
+
+  .floor{
+    position:absolute;left:56%;top:78%;width:min(26vw,320px);height:52px;
+    transform:translate(-50%,-50%) rotateX(72deg);
+    background:radial-gradient(ellipse at center, rgba(0,0,0,.55), transparent 68%);
+    filter:blur(10px);pointer-events:none;
+  }
+  .note{position:fixed;left:20px;bottom:18px;z-index:5}
+  @media (prefers-reduced-motion: reduce){ .hand{transition:none} }
+</style>
+</head>
+<body>
+<div class="scene" id="scene">
+  <div class="floor"></div>
+  <div class="hand" id="hand">
+    <img src="assets/img/hand-cutout.png" alt="A hand held up, palm toward you">
+    <span class="cool"></span>
+    <span class="rim"></span>
+  </div>
+</div>
+<p class="note">DRAFT · the photograph itself, tilting toward your cursor · no WebGL, no 3D model</p>
+
+<script>
+/* Spring-smoothed tilt. Small angles only — a photograph has no real depth, so
+   past roughly 14 degrees the illusion breaks and it reads as a flat card. */
+(function () {
+  var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var el = document.getElementById('hand');
+  if (reduce) return;
+
+  var tx = 0, ty = 0, cx = 0, cy = 0, vx = 0, vy = 0, sx = 0, sy = 0, raf = null;
+
+  addEventListener('mousemove', function (e) {
+    var nx = e.clientX / innerWidth - 0.5;
+    var ny = e.clientY / innerHeight - 0.5;
+    ty = nx * 26;        // rotateY follows horizontal
+    tx = ny * -14;       // rotateX opposes vertical
+    sx = nx * 26;        // slight translation sells the parallax
+    sy = ny * 16;
+    if (!raf) raf = requestAnimationFrame(step);
+  });
+
+  function step() {
+    vx += (tx - cx) * 0.055; vx *= 0.84; cx += vx;
+    vy += (ty - cy) * 0.055; vy *= 0.84; cy += vy;
+    el.style.setProperty('--tiltX', cx.toFixed(2) + 'deg');
+    el.style.setProperty('--tiltY', cy.toFixed(2) + 'deg');
+    el.style.setProperty('--shiftX', (cy * 0.9).toFixed(1) + 'px');
+    el.style.setProperty('--shiftY', (-cx * 0.9).toFixed(1) + 'px');
+    raf = (Math.abs(tx - cx) > .01 || Math.abs(ty - cy) > .01 ||
+           Math.abs(vx) > .01 || Math.abs(vy) > .01) ? requestAnimationFrame(step) : null;
+  }
+})();
+</script>
+</body>
+</html>
