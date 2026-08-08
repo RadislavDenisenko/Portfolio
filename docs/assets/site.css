@@ -428,11 +428,17 @@ section{position:relative}
   font-family:var(--mono);font-size:12px;color:var(--soft);
   letter-spacing:.03em;text-align:left;max-width:40ch;margin-top:12px;
 }
-.hand-fallback{
-  display:grid;place-items:center;
-  color:rgba(255,255,255,.6);font-family:var(--mono);font-size:13px;
+/* No WebGL (GPU denylist, a VM, webgl.disabled). site.js draws the real
+   21-landmark topology as an SVG here — the same diagram the tracker works
+   from — instead of a line of text describing a hand that is not on screen,
+   and relabels the stage and caption to say what this actually is. */
+.hand-fallback{display:grid;place-items:center;padding:6%}
+.lm-diagram{
+  width:auto;height:100%;max-width:100%;max-height:100%;overflow:visible;
 }
-.hand-fallback::after{content:'✋ 21 landmarks · 30 fps'}
+.lm-diagram line{stroke:rgba(55,214,255,.5);stroke-width:.7}
+.lm-diagram circle{fill:#26D9A3}
+.lm-diagram circle.tip{fill:#37D6FF}
 
 /* --------------------- AirMouse — full-bleed room scene -------------------- */
 /* One cinematic room (owner-approved): the surveillance camera top-left casts
@@ -498,9 +504,9 @@ section{position:relative}
 .hand-shadow{
   --drift:0px; --near:1;
   position:absolute;left:34%;bottom:1.5%;
-  width:62%;height:13%;border-radius:50%;
-  background:radial-gradient(46% 52% at 38% 42%,
-    rgba(2,5,11,.92),rgba(2,5,11,.45) 42%,rgba(2,5,11,0) 78%);
+  width:66%;height:15%;border-radius:50%;
+  background:radial-gradient(56% 60% at 40% 44%,
+    rgba(2,5,11,.96),rgba(2,5,11,.6) 46%,rgba(2,5,11,0) 82%);
   filter:blur(14px);
   transform:translateX(var(--drift)) scale(var(--near)) rotate(-9deg) skewX(-16deg);
   will-change:transform;
@@ -742,9 +748,10 @@ section{position:relative}
   .scene .tags{margin:8px 0 12px;font-size:12px}
   .scene .specs{
     display:block;max-width:none;margin:12px 0 0;
-    font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.8);
+    font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.8);
     letter-spacing:.02em;line-height:1.7;
   }
+  .scene .actions .btn-primary{padding:12px 18px;font-size:15px;white-space:nowrap}
   .scene .specs li{
     display:inline;background:none;border:0;padding:0;color:inherit;
     font-size:inherit;-webkit-backdrop-filter:none;backdrop-filter:none;

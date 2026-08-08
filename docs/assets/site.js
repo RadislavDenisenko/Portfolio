@@ -212,13 +212,83 @@
   }
 
   /* ---------- AirMouse: lazy-init the 3D hand when the section nears ---------- */
+
+  /* A stage that will not animate is NOT a button, and must not claim to be
+     one. Both downgrade paths — coarse pointer / reduced motion, and no WebGL
+     at all — come through here, so neither can leave a tabbable control that
+     announces an interactive pinch demo and then does nothing. */
+  var makeStatic = function (el, label, capAttr) {
+    el.removeAttribute('tabindex');
+    el.removeAttribute('role');
+    el.setAttribute('role', 'img');
+    el.setAttribute('aria-label', label);
+    el.classList.add('is-static');
+    var cap = $('[data-cap-static]');
+    if (cap) {
+      cap.textContent = capAttr || cap.getAttribute('data-cap-static') || cap.textContent;
+    }
+  };
+  var STATIC_LABEL = '3D hand, palm open, with the 21 tracked landmarks highlighted.';
+
+  /* The 21-landmark topology, in MediaPipe's own normalised coordinates for an
+     open right palm. Used only when WebGL is unavailable — it draws the same
+     diagram the tracker works from, so the fallback shows something true
+     instead of a caption describing a hand that is not on screen. */
+  var LM = [
+    [50, 96], [30, 84], [20, 71], [14, 60], [9, 51],
+    [40, 55], [37, 39], [35, 29], [34, 20],
+    [50, 52], [50, 34], [50, 23], [50, 13],
+    [60, 54], [62, 37], [63, 26], [64, 17],
+    [70, 59], [74, 45], [77, 36], [79, 27]
+  ];
+  var LINKS = [[0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8],
+    [5, 9], [9, 10], [10, 11], [11, 12], [9, 13], [13, 14], [14, 15], [15, 16],
+    [13, 17], [17, 18], [18, 19], [19, 20], [0, 17]];
+  var landmarkDiagram = function () {
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 100 110');
+    svg.setAttribute('class', 'lm-diagram');
+    svg.setAttribute('aria-hidden', 'true');
+    LINKS.forEach(function (l) {
+      var ln = document.createElementNS(ns, 'line');
+      ln.setAttribute('x1', LM[l[0]][0]); ln.setAttribute('y1', LM[l[0]][1]);
+      ln.setAttribute('x2', LM[l[1]][0]); ln.setAttribute('y2', LM[l[1]][1]);
+      svg.appendChild(ln);
+    });
+    LM.forEach(function (p, i) {
+      var c = document.createElementNS(ns, 'circle');
+      c.setAttribute('cx', p[0]); c.setAttribute('cy', p[1]);
+      c.setAttribute('r', i === 4 || i === 8 ? 2.6 : 2.0);
+      if (i === 4 || i === 8) c.setAttribute('class', 'tip');
+      svg.appendChild(c);
+    });
+    return svg;
+  };
+
+  /* Ask before importing. three.js logs its own console.error when it cannot
+     create a context, and DESIGN.md's clean-console rule outranks the
+     convenience of finding out by failing. */
+  var hasWebGL = function () {
+    try {
+      var c = document.createElement('canvas');
+      return !!(c.getContext('webgl2') || c.getContext('webgl'));
+    } catch (e) { return false; }
+  };
+
+  var handFallback = function (el) {
+    el.classList.add('hand-fallback');
+    if (!el.querySelector('.lm-diagram')) el.appendChild(landmarkDiagram());
+    /* honest on both counts: it is a diagram, and the 3D version is missing */
+    makeStatic(el, 'Diagram of the 21 hand landmarks AirMouse tracks, on an open palm.',
+      'The 21 landmarks AirMouse tracks. The 3D version needs WebGL, which this browser has turned off.');
+  };
+
   var initHandOn = function (el, opts) {
+    if (!hasWebGL()) { handFallback(el); return; }
     import('./hand.js')
       .then(function (m) { m.initHand(el, opts); })
-      .catch(function (err) {
-        el.classList.add('hand-fallback');
-        if (window.console) console.warn('hand scene unavailable', err);
-      });
+      .catch(function () { handFallback(el); });
   };
   var handStage = $('#hand-stage'); /* homepage and airmouse/ both use this id */
   if (handStage) {
@@ -229,16 +299,7 @@
       room: handStage.hasAttribute('data-room'),
       shadowEl: $('#hand-shadow')
     };
-    if (opts.statik) {
-      /* static frame = not a button. Tell the truth to AT and in the caption. */
-      handStage.removeAttribute('tabindex');
-      handStage.setAttribute('role', 'img');
-      handStage.setAttribute('aria-label',
-        '3D hand, palm open, with the 21 tracked landmarks highlighted.');
-      handStage.classList.add('is-static');
-      var cap = $('[data-cap-static]');
-      if (cap) cap.textContent = cap.getAttribute('data-cap-static');
-    }
+    if (opts.statik) makeStatic(handStage, STATIC_LABEL);
     if ('IntersectionObserver' in window) {
       var hio = new IntersectionObserver(function (entries) {
         entries.forEach(function (en) {
