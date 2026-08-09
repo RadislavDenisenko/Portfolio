@@ -116,6 +116,36 @@ function dotSprite(rgb) {
   return new T.CanvasTexture(c);
 }
 
+
+/* --------------------------------------------------------------- wrist bend
+   Rotating the whole group swings the forearm along with the hand, which reads
+   as a prop on a stick. The turn is applied per vertex instead, ramped in
+   across the wrist: the stub below it holds still, the hand turns on it, and
+   the fingers run a slower spring than the palm so they arrive late. That lag
+   is most of the difference between rotating and moving.
+
+   Written longhand because the vendored three exports no Quaternion and no
+   Matrix3, and two composed axis-angle rotations are a dozen lines. */
+const BUCKETS = 32;
+const BEND_BAND = 0.034;        // model units the wrist spreads the bend over
+
+function rodrigues(m, u, ang) {
+  const c = Math.cos(ang), s = Math.sin(ang), C = 1 - c;
+  const x = u.x, y = u.y, z = u.z;
+  m[0] = x * x * C + c;     m[1] = x * y * C - z * s; m[2] = x * z * C + y * s;
+  m[3] = y * x * C + z * s; m[4] = y * y * C + c;     m[5] = y * z * C - x * s;
+  m[6] = z * x * C - y * s; m[7] = z * y * C + x * s; m[8] = z * z * C + c;
+}
+
+function mul3(out, o, a, b) {
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      out[o + r * 3 + c] =
+        a[r * 3] * b[c] + a[r * 3 + 1] * b[3 + c] + a[r * 3 + 2] * b[6 + c];
+    }
+  }
+}
+
 export async function initHand(target, opts = {}) {
   const canvas = document.createElement('canvas');
   canvas.setAttribute('aria-hidden', 'true');
@@ -192,6 +222,7 @@ export async function initHand(target, opts = {}) {
   const tipTex = dotSprite('124,255,190');
   const jointTex = dotSprite('90,214,255');
   const pts = [];
+  const lmRaw = [];
   const TIPS = new Set([4, 8, 12, 16, 20]);
   LANDMARKS.forEach((name, i) => {
     const p = model.joints[name];
@@ -208,6 +239,7 @@ export async function initHand(target, opts = {}) {
     s.renderOrder = 10;
     lm.add(s);
     pts[i] = s.position;
+    lmRaw[i] = p;
   });
 
   const segs = [];
@@ -228,6 +260,99 @@ export async function initHand(target, opts = {}) {
   lm.add(skel);
   spin.add(lm);
 
+  /* Screen axes expressed in the geometry's own frame. The cursor turns the
+     hand about the camera's axes; the vertices we move live in model space. */
+  const probe = new T.Group();
+  probe.rotation.set(POSE.x, POSE.y, POSE.z);
+  probe.updateMatrixWorld();
+  const axX = probe.worldToLocal(new T.Vector3(1, 0, 0)).normalize();
+  const axY = probe.worldToLocal(new T.Vector3(0, 1, 0)).normalize();
+
+  const wj = model.joints['wrist'];
+  const tj = model.joints['middle-finger-tip'];
+  const reach = Math.hypot(tj[0] - wj[0], tj[1] - wj[1], tj[2] - wj[2]);
+  const axis = new T.Vector3((tj[0] - wj[0]) / reach,
+                             (tj[1] - wj[1]) / reach,
+                             (tj[2] - wj[2]) / reach);
+  const along = (x, y, z) =>
+    (x - wj[0]) * axis.x + (y - wj[1]) * axis.y + (z - wj[2]) * axis.z;
+
+  /* Everything that varies across the hand varies with one number — distance
+     along the wrist-to-fingertip axis — so the per-vertex work is a lookup,
+     and only 32 rotation matrices get built per frame instead of 1360. */
+  const T0 = -0.008;
+  const slot = t => Math.max(0, Math.min(BUCKETS - 1,
+    Math.round((t - T0) / (reach - T0) * (BUCKETS - 1))));
+  const bendW = new Float32Array(BUCKETS);    // how much of the turn reaches here
+  const bendD = new Float32Array(BUCKETS);    // how far out, for the finger lag
+  for (let i = 0; i < BUCKETS; i++) {
+    const t = T0 + (reach - T0) * i / (BUCKETS - 1);
+    const u = Math.max(0, Math.min(1, t / BEND_BAND));
+    bendW[i] = u * u * (3 - 2 * u);
+    bendD[i] = Math.max(0, Math.min(1, t / reach));
+  }
+
+  const posAttr = model.geo.attributes.position;
+  const nrmAttr = model.geo.attributes.normal;
+  const restP = posAttr.array.slice();
+  const restN = nrmAttr.array.slice();
+  const vSlot = new Uint8Array(restP.length / 3);
+  for (let v = 0; v < vSlot.length; v++) {
+    vSlot[v] = slot(along(restP[v * 3], restP[v * 3 + 1], restP[v * 3 + 2]));
+  }
+  const lmSlot = lmRaw.map(p => (p ? slot(along(p[0], p[1], p[2])) : 0));
+  mesh.frustumCulled = false;    // the bend moves vertices outside the bind box
+
+  const mats = new Float32Array(BUCKETS * 9);
+  const mA = new Float32Array(9), mB = new Float32Array(9);
+  const skelPos = skel.geometry.attributes.position;
+
+  /* cx/cy is where the palm has got to, gx/gy where the fingers have. */
+  function bend(cx, cy, gx, gy) {
+    for (let i = 0; i < BUCKETS; i++) {
+      const w = bendW[i], d = bendD[i];
+      rodrigues(mA, axX, w * (cx + (gx - cx) * d));
+      rodrigues(mB, axY, w * (cy + (gy - cy) * d));
+      mul3(mats, i * 9, mA, mB);
+    }
+
+    const P = posAttr.array, N = nrmAttr.array;
+    for (let v = 0, n = vSlot.length; v < n; v++) {
+      const o = vSlot[v] * 9, k = v * 3;
+      const px = restP[k] - wj[0], py = restP[k + 1] - wj[1], pz = restP[k + 2] - wj[2];
+      P[k]     = wj[0] + mats[o]     * px + mats[o + 1] * py + mats[o + 2] * pz;
+      P[k + 1] = wj[1] + mats[o + 3] * px + mats[o + 4] * py + mats[o + 5] * pz;
+      P[k + 2] = wj[2] + mats[o + 6] * px + mats[o + 7] * py + mats[o + 8] * pz;
+      const nx = restN[k], ny = restN[k + 1], nz = restN[k + 2];
+      N[k]     = mats[o]     * nx + mats[o + 1] * ny + mats[o + 2] * nz;
+      N[k + 1] = mats[o + 3] * nx + mats[o + 4] * ny + mats[o + 5] * nz;
+      N[k + 2] = mats[o + 6] * nx + mats[o + 7] * ny + mats[o + 8] * nz;
+    }
+    posAttr.needsUpdate = true;
+    nrmAttr.needsUpdate = true;
+
+    /* The landmarks are the claim this section makes, so they ride the same
+       transform as the skin rather than a cheaper approximation of it. */
+    for (let i = 0; i < lmRaw.length; i++) {
+      const p = lmRaw[i];
+      if (!p || !pts[i]) continue;
+      const o = lmSlot[i] * 9;
+      const px = p[0] - wj[0], py = p[1] - wj[1], pz = p[2] + 0.004 - wj[2];
+      pts[i].set(
+        wj[0] + mats[o]     * px + mats[o + 1] * py + mats[o + 2] * pz + centre[0],
+        wj[1] + mats[o + 3] * px + mats[o + 4] * py + mats[o + 5] * pz + centre[1],
+        wj[2] + mats[o + 6] * px + mats[o + 7] * py + mats[o + 8] * pz + centre[2]);
+    }
+    const S = skelPos.array;
+    let j = 0;
+    for (const [a, b] of BONES) {
+      if (!pts[a] || !pts[b]) continue;
+      S[j++] = pts[a].x; S[j++] = pts[a].y; S[j++] = pts[a].z;
+      S[j++] = pts[b].x; S[j++] = pts[b].y; S[j++] = pts[b].z;
+    }
+    skelPos.needsUpdate = true;
+  }
+
   function resize() {
     const r = target.getBoundingClientRect();
     if (!r.width || !r.height) return;
@@ -245,6 +370,7 @@ export async function initHand(target, opts = {}) {
   if (opts.statik) { renderer.render(scene, camera); return; }
 
   let tx = 0, ty = 0, cx = 0, cy = 0, vx = 0, vy = 0;
+  let gx = 0, gy = 0, ux = 0, uy = 0;
   const onMove = e => {
     ty = (e.clientX / window.innerWidth - 0.5) * 0.62;
     tx = (e.clientY / window.innerHeight - 0.5) * 0.34;
@@ -256,8 +382,13 @@ export async function initHand(target, opts = {}) {
     if (!visible || document.hidden) { running = false; raf = null; return; }
     vx += (tx - cx) * 0.055; vx *= 0.85; cx += vx;
     vy += (ty - cy) * 0.055; vy *= 0.85; cy += vy;
-    wrap.rotation.x = cx;
-    wrap.rotation.y = cy;
+    /* The fingers chase the palm rather than the cursor, on a slightly softer
+       spring, so they set off after it and settle after it. Tuned to about 7
+       degrees of lag on a full-width flick: a hand yields that much, a slower
+       spring gave 21 and the hand turned to rubber. */
+    ux += (cx - gx) * 0.26; ux *= 0.84; gx += ux;
+    uy += (cy - gy) * 0.26; uy *= 0.84; gy += uy;
+    bend(cx, cy, gx, gy);
     wrap.position.y = 0.06 + Math.sin(t / 1600) * 0.022;   // idle drift, never frozen
     if (opts.shadowEl) {
       opts.shadowEl.style.transform =

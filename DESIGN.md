@@ -43,32 +43,37 @@ Full-viewport section per project, scroll-snap proximity (never JS-hijacked):
 2. **AirMouse** — a full-bleed 100svh cinematic room scene (owner decision, the
    framed-stage exception above): a moody blue room photo where a surveillance
    camera (blinking CSS REC dot on its housing) casts a volumetric beam onto
-   the floor. Floating in the beam on a transparent canvas: a **procedural
-   rigged hand we generate in code — no GLB, no scan**. A lofted
-   superellipse palm with real muscle relief (thenar, hypothenar, knuckle pads),
-   four three-bone fingers and an opposed three-bone thumb, each segment
-   parented to its own joint group. It is a RIGHT hand shown palm-first, so the
-   thumb is on the viewer's right. Anthropometric phalanx lengths and a
-   metacarpal arch that descends from the middle, so middle > ring ≈ index >
-   pinky reads right. Joints swell into knuckles and the shafts waist between
-   them; fingertips narrow and then fatten into a palmar pulp. The anatomy the
-   tiling skin map cannot supply is baked into the vertex colours and the loft
-   itself: palmar creases cut into the form as well as darkened, flexion creases
-   at every knuckle, low-frequency pad whorls on the fingertips. Rest pose is an
-   open palm to the viewer; it follows the cursor with spring lag plus a
-   per-finger sway, breathes when idle, and **click / Enter is a real pinch** —
-   the index curls to a textbook 45/54/17° tip pinch and the thumb swings up and
-   across until the two pads touch. The thumb angles are solved against the rig
-   at build time, and what is measured is the SURFACE gap between the two distal
-   phalanges (each sampled as the tapered capsule the loft actually builds), not
-   the distance between landmarks — landmarks live under the skin, so closing
-   *them* buries one finger inside the other. Retune the anatomy and the thumb
-   re-finds contact; if it ever cannot reach, the module says so in the console.
-   That's the product's actual click gesture, so the copy says so. All 21
-   landmarks are children of the rig's joints — anatomically exact by
-   construction and they track the pinch — sitting proud of the surface on the
-   pad normal, with soft radial-gradient halos and an aqua skeleton overlay.
-   The skeleton is drawn THROUGH the hand rather than depth-tested: an
+   the floor. Floating in the beam on a transparent canvas: a **modelled,
+   rigged reference hand wearing maps we bake ourselves**. The mesh is the MIT
+   WebXR hand skeleton (25 named joints, 1360 vertices, 94KB); it replaced
+   ~1450 lines of procedural lofting that never got past "mannequin in a glove",
+   because a mesh a human modelled already has the knuckle arc, the digit taper
+   and the thumb mass right. It is a LEFT hand shown palm-first, so the thumb is
+   on the viewer's right. We do not skin it per joint at runtime: the section
+   shows one open-palm pose and the bind pose IS that pose. So the rendered hand
+   does not pinch, and no copy near it claims it does — "pinch to click" on the
+   page is a fact about the Windows app, which is true, not a caption on the
+   demo. The rig is still read, because the 21
+   MediaPipe landmarks are exactly where its joints say they are.
+
+   **The hand turns on its wrist, not on a stick.** The cursor rotation is
+   applied per vertex, ramped in with a smoothstep across the wrist over 0.034
+   model units: the forearm stub below holds still while the hand pivots on it.
+   Rotating the whole group instead — which is what a rigid transform does —
+   swings the forearm along with the hand, and the eye reads that instantly as a
+   prop being waved. The fingers then chase the palm on a second, slightly
+   softer spring, so they set off after it and settle after it. That lag is
+   tuned to about 7 degrees on a full-width flick, which is roughly what a hand
+   yields; a slower spring measured 21 degrees and the hand turned to rubber.
+   It breathes when idle so it is never frozen. All of it costs 0.024ms a frame,
+   because everything that varies across the hand varies with one number —
+   distance along the wrist-to-fingertip axis — so 32 rotation matrices get
+   built per frame and every vertex is a lookup.
+
+   All 21 landmarks are placed from the rig's joints — anatomically exact by
+   construction — and they ride the same per-vertex transform as the skin, so
+   they stay glued to it through the bend. Soft radial-gradient halos, aqua
+   skeleton overlay. The skeleton is drawn THROUGH the hand rather than depth-tested: an
    instrumentation layer is either drawn or it isn't, and half-buried
    connectors emerge from under the mesh and die in mid-palm. Every additive
    overlay uses CustomBlending that adds RGB but not alpha: plain additive
