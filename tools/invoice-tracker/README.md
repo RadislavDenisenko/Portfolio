@@ -44,18 +44,16 @@ and updates `data/invoices.json`.
 
 It needs a Gmail **App Password** (not your account password) from
 <https://myaccount.google.com/apppasswords>, which requires 2-step verification.
-Put it in `secrets.json` next to the script:
-
-```json
-{"user": "raddenisenko@gmail.com", "password": "abcd efgh ijkl mnop"}
-```
-
-Then:
+The first run asks for it and writes `secrets.json` itself — no file to create
+by hand:
 
 ```bash
 python3 fetch_invoices.py              # everything since 01-Jan-2026
 python3 fetch_invoices.py --keep-pdfs  # also archive the PDFs into data/pdf/
 ```
+
+Scheduled runs read the saved `secrets.json`, so run it once by hand first. It
+also accepts `INVOICE_EMAIL` and `INVOICE_APP_PASSWORD` from the environment.
 
 Run it automatically on Thursday mornings:
 

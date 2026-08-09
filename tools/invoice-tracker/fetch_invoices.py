@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import email
+import getpass
 import imaplib
 import json
 import os
@@ -34,19 +35,41 @@ PDF_DIR = DATA / "pdf"
 
 
 def credentials() -> tuple[str, str]:
+    """Environment, then secrets.json, then ask — and remember the answer."""
     user = os.environ.get("INVOICE_EMAIL")
     password = os.environ.get("INVOICE_APP_PASSWORD")
-    if not (user and password):
-        secrets = HERE / "secrets.json"
-        if secrets.exists():
-            data = json.loads(secrets.read_text("utf-8"))
-            user = user or data.get("user")
-            password = password or data.get("password")
-    if not (user and password):
+
+    secrets = HERE / "secrets.json"
+    if not (user and password) and secrets.exists():
+        data = json.loads(secrets.read_text("utf-8"))
+        user = user or data.get("user")
+        password = password or data.get("password")
+
+    if user and password:
+        return user, password.replace(" ", "")
+
+    if not sys.stdin.isatty():
         sys.exit(
-            "No credentials. Set INVOICE_EMAIL and INVOICE_APP_PASSWORD, or write "
-            f"{HERE / 'secrets.json'} with {{\"user\": ..., \"password\": ...}}."
+            "No credentials. Run this once by hand to set them up, or set "
+            "INVOICE_EMAIL and INVOICE_APP_PASSWORD."
         )
+
+    print("First run — I need a Gmail App Password (not your normal password).")
+    print("Make one at https://myaccount.google.com/apppasswords, then paste it below.")
+    user = user or input("Gmail address: ").strip()
+    if not password:
+        # getpass hides the paste, which surprises people the first time.
+        password = getpass.getpass("App password (nothing will appear as you paste): ")
+    password = password.replace(" ", "").strip()
+    if not (user and password):
+        sys.exit("Need both an address and a password.")
+
+    secrets.write_text(json.dumps({"user": user, "password": password}, indent=2), "utf-8")
+    try:
+        secrets.chmod(0o600)
+    except OSError:
+        pass  # Windows does not do POSIX modes; .gitignore is the real guard here
+    print(f"Saved to {secrets}. It is gitignored, so it stays off GitHub.\n")
     return user, password
 
 
