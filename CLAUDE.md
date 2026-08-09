@@ -101,6 +101,17 @@ heading like **Worth knowing**:
 
 Never pad this. If there is nothing worth raising, say nothing.
 
+## How to write code here
+
+Follow ponytail (`.claude/skills/ponytail/`): the simplest thing that works,
+stdlib and native platform features before dependencies, no speculative
+abstractions, delete before adding, shortest diff that does the job.
+
+**But never at the cost of functionality or performance.** Lazy means less code,
+not less product. If the short version drops a feature, handles fewer cases, or
+runs slower, it is the wrong version — write the one that actually works well.
+Simplicity is how you get there, not what you trade the result for.
+
 ## Hard constraints
 
 Zero third-party requests at runtime · console stays clean · total page transfer
