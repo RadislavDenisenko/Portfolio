@@ -1,5 +1,16 @@
 @echo off
-rem Double-click this to open the dashboard. Close the window to stop it.
+rem Double-click this to open the dashboard. Close this window to stop it.
 cd /d "%~dp0"
-start "" http://localhost:8080/
-python -m http.server 8080
+
+rem Let the server bind before the browser knocks. Opening the tab first races
+rem Python's startup, and a browser that loses shows a connection error rather
+rem than retrying.
+start "" /b cmd /c "timeout /t 2 /nobreak >nul & explorer http://localhost:8080/"
+
+echo Dashboard: http://localhost:8080/
+echo Close this window to stop it.
+echo.
+
+rem Loopback only: nothing else on the network can reach your pay data, and
+rem Windows Firewall has no reason to prompt.
+python -m http.server 8080 --bind 127.0.0.1

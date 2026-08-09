@@ -31,6 +31,7 @@ Zero dependencies — Python standard library only, and plain browser APIs.
 | `test_parser.py` | the check — run this to prove nothing is broken |
 | `open-tracker.bat` | double-click: serves the dashboard and opens the browser |
 | `fetch-invoices.bat` | double-click: runs the Gmail fetch |
+| `README.md` | fuller reference. Where it and this file differ, follow this file — README is written for any machine, this one for his |
 
 **A "job" is a distinct JOB number on a given day.** Several pay lines share one
 JOB number — those are one job, not several. Money is handled in whole cents.
@@ -69,6 +70,10 @@ del secrets.json
 
 Tell him to paste **once** and that the blank screen is normal.
 
+Deleting the file only re-prompts if `INVOICE_EMAIL` and `INVOICE_APP_PASSWORD`
+are unset — the environment is checked first and wins. If a previous session set
+them, clear them too.
+
 ### If Gmail still refuses
 
 1. It must be an App Password, not his account password.
@@ -80,6 +85,15 @@ A network failure (rather than a credential one) says
 `Could not reach imap.gmail.com` and is about VPN/firewall/port 993, not the
 password.
 
+### Reading the result
+
+It prints one `+ <pay period>: N days, N jobs, $N` line per invoice it took, then
+a total. PDFs it cannot read are reported on stderr and skipped rather than
+crashing the run, so **compare the count it reports against the number of
+`FL INVOICE` emails in the mailbox** — a silent shortfall means something was
+skipped, not that fewer invoices exist. Re-running is safe and idempotent: it
+tracks message IDs and re-parses without duplicating.
+
 ## Reference numbers — use these to check your parse
 
 The week of **July 05–11, 2026** is already verified. If you re-parse it and get
@@ -89,14 +103,25 @@ anything different, your parse is wrong:
 - 35 jobs across 61 pay lines
 - Gross **$1,530.63** · soft fee **-$6.25** · take home **$1,524.31**
 - Averages: 7.0 jobs/day · $306.13/day · $43.73/job
-- To take home $1,300 over 5 days: **6.0 jobs a day**
+- To take home $1,300 over 5 days: **5.97 jobs a day**
+
+Two places where the obvious arithmetic gives a different answer, both on
+purpose:
+
+- **Take home is $1,524.31, not $1,524.38.** It comes off the invoice's *printed*
+  total of $1,530.56, not off the $1,530.63 the 61 lines actually sum to.
+- **The CLI says `5.97 jobs/day`; the dashboard says `6.0`.** Same number, and
+  the dashboard rounds a headline figure to one decimal. Neither is wrong.
 
 **The 7¢ discrepancy is real and expected.** The 61 lines total $1,530.63 but the
 invoice prints $1,530.56. That is Koscom's arithmetic, not a bug here — the
 dashboard reports it under "Worth asking about". Do not "fix" it.
 
-The other 6 weeks are: WK07.18, WK07.04, WK06.27, WK06.20, WK06.13, WK06.06
-(2026). Nothing older exists.
+As of 2026-08-09 there were 7 invoice emails: weeks ending WK06.06, WK06.13,
+WK06.20, WK06.27, WK07.04, WK07.11 and WK07.18 of 2026, arriving on Thursdays
+about two and a half weeks after the week they cover. **Pull whatever IMAP
+actually returns rather than treating that list as the target** — more will have
+arrived since this was written, and nothing is hardcoded to it.
 
 ## Then show him the numbers
 
