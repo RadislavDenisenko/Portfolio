@@ -1,0 +1,1 @@
+Vendored from https://github.com/DietrichGebert/ponytail (MIT) at commit 2ed6c52.

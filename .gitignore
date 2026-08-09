@@ -12,6 +12,10 @@ dist/
 projects/airmouse/config.json
 projects/airmouse/screenshot.png
 
+# private: real pay data and the Gmail app password. This repo is public.
+tools/invoice-tracker/data/
+tools/invoice-tracker/secrets.json
+
 .vscode/
 .idea/
 Thumbs.db

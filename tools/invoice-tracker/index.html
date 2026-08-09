@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Invoice tracker</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>%F0%9F%92%B5</text></svg>">
+<link rel="stylesheet" href="assets/tracker.css">
+</head>
+<body>
+
+<header class="head">
+  <h1>Invoice tracker</h1>
+  <p class="sub">Every invoice stays on this computer. Nothing is uploaded anywhere.</p>
+  <p class="status" id="status"></p>
+</header>
+
+<div class="drop" id="drop" tabindex="0" role="button"
+     aria-label="Choose invoice PDFs, or drop them anywhere on this page">
+  <strong>Drop invoice PDFs here</strong>
+  <span>or click to choose them — you can add every week at once</span>
+</div>
+<input type="file" id="file" accept="application/pdf,.pdf" multiple hidden>
+<p class="note" id="note" role="status"></p>
+
+<section id="empty">
+  <h2>Start here</h2>
+  <p>Save the <code>I0F8.pdf</code> attachment out of any
+  <em>FL INVOICE</em> email and drop it above. Add as many weeks as you have —
+  the more weeks it can see, the truer the averages get.</p>
+</section>
+
+<main id="dashboard" hidden>
+
+  <nav class="chips" id="week-picker" aria-label="Choose a week"></nav>
+
+  <h2 id="week-title"></h2>
+  <div class="tiles" id="tiles"></div>
+
+  <div id="days"></div>
+
+  <section class="calc">
+    <h2>What do I need to hit my number?</h2>
+    <div class="calc-controls">
+      <div class="field">
+        <label for="target-amount">Take home a week</label>
+        <div class="money-input">
+          <span aria-hidden="true">$</span>
+          <input type="number" id="target-amount" min="0" max="10000" step="25" inputmode="numeric">
+        </div>
+        <input type="range" id="target-slider" min="200" max="3000" step="25"
+               aria-label="Weekly take-home target">
+      </div>
+      <div class="field">
+        <span class="label" id="days-label">Days a week</span>
+        <div class="segment" role="group" aria-labelledby="days-label">
+          <button type="button" data-days="4">4</button>
+          <button type="button" data-days="5">5</button>
+          <button type="button" data-days="6">6</button>
+        </div>
+      </div>
+    </div>
+    <div class="answer">
+      <div class="answer-box" id="target-answer"></div>
+      <div class="answer-detail" id="target-detail"></div>
+    </div>
+  </section>
+
+  <div id="history"></div>
+  <div class="warnings" id="warnings"></div>
+
+  <footer class="foot">
+    <button type="button" id="export" class="btn">Export JSON</button>
+    <button type="button" id="clear" class="btn btn-quiet">Clear stored invoices</button>
+  </footer>
+
+</main>
+
+<script src="assets/pdf-extract.js"></script>
+<script src="assets/tracker.js"></script>
+</body>
+</html>
