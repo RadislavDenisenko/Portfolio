@@ -111,6 +111,18 @@ heading like **Worth knowing**:
 
 Never pad this. If there is nothing worth raising, say nothing.
 
+**When you name a problem, say what it actually means for him.** Not the
+mechanism — the consequence. What will happen, what he'll see, whether the thing
+works or not, and what he has to do about it. Never hand him a term like
+"commit", "pull", "branch" or "dependency" and leave him to derive the result.
+
+- Bad: "the icon only works after you git pull — open-tracker.bat came in a
+  commit you don't have."
+- Good: "that icon won't do anything yet. The file it points at isn't on your
+  PC — double-clicking it opens an error. One step fixes it: <the step>."
+
+If a term is unavoidable, define it in half a sentence the first time.
+
 ## How to write code here
 
 Follow ponytail (`.claude/skills/ponytail/`): the simplest thing that works,
