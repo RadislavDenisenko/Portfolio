@@ -102,6 +102,83 @@ def check_tax() -> None:
     print("tax math OK")
 
 
+def check_odometer() -> None:
+    """Odometer readings into a mileage log that cannot overstate the miles."""
+    import json
+
+    import tax
+
+    tmp = _sandbox()
+
+    # A fake invoice store: he worked the 1st, 2nd and 6th. Not the 3rd.
+    store = tmp / "invoices.json"
+    store.write_text(json.dumps({"invoices": [{"line_items": [
+        {"date": "2026-07-01", "job": "100", "cents": 1},
+        {"date": "2026-07-01", "job": "101", "cents": 1},
+        {"date": "2026-07-02", "job": "102", "cents": 1},
+        {"date": "2026-07-06", "job": "103", "cents": 1},
+        {"date": "2026-07-08", "job": "104", "cents": 1},
+    ]}]}), "utf-8")
+
+    assert tax.workdays_from_invoices(store) == {
+        "2026-07-01": ["100", "101"], "2026-07-02": ["102"],
+        "2026-07-06": ["103"], "2026-07-08": ["104"],
+    }
+
+    def reading(at, value):
+        ledger.setdefault("odometer", []).append(
+            {"at": at, "reading": value, "message_id": at}
+        )
+
+    ledger = tax.load()
+    reading("2026-07-01T07:10", 80_000)      # left
+    reading("2026-07-01T18:40", 80_063)      # home: 63 miles
+    reading("2026-07-02T07:00", 80_100)      # only one reading all day
+    reading("2026-07-03T08:00", 80_200)      # not a workday
+    reading("2026-07-03T19:00", 80_400)
+    reading("2026-07-06T07:00", 80_500)      # readings reversed
+    reading("2026-07-06T19:00", 80_400)
+    result = tax.odometer_to_mileage(ledger, store)
+
+    assert result["trips"] == 1, result
+    assert result["miles"] == 63.0, result
+    trip = ledger["mileage"][0]
+    assert trip["date"] == "2026-07-01"
+    # The invoice supplies the business purpose. That is the whole trick.
+    assert "100" in trip["purpose"] and "101" in trip["purpose"], trip["purpose"]
+    assert trip["complete"] and trip["kind"] == "business"
+
+    joined = " | ".join(result["problems"])
+    assert "only one odometer reading" in joined
+    assert "no invoice shows work that day" in joined     # the 3rd is excluded
+    assert "backwards" in joined
+    # The 200 miles on the non-workday must NOT reach the total.
+    assert result["miles"] == 63.0
+
+    # Idempotent, and it must not eat a hand-entered trip.
+    tax.add_miles(ledger, 12, "2026-07-09", "supply run", "business", "depot")
+    for _ in range(3):
+        again = tax.odometer_to_mileage(ledger, store)
+    assert again["trips"] == 1, again
+    assert len(ledger["mileage"]) == 2, ledger["mileage"]
+    assert any(m.get("source") != "odometer" for m in ledger["mileage"])
+
+    # A day he worked and sent nothing at all is named, because that is lost
+    # money. Days whose readings were broken are a different failure and are
+    # reported through `problems` instead, so they must NOT show up here.
+    assert result["missing_days"] == ["2026-07-08"], result["missing_days"]
+
+    # A day after the last invoice still counts — invoices lag ~2.5 weeks.
+    reading("2026-08-01T07:00", 81_000)
+    reading("2026-08-01T18:00", 81_070)
+    fresh = tax.odometer_to_mileage(ledger, store)
+    assert fresh["miles"] == 133.0, fresh
+    late = [m for m in ledger["mileage"] if m["date"] == "2026-08-01"][0]
+    assert "invoice not issued yet" in late["purpose"]
+
+    print("odometer checks OK")
+
+
 def check_receipts() -> None:
     """The validators, which are the only thing standing between a misread
     digit and a wrong number on a return."""
@@ -192,6 +269,7 @@ def main() -> int:
 
     print("core math OK")
     check_tax()
+    check_odometer()
     check_receipts()
 
     if len(sys.argv) > 1:

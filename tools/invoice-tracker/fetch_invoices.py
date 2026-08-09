@@ -25,6 +25,7 @@ import hashlib
 import imaplib
 import json
 import os
+import re
 import sys
 from email.header import decode_header, make_header
 from email.utils import parsedate_to_datetime
@@ -44,6 +45,16 @@ RECEIPT_INDEX = DATA / "receipts.json"
 # already contains Stellar MLS and SunPass mail with "invoice" and "receipt" in
 # the subject. The iPhone Shortcut fills it in, so normally he types nothing.
 RECEIPT_SUBJECT = "RCPT"
+
+# Odometer readings, mailed the same way. Two a day: leaving, and home again.
+#
+# Pub 463's delivery-route example is why this is enough and why no address list
+# is needed: "You can satisfy the requirements by recording the length of the
+# delivery route once, the date of each trip at or near the time of the trips,
+# and the total miles you drove the car during the tax year." His invoices
+# already carry the dates and the job numbers — the business purpose — so the
+# only thing missing was the distance, and two numbers a day supply it.
+ODOMETER_SUBJECT = "MILES"
 
 # The password lives outside the repository. This one is public, and a file
 # sitting in the working tree is one `git add -f` or one edited .gitignore away
@@ -223,6 +234,92 @@ def image_attachments(message):
         yield filename or "receipt.jpg", payload
 
 
+def body_text(message) -> str:
+    """First text/plain part, decoded. Where the odometer number usually is."""
+    for part in message.walk():
+        if part.get_content_type() != "text/plain":
+            continue
+        payload = part.get_payload(decode=True)
+        if not payload:
+            continue
+        charset = part.get_content_charset() or "utf-8"
+        try:
+            return payload.decode(charset, "replace")
+        except LookupError:
+            return payload.decode("utf-8", "replace")
+    return ""
+
+
+def fetch_odometer(box, since: str, subject: str) -> int:
+    """Odometer readings he mailed himself, into the tax ledger.
+
+    The number can be in the subject after the keyword ("MILES 84213") or on the
+    first line of the body, because he will do both and neither should fail.
+    """
+    import tax
+
+    status, data = box.search(None, "SUBJECT", f'"{subject}"', "SINCE", since)
+    if status != "OK":
+        print("odometer search failed", file=sys.stderr)
+        return 0
+
+    ledger = tax.load()
+    readings = ledger.setdefault("odometer", [])
+    known = {r["message_id"] for r in readings if r.get("message_id")}
+    added = 0
+
+    for num in data[0].split():
+        status, raw = box.fetch(num, "(BODY.PEEK[])")
+        if status != "OK" or not raw or not raw[0]:
+            continue
+        message = email.message_from_bytes(raw[0][1])
+        message_id = (message.get("Message-ID") or "").strip()
+        if message_id and message_id in known:
+            continue
+
+        subject_line = subject_of(message)
+        # Strip the keyword before hunting for digits, so a keyword that ever
+        # gains a number in it cannot be misread as an odometer reading.
+        stripped = re.sub(re.escape(subject), " ", subject_line, flags=re.I)
+        value = _first_number(stripped) or _first_number(body_text(message))
+        if value is None:
+            print(f"  ? no number in {subject_line!r}", file=sys.stderr)
+            continue
+
+        try:
+            when = parsedate_to_datetime(message.get("Date", ""))
+        except (TypeError, ValueError):
+            continue
+        readings.append({
+            "at": when.astimezone().replace(tzinfo=None).isoformat(timespec="minutes"),
+            "reading": value,
+            "message_id": message_id,
+        })
+        known.add(message_id)
+        added += 1
+
+    if added:
+        readings.sort(key=lambda r: r["at"])
+        # Rebuild the trips here rather than making him remember a second step.
+        # It is idempotent, so running it every fetch costs nothing.
+        result = tax.odometer_to_mileage(ledger)
+        tax.save(ledger)
+        print(f"  {result['trips']} day(s) of driving, {result['miles']:,.0f} business miles")
+        for problem in result["problems"]:
+            print(f"  ! {problem}")
+    return added
+
+
+def _first_number(text: str) -> int | None:
+    match = re.search(r"\d[\d,]*", text or "")
+    if not match:
+        return None
+    try:
+        return int(match.group(0).replace(",", ""))
+    except ValueError:
+        return None
+
+
 def load_receipts() -> dict:
     if RECEIPT_INDEX.exists():
         try:
@@ -317,6 +414,10 @@ def main(argv: list[str] | None = None) -> int:
         "--receipt-subject", default=RECEIPT_SUBJECT,
         help=f"subject line marking a receipt photo (default {RECEIPT_SUBJECT})",
     )
+    ap.add_argument(
+        "--odometer-subject", default=ODOMETER_SUBJECT,
+        help=f"subject line marking an odometer reading (default {ODOMETER_SUBJECT})",
+    )
     ap.add_argument("--keep-pdfs", action="store_true", help="also archive the PDFs")
     ap.add_argument("--forget", action="store_true", help="delete the stored password and exit")
     args = ap.parse_args(argv)
@@ -408,6 +509,8 @@ def main(argv: list[str] | None = None) -> int:
         # he would stop taking.
         print(f"\nlooking for receipts (subject {args.receipt_subject!r})")
         receipts_added = fetch_receipts(box, args.since, args.receipt_subject)
+        print(f"looking for odometer readings (subject {args.odometer_subject!r})")
+        odometer_added = fetch_odometer(box, args.since, args.odometer_subject)
     finally:
         try:
             box.logout()
@@ -422,6 +525,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"{receipts_added} new receipt(s); {len(pending)} waiting to be read")
     if pending:
         print("  Ask Claude to read them:  \"read my new receipts\"")
+    print(f"{odometer_added} new odometer reading(s)")
+    print("\n  What it all adds up to:  python tax.py report")
 
     if added:
         for invoice in store["invoices"][:1]:

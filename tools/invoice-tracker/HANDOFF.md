@@ -191,6 +191,120 @@ the year he disposes of it** — potentially a decade.
 
 ---
 
+## 4b. Deep verification, 2026-08-09 — five positions, each attacked twice
+
+Five research agents against primary sources, then two adversaries per finding
+(a hostile examiner and a CPA who has to sign it). **Everything below is quoted
+from the statute, the regulation, the ruling or the publication itself.** Where
+the first pass was wrong, the correction is what is recorded.
+
+### ✅ The home office converts the commute — and he may qualify ALREADY
+
+Rev. Rul. 99-7 holding (3), verbatim from `irs.gov/pub/irs-drop/rr-99-7.pdf`:
+"If a taxpayer's residence is the taxpayer's principal place of business within
+the meaning of § 280A(c)(1)(A), the taxpayer may deduct daily transportation
+expenses incurred in going between the residence and another work location …
+regardless of whether the other work location is regular or temporary and
+**regardless of the distance**."
+
+§280A(c)(1) flush language (Taxpayer Relief Act of 1997 §932, enacted to
+override *Commissioner v. Soliman*, 506 U.S. 168) reaches a place used for
+"administrative or management activities … if there is no other fixed location
+of such trade or business **where the taxpayer conducts substantial
+administrative or management activities**". Pub 587's own Example 1 is a
+self-employed plumber whose work is nearly all at customers' homes and whose
+home office still qualifies. He is a textbook match.
+
+**The correction that matters:** the first pass assumed a room in a shared house
+fails the exclusive-use test. **It probably does not.** Pub 587: "To qualify
+under the exclusive use test, you must use a **specific area** of your home only
+for your trade or business," and "The space does not need to be marked off by a
+permanent partition." The unit is an *area*, not a room and not a lease. The
+shared kitchen and living room are irrelevant; his private room is his.
+**So the question is a fact, not a legal call: has that desk been used only for
+work, with no gaming and no personal use?** If yes, the home legs are deductible
+from the day he started. If no, they are not, and nothing is lost by asking.
+
+**Time-critical:** the evidence for that claim is packed into a box in a few
+weeks. Photograph and measure the CURRENT desk *before* the move.
+
+### ✅ The mileage log is far simpler than an address-by-address reconstruction
+
+Pub 463's delivery-route example, verbatim: "You can satisfy the requirements by
+recording **the length of the delivery route once**, the date of each trip at or
+near the time of the trips, and the total miles you drove the car during the tax
+year." And: "You make deliveries at several different locations on a route that
+begins and ends at your employer's business premises … You can account for these
+using **a single record of miles driven**."
+
+**He does not need leg-by-leg service addresses.** He needs distance + date +
+business purpose, and his invoices already supply date and purpose. That is why
+the odometer design below works.
+
+Two further corrections to the received wisdom:
+
+- **§274(d) is NOT all-or-nothing for the year.** It operates per element per
+  use. *Delima* (the case usually cited for total disallowance) actually allowed
+  $3,200 of a $4,000 claim and denied $800. A log that supports 60% of the trips
+  supports 60% of the miles.
+- **"Place" is not an enumerated element for listed property.** Reg.
+  §1.274-5T(b)(6) lists exactly three: amount, time (date), business purpose.
+  Place attaches to *travel* and *gifts*. Destination still matters as evidence,
+  but the address chain is not the statutory requirement it was made out to be.
+
+### ⚠️ UNRESOLVED AND IT COULD VOID THE WHOLE MILEAGE PLAN
+
+**Was the standard mileage rate ever available on this van?** Pub 463: "If you
+want to use the standard mileage rate for a car you own, you must choose to use
+it **in the first year** the car is available for use in your business." Rev.
+Proc. 2019-46 §4.05(3) bars the rate for any vehicle on which he claimed §179,
+bonus depreciation, or MACRS. Expensing a work van under §179 is the single most
+common move a contractor makes. **Pull his 2024 and 2025 returns, Schedule C
+line 9 and Form 4562, before trusting any number this tool produces.**
+
+Also worth two minutes: §274(d)'s last sentence exempts a "qualified nonpersonal
+use vehicle," and Reg. §1.274-5(k)(2)(ii)(H) lists "Delivery trucks with seating
+only for the driver, or only for the driver plus a folding jump seat." Almost
+certainly unavailable (he drives it personally), but a yes removes the hardest
+part of the problem.
+
+### ✅ Estimated tax — much smaller than feared, with one precondition
+
+- Next payment **September 15, 2026**. The four dates: Apr 15, Jun 15, Sep 15,
+  Jan 15 2027.
+- §6654(d)(1)(B): the required annual payment is the **LESSER** of 90% of 2026
+  tax or **100% of the tax shown on his 2025 return**. The 110% bump in
+  §6654(d)(1)(C) applies only above $150,000 of prior-year AGI — not him.
+- **PRECONDITION, easily missed.** §6654(d)(1)(B) final sentence: "Clause (ii)
+  shall not apply if the preceding taxable year was not a taxable year of 12
+  months or **if the individual did not file a return for such preceding taxable
+  year**." **Ask whether he filed 2025 before relying on any of this.**
+- §6654(e)(2): if 2025 total tax was exactly $0, **no penalty at all** for 2026.
+- §6654(e)(1): no penalty if 2026 tax is under $1,000.
+- The penalty is **simple interest, not a fine** — §6622(b) exempts §6654 from
+  daily compounding. 2026 rates: 7% Q1, 6% Q2, 7% Q3.
+- **Scale: roughly $130–$220 if the prior-year safe harbor applies**, ~$440 if it
+  does not. It is not the emergency. **The emergency is owing ~$4,100 in April
+  with nothing in the account.** Sell him the cash-flow problem, not the penalty.
+- §6654(b)(3) applies payments **oldest-installment-first**, so paying in
+  September does not cure the April and June misses — it caps them.
+
+### iPhone capture — corrections to the obvious advice
+
+- Shortcut: **Take Photo** (Show Camera Preview ON) → **Save to Photo Album** →
+  **Send Email** with "Show Compose Sheet" OFF. The silent-send behaviour of that
+  toggle is **not documented by Apple** — widely relied on, but test it once.
+- **Back Tap is a SINGLE-finger double tap** on an unlocked phone (iPhone 8+,
+  iOS 14+). Two fingers does nothing. Action button is iPhone 15 Pro or later.
+- **Gmail does NOT suppress mail you send to your own primary address** — that
+  rule is about aliases and Groups. All Mail is still the right folder, for a
+  better reason: it is a superset, immune to whether Gmail labelled it INBOX or
+  SENT. The existing code already selects it.
+- Do **not** filter on `has:attachment` — iOS Mail can inline a photo, and the
+  receipt then becomes invisible with no error.
+- `Save to Photo Album` is the cheap insurance: if the send fails in a dead zone
+  the photo still exists on the phone.
+
 ## 5a. The receipt system — BUILT 2026-08-09
 
 Working end to end on the PC side. `fetch-invoices.bat` now pulls invoices and
@@ -214,8 +328,39 @@ receipt photos in the same login, so it stays one double-click.
 - The image is written once and never edited or deleted; every ledger entry
   points back at it by filename. Rev. Proc. 97-22 needs the image to survive.
 
-Still to do: the iPhone-side Shortcut (see section 6 answers), and the dashboard
-review queue.
+Still to do: the iPhone-side Shortcut, and the dashboard review queue.
+
+## 5b. The mileage log — BUILT 2026-08-09, and it is the bigger money
+
+Receipts were what he asked for. **Mileage is worth several times more** and he
+was claiming none of it. Same pipe, second keyword:
+
+    phone -> odometer number mailed to himself, subject MILES, twice a day
+    PC    -> fetch_invoices.py stores the readings in the ledger
+    tax.py -> pairs each day's first and last reading into one business trip
+
+The design rests on Pub 463's delivery-route example (quoted in 4b): distance +
+date + business purpose is enough, and **the invoices already supply date and
+purpose**. `workdays_from_invoices()` turns every invoice into
+`{date: [job numbers]}`, so a trip's purpose reads "7 cable job(s), ticket(s)
+144158, 144203…" — generated from a document Koscom issued, not from memory.
+
+Rules that must not be relaxed:
+
+- **First and last reading of the same day**, never one day's reading minus the
+  next day's. The latter would sweep in every evening errand and overstate
+  business miles, which is the one direction this must never err.
+- A day with readings but **no invoice showing work** is excluded from the total,
+  not guessed at — unless it is later than the newest invoice, since invoices
+  arrive ~2.5 weeks in arrears.
+- Reversed, identical, or absurd (>500 mi) readings are flagged, never averaged.
+- Days he demonstrably worked and sent nothing are **counted and priced**, so the
+  cost of skipping is visible rather than silent.
+- Idempotent: rebuilding replaces only `source: odometer` trips and leaves
+  hand-entered ones alone.
+
+`python tax.py odometer 84213` records one by hand; the fetcher does it
+automatically for anything mailed in.
 
 ## 5. The receipt system — the design that was chosen
 

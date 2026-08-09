@@ -206,6 +206,117 @@ def add_miles(
     return entry
 
 
+def workdays_from_invoices(store_path: Path | None = None) -> dict[str, list[str]]:
+    """Which days he worked, and the job numbers, straight off the invoices.
+
+    This is the business-purpose half of the mileage record, and it is the part
+    that makes the whole thing defensible: §274(d) wants the date and the
+    business purpose of each use, and "7 cable jobs, tickets 144158, 144203…" is
+    exactly that — generated from a document Koscom issued, not from memory.
+    """
+    try:
+        import invoice_parser
+        store = invoice_parser.load_store(store_path or HERE / "data" / "invoices.json")
+    except Exception:
+        return {}
+    days: dict[str, set[str]] = {}
+    for invoice in store.get("invoices", []):
+        for item in invoice.get("line_items", []):
+            days.setdefault(str(item["date"]), set()).add(str(item["job"]))
+    return {day: sorted(jobs) for day, jobs in sorted(days.items())}
+
+
+def odometer_to_mileage(ledger: dict, store_path: Path | None = None) -> dict:
+    """Pair each day's odometer readings into one business trip for that day.
+
+    The first reading of a day is leaving, the last is getting home, and the gap
+    between them is the working day. Deliberately NOT the difference between one
+    day's reading and the next day's — that would sweep in every evening errand
+    and overstate business miles, which is the one direction it must never err.
+
+    Idempotent: re-running replaces the trips it made last time and leaves
+    anything hand-entered alone.
+    """
+    workdays = workdays_from_invoices(store_path)
+    last_invoiced = max(workdays) if workdays else ""
+
+    by_day: dict[str, list[dict]] = {}
+    for reading in ledger.get("odometer", []):
+        by_day.setdefault(reading["at"][:10], []).append(reading)
+
+    trips, problems = [], []
+    for day in sorted(by_day):
+        readings = sorted(by_day[day], key=lambda r: r["at"])
+        jobs = workdays.get(day)
+
+        if len(readings) < 2:
+            problems.append(
+                f"{day}: only one odometer reading, so there is no distance for "
+                "that day. Send a second one next time — leaving and getting back."
+            )
+            continue
+
+        miles = readings[-1]["reading"] - readings[0]["reading"]
+        if miles < 0:
+            problems.append(
+                f"{day}: the readings go backwards ({readings[0]['reading']} then "
+                f"{readings[-1]['reading']}). One of them is a typo."
+            )
+            continue
+        if miles == 0:
+            problems.append(f"{day}: both readings are the same, so no miles were recorded.")
+            continue
+        if miles > 500:
+            problems.append(
+                f"{day}: {miles} miles in one day is far outside his normal ~63. "
+                "Check the numbers before this goes anywhere near a return."
+            )
+
+        if jobs:
+            purpose = f"{len(jobs)} cable job(s), ticket(s) {', '.join(jobs[:6])}"
+            purpose += "…" if len(jobs) > 6 else ""
+            kind = "business"
+        elif day > last_invoiced:
+            # Invoices arrive ~2.5 weeks after the work, so recent days have no
+            # invoice yet. That is a wait, not a problem.
+            purpose = "worked — invoice not issued yet"
+            kind = "business"
+        else:
+            problems.append(
+                f"{day}: {miles} miles logged but no invoice shows work that day, so "
+                "there is nothing to prove it was business. Left out of the total."
+            )
+            continue
+
+        trips.append({
+            "date": day,
+            "miles": float(miles),
+            "kind": kind,
+            "purpose": purpose,
+            "route": f"odometer {readings[0]['reading']} → {readings[-1]['reading']}",
+            "complete": True,
+            "source": "odometer",
+        })
+
+    # Days he demonstrably worked but sent no readings — the deduction he is
+    # losing, which is worth naming out loud.
+    missing = [
+        day for day in workdays
+        if day not in by_day and _year(day, dt.date.today().year)
+    ]
+
+    kept = [m for m in ledger.get("mileage", []) if m.get("source") != "odometer"]
+    ledger["mileage"] = sorted(kept + trips, key=lambda m: m["date"])
+
+    return {
+        "trips": len(trips),
+        "miles": round(sum(t["miles"] for t in trips), 1),
+        "problems": problems,
+        "missing_days": missing,
+        "last_invoiced": last_invoiced,
+    }
+
+
 def _year(value: str, year: int | None) -> bool:
     return year is None or value.startswith(str(year))
 
@@ -442,6 +553,10 @@ def main(argv: list[str] | None = None) -> int:
     v = sub.add_parser("method", help="standard mileage or actual vehicle costs")
     v.add_argument("choice", choices=["standard", "actual"])
 
+    o = sub.add_parser("odometer", help="record a reading, or rebuild the log from them")
+    o.add_argument("reading", nargs="?", type=int, help="what the dash says right now")
+    o.add_argument("--at", help="ISO datetime; defaults to now")
+
     args = ap.parse_args(argv)
     ledger = load()
 
@@ -466,6 +581,30 @@ def main(argv: list[str] | None = None) -> int:
         ledger["vehicle_method"] = args.choice
         save(ledger)
         print(f"Vehicle method set to {args.choice}.")
+    elif args.command == "odometer":
+        if args.reading is not None:
+            ledger.setdefault("odometer", []).append({
+                "at": args.at or dt.datetime.now().isoformat(timespec="minutes"),
+                "reading": args.reading,
+                "message_id": "",
+            })
+            ledger["odometer"].sort(key=lambda r: r["at"])
+        result = odometer_to_mileage(ledger)
+        save(ledger)
+        print(
+            f"{len(ledger.get('odometer', []))} reading(s) -> {result['trips']} day(s), "
+            f"{result['miles']:,.0f} business miles"
+        )
+        for problem in result["problems"]:
+            print(f"  ! {problem}")
+        if result["missing_days"]:
+            days = result["missing_days"]
+            worth = round(sum(63 * rate_for(d) for d in days))
+            print(
+                f"\n  {len(days)} day(s) you worked with no odometer readings at all.\n"
+                f"  At your usual ~63 miles that is about {money(worth)} of deduction\n"
+                f"  you cannot claim: {', '.join(days[:8])}" + ("…" if len(days) > 8 else "")
+            )
     else:
         gross = to_cents(args.gross) if args.gross else 0
         if not gross:
