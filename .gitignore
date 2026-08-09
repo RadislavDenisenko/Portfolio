@@ -12,9 +12,14 @@ dist/
 projects/airmouse/config.json
 projects/airmouse/screenshot.png
 
-# private: real pay data and the Gmail app password. This repo is public.
+# private: real pay data, receipt photos and the Gmail app password.
+# This repo is public.
 tools/invoice-tracker/data/
 tools/invoice-tracker/secrets.json
+
+# his to edit: which merchant maps to which expense category. Regenerates from
+# DEFAULT_RULES in receipts.py, so his edits never show up as repo changes.
+tools/invoice-tracker/receipt-rules.txt
 
 .vscode/
 .idea/

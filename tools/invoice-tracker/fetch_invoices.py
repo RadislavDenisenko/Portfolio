@@ -18,13 +18,16 @@ from __future__ import annotations
 
 import argparse
 import ctypes
+import datetime as dt
 import email
 import getpass
+import hashlib
 import imaplib
 import json
 import os
 import sys
 from email.header import decode_header, make_header
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 
 import invoice_parser
@@ -33,6 +36,14 @@ HERE = Path(__file__).parent
 DATA = HERE / "data"
 STORE = DATA / "invoices.json"
 PDF_DIR = DATA / "pdf"
+INBOX = DATA / "inbox"
+RECEIPT_INDEX = DATA / "receipts.json"
+
+# The subject line that says "this is a receipt". Short, because on a bad day he
+# is typing it one-handed in a parking lot; distinctive, because his mailbox
+# already contains Stellar MLS and SunPass mail with "invoice" and "receipt" in
+# the subject. The iPhone Shortcut fills it in, so normally he types nothing.
+RECEIPT_SUBJECT = "RCPT"
 
 # The password lives outside the repository. This one is public, and a file
 # sitting in the working tree is one `git add -f` or one edited .gitignore away
@@ -179,19 +190,133 @@ def subject_of(message) -> str:
         return raw
 
 
-def pdf_attachments(message):
+def attachments(message, prefix: str, suffixes: tuple[str, ...]):
+    """Every attachment matching a MIME prefix or a filename suffix.
+
+    Both tests, because phones are careless with Content-Type: iOS Mail has been
+    seen sending a photo as application/octet-stream with a .jpg name, and a
+    receipt that silently fails to arrive is worse than no receipt at all.
+    """
     for part in message.walk():
         filename = part.get_filename() or ""
-        if part.get_content_type() == "application/pdf" or filename.lower().endswith(".pdf"):
+        ctype = (part.get_content_type() or "").lower()
+        if ctype.startswith(prefix) or filename.lower().endswith(suffixes):
             payload = part.get_payload(decode=True)
             if payload:
-                yield filename or "invoice.pdf", payload
+                yield filename, payload
+
+
+def pdf_attachments(message):
+    for filename, payload in attachments(message, "application/pdf", (".pdf",)):
+        yield filename or "invoice.pdf", payload
+
+
+# HEIC is the iPhone default and nothing here can read it, so it is accepted and
+# then flagged rather than dropped — losing a receipt silently is the one failure
+# this whole system exists to prevent. The fix is one action in the Shortcut.
+IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png", ".heic", ".heif", ".webp", ".gif", ".tif", ".tiff")
+UNREADABLE_SUFFIXES = (".heic", ".heif")
+
+
+def image_attachments(message):
+    for filename, payload in attachments(message, "image/", IMAGE_SUFFIXES):
+        yield filename or "receipt.jpg", payload
+
+
+def load_receipts() -> dict:
+    if RECEIPT_INDEX.exists():
+        try:
+            return json.loads(RECEIPT_INDEX.read_text("utf-8"))
+        except json.JSONDecodeError:
+            pass
+    return {"receipts": []}
+
+
+def save_receipts(index: dict) -> None:
+    index["receipts"].sort(key=lambda r: (r["received"], r["id"]))
+    RECEIPT_INDEX.parent.mkdir(parents=True, exist_ok=True)
+    RECEIPT_INDEX.write_text(json.dumps(index, indent=2) + "\n", "utf-8")
+
+
+def _sent_date(raw: str) -> str:
+    try:
+        return parsedate_to_datetime(raw).date().isoformat()
+    except (TypeError, ValueError):
+        return dt.date.today().isoformat()
+
+
+def fetch_receipts(box, since: str, subject: str) -> int:
+    """Photos he mailed himself, filed into data/inbox/ and indexed.
+
+    Rev. Proc. 97-22 lets a scan stand in for the paper original only if the
+    system indexes it, keeps it legible, and can reproduce it on demand. So the
+    image file IS the record: written once, never edited, never deleted, and
+    everything extracted from it later refers back to it by id. Storing only the
+    numbers we read off it would destroy the record and the deduction with it.
+
+    Deduplicated on the bytes, so mailing the same photo twice — which he will,
+    on a bad signal — costs nothing.
+    """
+    status, data = box.search(None, "SUBJECT", f'"{subject}"', "SINCE", since)
+    if status != "OK":
+        print("receipt search failed", file=sys.stderr)
+        return 0
+
+    ids = data[0].split()
+    index = load_receipts()
+    known = {r["id"] for r in index["receipts"]}
+    added = 0
+
+    for num in ids:
+        status, raw = box.fetch(num, "(BODY.PEEK[])")
+        if status != "OK" or not raw or not raw[0]:
+            continue
+        message = email.message_from_bytes(raw[0][1])
+        for filename, payload in image_attachments(message):
+            digest = hashlib.sha256(payload).hexdigest()[:12]
+            if digest in known:
+                continue
+            suffix = Path(filename).suffix.lower()
+            if suffix not in IMAGE_SUFFIXES:
+                suffix = ".jpg"
+            sent = message.get("Date", "")
+            name = f"{_sent_date(sent)}-{digest}{suffix}"
+            INBOX.mkdir(parents=True, exist_ok=True)
+            (INBOX / name).write_bytes(payload)
+
+            problems = []
+            if suffix in UNREADABLE_SUFFIXES:
+                problems.append(
+                    "HEIC: saved but unreadable. Add a 'Convert Image' step to the "
+                    "Shortcut so it sends JPEG."
+                )
+            index["receipts"].append({
+                "id": digest,
+                "file": name,
+                "received": _sent_date(sent),
+                "email_subject": subject_of(message),
+                "email_date": sent,
+                "bytes": len(payload),
+                "status": "needs extraction",
+                "extracted": None,
+                "problems": problems,
+            })
+            known.add(digest)
+            added += 1
+            print(f"  + {name}" + ("   ! HEIC, cannot be read yet" if problems else ""))
+
+    save_receipts(index)
+    return added
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--since", default="01-Jan-2026", help="IMAP date, e.g. 01-Jun-2026")
     ap.add_argument("--query", default="INVOICE", help="text to match in the subject")
+    ap.add_argument(
+        "--receipt-subject", default=RECEIPT_SUBJECT,
+        help=f"subject line marking a receipt photo (default {RECEIPT_SUBJECT})",
+    )
     ap.add_argument("--keep-pdfs", action="store_true", help="also archive the PDFs")
     ap.add_argument("--forget", action="store_true", help="delete the stored password and exit")
     args = ap.parse_args(argv)
@@ -278,6 +403,11 @@ def main(argv: list[str] | None = None) -> int:
 
             if message_id:
                 seen.add(message_id)
+
+        # Same login, same double-click. A separate step for receipts is a step
+        # he would stop taking.
+        print(f"\nlooking for receipts (subject {args.receipt_subject!r})")
+        receipts_added = fetch_receipts(box, args.since, args.receipt_subject)
     finally:
         try:
             box.logout()
@@ -286,7 +416,12 @@ def main(argv: list[str] | None = None) -> int:
 
     store["seen_messages"] = sorted(seen)
     invoice_parser.save_store(STORE, store)
-    print(f"{added} new invoice(s); {len(store['invoices'])} total in {STORE}")
+    print(f"\n{added} new invoice(s); {len(store['invoices'])} total in {STORE}")
+
+    pending = [r for r in load_receipts()["receipts"] if r["status"] == "needs extraction"]
+    print(f"{receipts_added} new receipt(s); {len(pending)} waiting to be read")
+    if pending:
+        print("  Ask Claude to read them:  \"read my new receipts\"")
 
     if added:
         for invoice in store["invoices"][:1]:

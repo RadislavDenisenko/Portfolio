@@ -46,10 +46,12 @@ Zero dependencies anywhere — Python standard library and plain browser APIs.
 
 | File | Does |
 |---|---|
-| `fetch_invoices.py` | Gmail over IMAP, parses new invoices, writes `data/invoices.json` |
+| `fetch_invoices.py` | Gmail over IMAP: invoice PDFs → `data/invoices.json`, receipt photos → `data/inbox/` + `data/receipts.json` |
 | `invoice_parser.py` | invoice semantics + arithmetic; CLI: `python invoice_parser.py file.pdf` |
 | `pdf_text.py` | PDF text extraction, stdlib only |
 | `tax.py` | expenses, mileage, Schedule C categories, federal tax estimate |
+| `receipts.py` | receipt extraction queue + deterministic validators + filing |
+| `receipt-rules.txt` | merchant → category, plain text, his to edit (gitignored, regenerates) |
 | `assets/pdf-extract.js` | the same PDF algorithm in the browser, for drag-and-drop |
 | `index.html` + `assets/` | the dashboard |
 | `test_parser.py` | the check — must print `core math OK` |
@@ -189,7 +191,33 @@ the year he disposes of it** — potentially a decade.
 
 ---
 
-## 5. The receipt system — design decided, not yet built
+## 5a. The receipt system — BUILT 2026-08-09
+
+Working end to end on the PC side. `fetch-invoices.bat` now pulls invoices and
+receipt photos in the same login, so it stays one double-click.
+
+    phone   -> photo mailed to himself, subject RCPT
+    PC      -> fetch_invoices.py drops it in data/inbox/, indexes data/receipts.json
+    Claude  -> reads the image, runs `python receipts.py record <id> ...`
+    receipts.py -> validates; clean ones go "ready", doubtful ones "needs a look"
+    him     -> `python receipts.py ok --all`, and it lands in the tax ledger
+
+- Dedup is on the **image bytes** (sha256), so mailing the same photo twice on a
+  bad signal costs nothing.
+- **HEIC is accepted, saved, and flagged** rather than dropped — iPhone's default
+  format cannot be read here. The Shortcut needs a Convert Image step. A receipt
+  that vanishes silently is the one failure that would kill the habit.
+- Validators are arithmetic only, never a model's self-reported confidence:
+  items+tax must equal the total to the cent, the date must parse and be in the
+  past, and merchant+date+total collides against everything already filed.
+- Categories come from `receipt-rules.txt`, a plain text file he can edit.
+- The image is written once and never edited or deleted; every ledger entry
+  points back at it by filename. Rev. Proc. 97-22 needs the image to survive.
+
+Still to do: the iPhone-side Shortcut (see section 6 answers), and the dashboard
+review queue.
+
+## 5. The receipt system — the design that was chosen
 
 **Capture: email to himself.** He shares a photo to email; the existing IMAP code
 picks it up. Chosen because the code, the encrypted credential and the launcher
@@ -227,26 +255,41 @@ integrations, multi-user anything.
 
 ---
 
-## 6. Answer these before building further
+## 6. Answered 2026-08-09
 
-1. **iPhone or Android?** Decides the one-tap share mechanism. Nothing else.
-2. **Is the Koscom income 1099 or W-2?** `CLAUDE.md` says he has been a Comcast
-   technician since Oct 2023, but the Koscom invoice is contractor-shaped (a
-   "soft fee" deduction, nothing withheld). **This is the threshold question:**
-   if any of it is W-2, none of these expenses are deductible against it — the
-   deduction for unreimbursed employee expenses was permanently repealed.
-3. **Does he have a space used regularly and exclusively for work at home?**
-   Decides the home office, and through it whether his daily driving is
-   deductible at all.
-4. **Has he set aside anything for taxes this year?** Nothing is withheld from
-   these invoices. If the answer is no, that matters more than the app does.
-5. **Roughly how many miles does he drive in a week, and how much of that is
-   home → first job?** Needed to size the deduction honestly.
+1. **iPhone.**
+2. **1099-NEC, confirmed by him.** No W-2 component on the Koscom work, so the
+   whole deduction side is live.
+3. **Home office: yes, but the good version starts soon.** Right now he rents a
+   room in a shared house — usable but the weak version of the exclusive-use
+   test. **He moves to his own apartment in roughly 4–6 weeks from 2026-08-09 and
+   will have a work-only spot there.** Treat the home office as starting at
+   move-in. Get the exact date and the square footage the day he moves, and make
+   him photograph the space.
+4. **Nothing set aside. Zero.**
+5. **~8 miles between job sites** (he says 7–10), and **home → first job is
+   sometimes 20+** (North Port to Sarasota), sometimes local. Combined with the
+   invoices — 4.43 days/week, 5.9 jobs/day — that is roughly **280 business miles
+   a week**.
 
-Also outstanding: he is owed a **van repair reimbursement**. Ashley approved it
-on 2026-07-24 saying "next week's payout"; on 2026-07-30 he said it still had not
-arrived. It would appear on an invoice as its own labelled row beside `TRUCK` and
-`SOFT FEE`. Check whether it ever landed.
+### What the mailbox turned up that nobody had written down
+
+- **He only started with Koscom the week of 2026-05-31.** First payout 2026-06-25.
+  There are no earlier Koscom invoices in Gmail since 01-Jan-2026, so **2026 is a
+  part-year 1099**: ~$31,000 projected, not the ~$57,600 full-year run rate.
+  **Still unknown: what he was doing Jan–May 2026.** If that was W-2 at Comcast,
+  the income stacks and the bracket shifts — ask.
+- **He appears to have a second business.** Monthly *Keller Williams Realty*
+  agent invoices and *Stellar MLS* annual billing run through his inbox from
+  January onward. If he is licensed in real estate, those fees are deductible and
+  none of them are recorded. Ask before assuming.
+- **SunPass toll invoices.** Tolls and parking are deductible **on top of**
+  standard mileage — the rate does not include them. `tax.py` now has a `tolls`
+  category flagged `vehicle: False` for exactly this reason; do not "fix" it to
+  True.
+- **The van repair reimbursement never arrived.** The `TRUCK` adjustment is
+  **$0.00 on all seven invoices**, including the two issued after Ashley approved
+  it on 2026-07-24. Still owed.
 
 ---
 

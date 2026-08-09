@@ -8,6 +8,7 @@ Point it at a real invoice to check the PDF side too:
 """
 
 import sys
+import tempfile
 from pathlib import Path
 
 from invoice_parser import analyze, jobs_needed, money_to_cents, parse, parse_rows
@@ -25,6 +26,136 @@ ROWS = [
     ["SOFT FEE", "-$6.25"],
     ["TOTAL PAY", "$132.18"],
 ]
+
+
+def _sandbox():
+    """Point the ledger and the receipt index at a throwaway dir.
+
+    His real ledger is the record behind a tax return. A test must never be able
+    to write to it, however the test is invoked.
+    """
+    import fetch_invoices
+    import tax
+
+    tmp = Path(tempfile.mkdtemp()) / "data"
+    (tmp / "inbox").mkdir(parents=True)
+    tax.LEDGER = tmp / "ledger.json"
+    fetch_invoices.DATA = tmp
+    fetch_invoices.INBOX = tmp / "inbox"
+    fetch_invoices.RECEIPT_INDEX = tmp / "receipts.json"
+    return tmp
+
+
+def check_tax() -> None:
+    """The numbers that decide what he sets aside."""
+    import tax
+
+    _sandbox()
+
+    # 2026 split the business rate mid-year. Getting the side of June 30 wrong
+    # silently misprices every mile he drove.
+    assert tax.rate_for("2026-06-30") == 72.5
+    assert tax.rate_for("2026-07-01") == 76.0
+    assert tax.rate_for("2025-12-31") == 70.0
+
+    # Verified against irs.gov 2026-08-09. These were the 2025 figures once.
+    assert tax.STANDARD_DEDUCTION_CENTS == 1_610_000
+    assert tax.BRACKETS[0] == (1_240_000, 0.10)
+    assert tax.BRACKETS[1] == (5_040_000, 0.12)
+
+    ledger = tax.load()
+    tax.add_miles(ledger, 100, "2026-06-30", "job sites", "business", "a to b")
+    tax.add_miles(ledger, 100, "2026-07-01", "job sites", "business", "a to b")
+    tax.add_miles(ledger, 500, "2026-07-02", "school run", "other", "home")
+    s = tax.summarize(ledger, 2026)
+    assert s["mileage_cents"] == 7250 + 7600, s["mileage_cents"]
+    assert s["miles"] == 200.0                    # personal miles stay out
+    assert s["miles_by_kind"]["other"] == 500.0
+
+    # The rule the module exists for: standard mileage swallows fuel and repairs,
+    # and does NOT swallow tolls.
+    tax.add_expense(ledger, 5000, "Wawa", "gas", "2026-07-02")
+    tax.add_expense(ledger, 1240, "SunPass", "tolls", "2026-07-02")
+    tax.add_expense(ledger, 4732, "Home Depot", "tools", "2026-07-02")
+    s = tax.summarize(ledger, 2026)
+    assert s["excluded_cents"] == 5000, s["excluded_cents"]
+    assert s["by_category"]["tolls"]["deductible_cents"] == 1240
+    assert s["total_deduction_cents"] == 14850 + 1240 + 4732, s["total_deduction_cents"]
+
+    # Switching to actual costs must flip which side is claimed.
+    ledger["vehicle_method"] = "actual"
+    s = tax.summarize(ledger, 2026)
+    assert s["claimed_vehicle_cents"] == 5000 and s["excluded_cents"] == 14850
+
+    # QBI: 20% of profit, but capped at 20% of what is left after the standard
+    # deduction. At his income the cap is what binds, so a flat 20% is wrong.
+    t = tax.estimate_tax(5_756_400, 800_000)
+    assert t["net_profit_cents"] == 4_956_400
+    assert t["qbi_deduction_cents"] > 0, "QBI missing — overstates the set-aside"
+    taxable = t["net_profit_cents"] - round(t["se_tax_cents"] * 0.5) - tax.STANDARD_DEDUCTION_CENTS
+    assert t["qbi_deduction_cents"] == round(taxable * 0.20), t["qbi_deduction_cents"]
+
+    # A thin year owes nothing and must never go negative.
+    assert tax.estimate_tax(500_000, 900_000)["total_tax_cents"] == 0
+    assert tax.estimate_tax(0, 0)["effective_rate"] == 0.0
+
+    print("tax math OK")
+
+
+def check_receipts() -> None:
+    """The validators, which are the only thing standing between a misread
+    digit and a wrong number on a return."""
+    import fetch_invoices
+    import receipts
+    import tax
+
+    _sandbox()
+
+    def seed(rid, name):
+        index = fetch_invoices.load_receipts()
+        index["receipts"].append({
+            "id": rid, "file": name, "received": "2026-08-09", "email_subject": "RCPT",
+            "email_date": "", "bytes": 1, "status": "needs extraction",
+            "extracted": None, "problems": [],
+        })
+        fetch_invoices.save_receipts(index)
+
+    for rid in ("aaa1", "bbb2", "ccc3", "ddd4"):
+        seed(rid, f"{rid}.jpg")
+
+    def record(rid, merchant, date, total, items="", tax_amount=""):
+        receipts.main(["record", rid, "--merchant", merchant, "--date", date,
+                       "--total", total, "--items", items, "--tax", tax_amount])
+        return receipts.find(fetch_invoices.load_receipts(), rid)
+
+    # Merchant rules, not a model, decide the category.
+    assert receipts.categorise("THE HOME DEPOT #6349") == "tools"
+    assert receipts.categorise("SUNPASS TOLL") == "tolls"
+    assert receipts.categorise("Wawa 5512") == "gas"
+    assert receipts.categorise("Some Place Nobody Knows") == "other"
+
+    good = record("aaa1", "Home Depot", "2026-08-01", "47.32", "22.15,22.15", "3.02")
+    assert good["problems"] == [] and good["status"] == "ready", good
+
+    bad = record("bbb2", "AutoZone", "2026-08-02", "99.99", "10.00,20.00")
+    assert any("off by" in p for p in bad["problems"]), bad
+    assert bad["status"] == "needs a look"
+
+    future = record("ccc3", "Wawa", "2099-01-01", "40.00")
+    assert any("future" in p for p in future["problems"])
+
+    dupe = record("ddd4", "Home Depot", "2026-08-01", "47.32", "22.15,22.15", "3.02")
+    assert any("duplicate" in p for p in dupe["problems"]), dupe
+
+    # Only the clean one may file itself, and it lands unreviewed.
+    receipts.main(["ok", "--all"])
+    ledger = tax.load()
+    assert len(ledger["expenses"]) == 1, ledger["expenses"]
+    entry = ledger["expenses"][0]
+    assert entry["reviewed"] is False and entry["confidence"] == "scanned"
+    assert entry["source"] == "aaa1.jpg", "the image must stay the record"
+
+    print("receipt checks OK")
 
 
 def main() -> int:
@@ -60,6 +191,8 @@ def main() -> int:
     assert analyze(bad)["gross_discrepancy_cents"] == 7
 
     print("core math OK")
+    check_tax()
+    check_receipts()
 
     if len(sys.argv) > 1:
         path = Path(sys.argv[1])

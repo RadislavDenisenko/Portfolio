@@ -72,6 +72,11 @@ CATEGORIES = {
     "mileage":    {"line": "9",   "label": "Car and truck expenses", "vehicle": True},
     "gas":        {"line": "9",   "label": "Car and truck — fuel", "vehicle": True},
     "repairs":    {"line": "9",   "label": "Car and truck — repairs", "vehicle": True},
+    # Tolls and parking sit on line 9 with the rest of the vehicle costs but are
+    # NOT part of the standard mileage rate — they are claimable on top of it.
+    # Hence vehicle=False: it means "the mileage rate already covers this", and
+    # for tolls it does not. SunPass on the run up to Sarasota is real money.
+    "tolls":      {"line": "9",   "label": "Car and truck — tolls & parking", "vehicle": False},
     "insurance":  {"line": "15",  "label": "Insurance (not health)", "vehicle": False},
     "office":     {"line": "18",  "label": "Office expense", "vehicle": False},
     "supplies":   {"line": "22",  "label": "Supplies", "vehicle": False},
