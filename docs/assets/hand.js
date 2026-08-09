@@ -90,11 +90,17 @@ async function loadModel(url) {
   return { geo, joints };
 }
 
-function loadSkin(renderer) {
+/* onReady fires per map as it uploads. The static path draws exactly one frame,
+   and TextureLoader is asynchronous, so without this that frame is drawn while
+   all three maps are still three's 1x1 empty texture — a normal map reading
+   (0,0,0) points away from every light and a roughness of 0 turns skin into a
+   mirror, which ships a black-blotched hand with white specular rims to every
+   phone and every reduced-motion visitor, permanently. */
+function loadSkin(renderer, onReady) {
   const loader = new T.TextureLoader();
   const maps = {};
   for (const [slot, url] of Object.entries(SKIN)) {
-    const t = loader.load(url);
+    const t = loader.load(url, onReady);
     if (slot === 'map') t.colorSpace = T.SRGBColorSpace;
     t.anisotropy = renderer.capabilities.getMaxAnisotropy();
     maps[slot] = t;
@@ -154,24 +160,25 @@ export async function initHand(target, opts = {}) {
   const renderer = new T.WebGLRenderer({ canvas, antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.toneMapping = T.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.0;
+  renderer.toneMappingExposure = 0.86;
   renderer.outputColorSpace = T.SRGBColorSpace;
 
   const scene = new T.Scene();
   const camera = new T.PerspectiveCamera(30, 1, 0.1, 100);
+  const draw = () => renderer.render(scene, camera);
   camera.position.set(0, 0, 3.2);
 
   /* Lit to the room plate: its beam enters upper-left, its only other sources
      are the window and the wall tube, both cool. Nothing warm is added — skin
      albedo is warm enough that neutral light returns warm. */
-  scene.add(new T.HemisphereLight(0xc9dcf2, 0x1a2740, 1.05));
-  const key = new T.DirectionalLight(0xffffff, 1.5);
+  scene.add(new T.HemisphereLight(0xc9dcf2, 0x1a2740, 0.16));
+  const key = new T.DirectionalLight(0xffffff, 1.35);
   key.position.set(-2.4, 2.8, 1.8);
   scene.add(key);
-  const rim = new T.DirectionalLight(0x8fd8ff, 0.9);
+  const rim = new T.DirectionalLight(0x8fd8ff, 0.42);
   rim.position.set(-3.0, 0.8, -1.6);
   scene.add(rim);
-  const fill = new T.DirectionalLight(0x7fa8d8, 0.28);
+  const fill = new T.DirectionalLight(0x7fa8d8, 0.06);
   fill.position.set(2.6, -0.6, 1.2);
   scene.add(fill);
 
@@ -193,12 +200,12 @@ export async function initHand(target, opts = {}) {
     color: 0xF0BFA4,
     roughness: 0.65,
     metalness: 0.0,
-    sheen: 0.45,
+    sheen: 0.22,
     sheenColor: 0xffcdb4,
-    sheenRoughness: 0.7,
+    sheenRoughness: 0.85,
     clearcoat: 0.02,
     clearcoatRoughness: 0.62,
-    ...loadSkin(renderer),
+    ...loadSkin(renderer, () => draw()),
   });
   mat.normalScale.set(0.62, 0.62);
 
@@ -266,6 +273,9 @@ export async function initHand(target, opts = {}) {
     renderer.setSize(r.width, r.height, false);
     camera.aspect = r.width / r.height;
     camera.updateProjectionMatrix();
+    /* Resizing clears the drawing buffer. The animation loop paints over that
+       on the next frame; the static path has no next frame. */
+    if (opts.statik) draw();
   }
   resize();
   if ('ResizeObserver' in window) new ResizeObserver(resize).observe(target);
@@ -275,7 +285,7 @@ export async function initHand(target, opts = {}) {
      there is no cursor to follow, so a render loop would burn battery to
      redraw an identical image — and the bend rig below is never needed, which
      is why it is built after this line rather than before it. */
-  if (opts.statik) { renderer.render(scene, camera); return; }
+  if (opts.statik) { draw(); return; }
 
   /* Screen axes expressed in the geometry's own frame. The cursor turns the
      hand about the camera's axes; the vertices we move live in model space. */
@@ -372,7 +382,7 @@ export async function initHand(target, opts = {}) {
 
 
   let tx = 0, ty = 0, cx = 0, cy = 0, vx = 0, vy = 0;
-  let gx = 0, gy = 0, ux = 0, uy = 0;
+  let gx = 0, gy = 0, ux = 0, uy = 0, prev = 0;
   const onMove = e => {
     ty = (e.clientX / window.innerWidth - 0.5) * 0.62;
     tx = (e.clientY / window.innerHeight - 0.5) * 0.34;
@@ -382,26 +392,40 @@ export async function initHand(target, opts = {}) {
   let visible = true, running = false, raf = null;
   const frame = t => {
     if (!visible || document.hidden) { running = false; raf = null; return; }
-    vx += (tx - cx) * 0.055; vx *= 0.85; cx += vx;
-    vy += (ty - cy) * 0.055; vy *= 0.85; cy += vy;
+    /* Step by elapsed time, not by frame. Stepping per frame means the hand
+       settles twice as fast on a 120Hz laptop as on a 60Hz one, and the idle
+       drift beside it is already on a clock, so the two drift apart. Clamped
+       at three frames so returning to a backgrounded tab does not launch it. */
+    const k = prev ? Math.min(3, (t - prev) / 16.667) : 1;
+    prev = t;
+    const damp = Math.pow(0.85, k), dampF = Math.pow(0.84, k);
+
+    vx += (tx - cx) * 0.055 * k; vx *= damp; cx += vx * k;
+    vy += (ty - cy) * 0.055 * k; vy *= damp; cy += vy * k;
     /* The fingers chase the palm rather than the cursor, on a slightly softer
        spring, so they set off after it and settle after it. Tuned to about 7
        degrees of lag on a full-width flick: a hand yields that much, a slower
        spring gave 21 and the hand turned to rubber. */
-    ux += (cx - gx) * 0.26; ux *= 0.84; gx += ux;
-    uy += (cy - gy) * 0.26; uy *= 0.84; gy += uy;
+    ux += (cx - gx) * 0.26 * k; ux *= dampF; gx += ux * k;
+    uy += (cy - gy) * 0.26 * k; uy *= dampF; gy += uy * k;
     bend(cx, cy, gx, gy);
     wrap.position.y = 0.06 + Math.sin(t / 1600) * 0.022;   // idle drift, never frozen
+    /* Drive the two custom properties the rule reserves, never `transform`
+       itself: the shadow's own rule composes them with a rotate and a skew
+       that make it read as a cast shadow rather than a disc, and writing
+       `transform` from here threw both away and slid it off the hand. */
     if (opts.shadowEl) {
-      opts.shadowEl.style.transform =
-        'translate(-50%,-50%) translateX(' + (cy * 46).toFixed(1) + 'px) scale(' +
-        (1 - Math.abs(cy) * 0.10).toFixed(3) + ')';
+      opts.shadowEl.style.setProperty('--drift', (cy * 46).toFixed(1) + 'px');
+      opts.shadowEl.style.setProperty('--near', (1 - Math.abs(cy) * 0.10).toFixed(3));
     }
-    renderer.render(scene, camera);
+    draw();
     raf = requestAnimationFrame(frame);
   };
   const start = () => { if (!running) { running = true; raf = requestAnimationFrame(frame); } };
-  const stop = () => { if (raf) cancelAnimationFrame(raf); raf = null; running = false; };
+  const stop = () => {
+    if (raf) cancelAnimationFrame(raf);
+    raf = null; running = false; prev = 0;
+  };
 
   if ('IntersectionObserver' in window) {
     new IntersectionObserver(es => es.forEach(e => {

@@ -105,7 +105,7 @@ def flatten(V):
     return V - np.expand_dims(V @ PALM_DIR, -1) * PALM_DIR
 
 
-def noise3(P, mask, freq=520.0, octaves=3):
+def noise3(P, mask, freq=900.0, octaves=3):
     """Value noise evaluated in model space, so grain is the same size
     everywhere on the hand regardless of how the UVs were laid out."""
     rng = np.random.default_rng(11)
@@ -189,6 +189,18 @@ def painted_palm_lines(a):
           lo(web, wri, 0.86) - across * (0.04 * span)], 0.9, 2),
     ]
 
+    # Proximal digital creases: the band where each finger hinges off the palm.
+    # The 3D crease pass cannot reach these — it gates on distance to the bone,
+    # and at the knuckle the palm is wider than that gate — so the busiest strip
+    # of a real palm was coming out blank.
+    perp = np.array([-down[1], down[0]])
+    for a, halfw in ((idx, 0.150), (mid, 0.155), (rng, 0.145), (pnk, 0.125)):
+        c = a - down * (0.045 * L)
+        curves.append(([c - perp * (halfw * span) + down * (0.012 * L),
+                        c - perp * (halfw * span * 0.4),
+                        c + perp * (halfw * span * 0.4),
+                        c + perp * (halfw * span) + down * (0.012 * L)], 0.8, 2))
+
     acc = np.zeros((N, N), np.float32)
     for pts, amp, width in curves:
         im = Image.new('L', (N, N), 0)
@@ -212,6 +224,40 @@ def catmull_rom(pts, steps=26):
                                     (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t +
                                     (-p0 + 3 * p1 - 3 * p2 + p3) * t ** 3)))
     return out
+
+
+def pigment(P, Nm, mask, J):
+    """Where a hand is red and where it is pale.
+
+    Skin is not one colour. The pads and the knuckles sit over a capillary bed
+    with very little above it; the hollow of the palm is thick, poorly
+    vascularised and the palest part of the whole hand. A photograph of a real
+    palm swings about 26 points of red-minus-green between those two places.
+    Baking only crease shadow into the albedo leaves a single hue everywhere,
+    which is most of what made the render read as unpainted clay."""
+    palmar = np.clip(Nm @ PALM_DIR, 0, 1)
+    dorsal = np.clip(Nm @ -PALM_DIR, 0, 1)
+    fingers = ('index-finger', 'middle-finger', 'ring-finger', 'pinky-finger')
+
+    red = np.zeros(P.shape[:2])
+
+    def blob(name, r, amp, side):
+        d = np.linalg.norm(P - J[name], axis=-1)
+        return np.exp(-(d / r) ** 2) * amp * side
+
+    for f in fingers:                        # pulp of the fingertips
+        red = np.maximum(red, blob(f + '-tip', 0.016, 1.0, palmar))
+        red = np.maximum(red, blob(f + '-phalanx-distal', 0.014, 0.80, palmar))
+    red = np.maximum(red, blob('thumb-tip', 0.018, 1.0, palmar))
+    red = np.maximum(red, blob('thumb-phalanx-distal', 0.016, 0.80, palmar))
+    for f in fingers:                        # knuckles, stretched over bone
+        red = np.maximum(red, blob(f + '-phalanx-proximal', 0.015, 0.85, dorsal))
+        red = np.maximum(red, blob(f + '-phalanx-intermediate', 0.012, 0.60, dorsal))
+
+    hollow = (J['index-finger-phalanx-proximal'] + J['pinky-finger-phalanx-proximal']
+              + 2 * J['wrist']) / 4
+    pale = np.exp(-(np.linalg.norm(P - hollow, axis=-1) / 0.045) ** 2) * palmar
+    return red * mask, pale * mask
 
 
 def build_creases(P, Nm, mask, J):
@@ -258,6 +304,12 @@ def build_creases(P, Nm, mask, J):
     grain = noise3(P, mask)
 
     height = -np.clip(depth, 0, 1.0) * 0.55
+    # Pore relief. Grain used to go only into roughness, where a +-0.036 swing
+    # is invisible, so 91% of the hand had no relief at all and the surface
+    # between the creases rendered dead. It is safe here in a way a tiled photo
+    # map never was: this noise is sampled in model space, so it has no repeat
+    # frequency to line up into scales.
+    height += grain * 0.030
     height *= mask
     return height, np.clip(depth, 0, 1.0) * mask, grain
 
@@ -283,6 +335,7 @@ def main():
     print('coverage: %.1f%%' % (100 * mask.mean()))
 
     height, depth, grain = build_creases(P, Nm, mask, J)
+    red, pale = pigment(P, Nm, mask, J)
 
     # normal from the height field
     gx = (np.roll(height, -1, 1) - np.roll(height, 1, 1)) * 0.5
@@ -295,15 +348,25 @@ def main():
     ln = np.sqrt(nx * nx + ny * ny + nz * nz)
     nmap = np.stack([nx / ln, ny / ln, nz / ln], -1) * 0.5 + 0.5
     nmap[~mask] = [0.5, 0.5, 1.0]
-    save((nmap * 255).astype(np.uint8), 'hand-normal.jpg', quality=90, optimize=True)
+    # Higher quality than the others on purpose: pore relief is exactly the
+    # high-frequency content JPEG throws away first, and blocking in a normal
+    # map amplifies into visible crust rather than softening.
+    save((nmap * 255).astype(np.uint8), 'hand-normal.jpg', quality=92, optimize=True)
 
-    # creases also read as shadow, which is what sells them at a glance
+    # Creases read as shadow, which is what sells them at a glance; on top of
+    # that the albedo carries pigment, by pulling green and blue down where the
+    # hand is red rather than pushing red up, which would just clip to white.
     shade = np.clip(1.0 - depth * 0.15, 0.7, 1.0)
-    col = np.stack([shade, shade * 0.975, shade * 0.955], -1)
+    col = np.stack([
+        shade * (1.0 - pale * 0.010),
+        shade * 0.975 * (1.0 - red * 0.085 + pale * 0.030),
+        shade * 0.955 * (1.0 - red * 0.130 + pale * 0.055),
+    ], -1)
+    col = np.clip(col, 0, 1)
     col[~mask] = 1.0
     save((col * 255).astype(np.uint8), 'hand-albedo.jpg', quality=90, optimize=True)
 
-    rough = np.clip(0.62 + depth * 0.10 + grain * 0.13, 0.42, 0.86)
+    rough = np.clip(0.62 + depth * 0.10 + grain * 0.15, 0.42, 0.86)
     rough[~mask] = 0.62
     # Half size: this map is almost entirely grain, which gzip cannot touch and
     # JPEG spends its whole budget on. At 512 it is 5x smaller and the grain is

@@ -81,7 +81,7 @@ Full-viewport section per project, scroll-snap proximity (never JS-hijacked):
    it, and a cyan glow arrives as grey haze. Skin is MeshPhysicalMaterial —
    warm mid tone, sheen, a whisper of clearcoat, plus albedo/normal/roughness
    maps — under ACES filmic tone mapping. Those maps are **baked to the model's
-   own UV layout, not tiled** (tools/make_hand_maps.py, 1024px, 56KB): the tool
+   own UV layout, not tiled** (tools/make_hand_maps.py, 1024px, 120KB): the tool
    rasterises the UVs to recover the 3D point behind every texel, then writes
    each crease where the rig's joints say it belongs — a flexion band at every
    finger joint, the three palm lines struck through the joint anchors, softer
@@ -95,26 +95,25 @@ Full-viewport section per project, scroll-snap proximity (never JS-hijacked):
    back of the hand, and the pose is yawed palm-forward — the model is a LEFT
    hand, so palm-forward puts the thumb on the right.
 
-   **Light is measured off the plate, never dialled by eye.** That photograph
-   has median luma 41 and p95 125; its brightest surface is the pool the beam
-   makes on the floor at #5E6D76. So: the key is a shadow-casting spot that
-   TRAVELS across the hand from the upper left and passes behind it (the
-   housing is at 22%/10% of the plate, its pool at 55%/88%) — never one that
-   faces the hand, which brightens both silhouettes and leaves the centre dark,
-   the signature of a ring light. Skin's median sits near the plate's own upper
-   range rather than above the brightest thing the beam can make, and the
-   terminator runs down the palm. Nothing warm is ever *added*: skin's albedo is
-   warm enough (R/B = 1.32) that neutral and even cool light returns warm, and
-   this room contains no warm source. The PMREM environment is BUILT from the
-   plate's sampled values with the beam, the wall tube and the floor in their
-   real directions — feeding a 1.79:1 rectilinear photo to an equirectangular
-   mapping smears it over 360°, and the near-black patches it lands on turn
-   shadowed skin slate-teal. Fingertip translucency is baked into the vertex
-   colours, not faked with a lamp; a light cannot express thickness, and one
-   aimed from below only ever paints an orange ring at each knuckle. The
-   forearm fades out of frame instead of ending in a stump — vertex alpha plus a
-   mask on the canvas, since the plate's floor mist only covers the terminus at
-   desktop crops. The floor shadow is a CSS **cast** shadow raking down-beam,
+   **Light is measured off the plate, never dialled by eye.** The plate has
+   median luma 39 and p90 96; its brightest surface is the pool the beam makes
+   on the floor. The rule that follows from that: **skin's median sits near the
+   plate's own upper range, never above it.** It once sat at 135 against a plate
+   p90 of 91 — brighter than 90% of the room it was standing in, shading across
+   only 2:1 where a beanbag two feet away in the same photograph shades across
+   21 — and no amount of crease detail rescues an object lit like that; it reads
+   as pasted on. The ambient was doing it, so the hemisphere came down from 1.05
+   to 0.16 and the key went up, which darkens the shadow side without dimming
+   the lit one. Measured after: median 97 against p90 91, a ratio of 1.07. A
+   flat palm facing the camera will never reach a sphere's terminator, so the
+   ratio to the plate is the number to hold, not the internal range. Nothing
+   warm is ever *added*: skin's albedo is warm enough that neutral and even cool
+   light returns warm, and this room contains no warm source — the key is white,
+   the rim and fill are blue. Fingertip and knuckle redness is **pigment in the
+   albedo map**, not a lamp: a light cannot express thickness, and one aimed
+   from below only ever paints an orange ring at each knuckle. The forearm is
+   masked out at the bottom of the stage in CSS rather than ending in a lit
+   stump. The floor shadow is a CSS **cast** shadow raking down-beam,
    offset and skewed, not a centred puddle (a puddle is a light directly
    overhead, which contradicts the plate). Copy sits directly on the scene
    behind a left scrim (≥4.5:1 verified); spec chips are glass pills, and the
