@@ -94,7 +94,11 @@ p{margin:0}
 }
 .skip:focus-visible{top:14px}
 
-.wrap{max-width:1160px;margin-inline:auto;padding-inline:clamp(20px,4vw,48px)}
+/* A fixed 1160px column on a 27" display is ~700px of dead margin a side, which
+   is the single thing that reads as "generated". The column keeps growing with
+   the viewport; line length is still held by the ch-based measures below, so
+   widening this fills the screen without turning body copy into a ticker. */
+.wrap{max-width:clamp(1160px,82vw,1880px);margin-inline:auto;padding-inline:clamp(20px,4vw,48px)}
 
 /* ------------------------------ header ---------------------------------- */
 .top{
@@ -110,7 +114,7 @@ p{margin:0}
 .top.over-dark .brand,
 .top.over-dark .top-links a:not(.top-cta){color:#fff}
 .top-nav{
-  max-width:1160px;margin-inline:auto;
+  max-width:clamp(1160px,82vw,1880px);margin-inline:auto;
   padding:0 clamp(20px,4vw,48px);
   min-height:64px;display:flex;align-items:center;justify-content:space-between;gap:16px;
 }
@@ -206,7 +210,7 @@ section{position:relative}
 }
 .hero-wrap{display:grid;justify-items:center;text-align:center;width:100%}
 .hero-h{
-  font-size:clamp(36px,4.9vw,66px);
+  font-size:clamp(36px,4.9vw,112px);
   max-width:22ch;
   margin:8px 0 16px;
 }
@@ -231,8 +235,11 @@ section{position:relative}
   transition-delay:var(--hl-delay,0ms);
 }
 .hero-sub{
-  font-size:clamp(16px,1.5vw,19px);color:var(--soft);
+  font-size:clamp(16px,1.5vw,26px);color:var(--soft);
   max-width:58ch;margin-bottom:24px;
+  /* At display sizes the last line kept coming out as a single orphaned word.
+     Ignored by browsers that don't support it, which just get today's wrap. */
+  text-wrap:balance;
 }
 .hero-sub a{color:var(--cobalt);font-weight:600;text-decoration-thickness:2px;text-underline-offset:3px}
 .hero .actions{justify-content:center;margin-bottom:clamp(24px,4svh,40px)}
@@ -250,7 +257,7 @@ section{position:relative}
     0 24px 70px -24px rgba(16,16,20,.22);
 }
 .stage-tilt{
-  height:min(42svh,50vw);
+  height:min(52svh,46vw);
   aspect-ratio:16/9;
   max-width:100%;
   transform-style:preserve-3d;
@@ -385,8 +392,8 @@ section{position:relative}
 /* let columns shrink below their content's intrinsic width — otherwise the
    deck figure inflates its track and the section overflows narrow viewports */
 .proj-grid > *{min-width:0}
-.proj-h{font-size:clamp(34px,4.4vw,56px);margin-bottom:16px}
-.lead{font-size:clamp(16px,1.35vw,18px);color:var(--soft);max-width:58ch;margin-bottom:16px}
+.proj-h{font-size:clamp(34px,4.4vw,92px);margin-bottom:16px}
+.lead{font-size:clamp(16px,1.35vw,24px);color:var(--soft);max-width:58ch;margin-bottom:16px;text-wrap:pretty}
 .lead strong{color:var(--ink);font-weight:600}
 .lead-honest{font-size:15px}
 .specs{
@@ -516,9 +523,9 @@ section{position:relative}
    must not eat pointer events meant for the hand canvas beneath it */
 .scene-copy{position:relative;z-index:2;width:100%;pointer-events:none}
 .scene-copy a,.scene-copy .specs li{pointer-events:auto}
-.scene-copy > *{max-width:560px}
+.scene-copy > *{max-width:clamp(560px,36vw,780px)}
 .scene .eyebrow{color:rgba(255,255,255,.78)}
-.scene .proj-h{color:#fff;font-size:clamp(38px,5vw,64px)}
+.scene .proj-h{color:#fff;font-size:clamp(38px,5vw,104px)}
 .scene .lead{color:rgba(255,255,255,.92)}
 .scene .lead strong{color:#fff}
 .scene .tags{color:rgba(255,255,255,.66)}
@@ -534,7 +541,7 @@ section{position:relative}
 /* four chips in a 560px column break 3+1, which orphans the last one on its own
    row and leaves a ragged L. Capped here so they break 2+2 at every desktop
    width instead. */
-.scene .specs{max-width:470px}
+.scene .specs{max-width:clamp(470px,30vw,660px)}
 /* The scene is a night photograph. .btn-ghost's paper-ground treatment (solid
    white fill, ink text) makes the SECONDARY action the brightest object in the
    frame — brighter than the 64px headline — which inverts the intended
@@ -650,7 +657,7 @@ section{position:relative}
   display:grid;align-content:center;
   padding-block:clamp(72px,10svh,120px);
 }
-.about-h{font-size:clamp(30px,3.6vw,44px);margin-bottom:32px}
+.about-h{font-size:clamp(30px,3.6vw,68px);margin-bottom:32px}
 .about-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
 .acard{
   background:var(--white);border:1px solid var(--line);border-radius:var(--r-md);
@@ -680,10 +687,10 @@ section{position:relative}
   text-align:center;
   box-shadow:0 34px 90px -30px rgba(43,92,255,.55);
 }
-.contact-card h2{font-size:clamp(32px,4.6vw,58px);margin-bottom:16px}
+.contact-card h2{font-size:clamp(32px,4.6vw,88px);margin-bottom:16px}
 .contact-sub{
   color:rgba(255,255,255,.95);max-width:44ch;margin:0 auto 32px;
-  font-size:clamp(16px,1.3vw,18px);
+  font-size:clamp(16px,1.3vw,24px);
 }
 .contact-card .actions{justify-content:center}
 

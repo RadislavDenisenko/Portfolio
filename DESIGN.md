@@ -33,6 +33,21 @@ hiring manager to download AirMouse or email me. Fun and professional at once.
 - Space: 4 / 8 / 12 / 16 / 20 / 24 / 32 / 48 / 64 (4px grid).
 - Type: 11 / 12 / 13 / 14 / 15 / 16 / 18 whole-px, plus fluid `clamp()` display sizes.
 
+**Nothing stops growing at a laptop.** Every `clamp()` ceiling here used to cap
+out around a 1350px viewport, and the column was a flat `max-width:1160px`. On a
+27" display at 2560 that is a 1160px column with ~700px of dead margin a side and
+a headline frozen at 66px — the single thing on this site that read as generated
+rather than designed. The column is `clamp(1160px,82vw,1880px)` and the display
+ceilings are set so type is still climbing at 2560: hero 112px, project 92px,
+scene 104px, contact 88px, body 24-26px. Measured across the range the hero runs
+40 / 63 / 71 / 94 / 112px at 390 / 1280 / 1440 / 1920 / 2560+.
+
+Widening the column is safe because **line length is held by the `ch` measures,
+not by the container** — 22ch on the hero headline, 58ch on body copy. Those are
+what stop a wide viewport from turning a paragraph into a ticker, so they stay
+whatever the column does. Display text gets `text-wrap:balance`; at these sizes
+the last line otherwise arrives as a single orphaned word.
+
 ## Structure
 Full-viewport section per project, scroll-snap proximity (never JS-hijacked):
 1. **Hero** — the AirMouse pointer story as a zero-weight pure-CSS demo inside a
