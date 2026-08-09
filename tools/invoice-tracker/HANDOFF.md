@@ -62,10 +62,12 @@ The script now prints the character count immediately:
 - `Got 16 characters — that is the right shape.` → good
 - `! Got 32 characters` → pasted twice; Ctrl+C, delete `secrets.json`, redo
 
-If a stale bad password is already saved, delete it first:
+The password is stored **outside the repo** — `%APPDATA%\invoice-tracker\gmail.dat`,
+encrypted with Windows DPAPI. Never write a credential into the working tree; this
+repository is public. If a stale bad password is saved, clear it with:
 
 ```powershell
-del secrets.json
+python fetch_invoices.py --forget
 ```
 
 Tell him to paste **once** and that the blank screen is normal.

@@ -44,8 +44,14 @@ and updates `data/invoices.json`.
 
 It needs a Gmail **App Password** (not your account password) from
 <https://myaccount.google.com/apppasswords>, which requires 2-step verification.
-The first run asks for it and writes `secrets.json` itself — no file to create
-by hand:
+The first run asks for it and stores it itself — no file to create by hand.
+
+**The password is never kept in this repository.** It goes to
+`%APPDATA%\invoice-tracker\` on Windows (encrypted with DPAPI, so it is tied to
+your Windows login and unreadable by another account) or
+`~/.config/invoice-tracker/` elsewhere, mode 600. A copy left in the old
+in-repo `secrets.json` is moved out and deleted the next time you run this.
+`python3 fetch_invoices.py --forget` erases every stored copy.
 
 ```bash
 python3 fetch_invoices.py              # everything since 01-Jan-2026

@@ -17,6 +17,7 @@ https://myaccount.google.com/apppasswords (needs 2-step verification on).
 from __future__ import annotations
 
 import argparse
+import ctypes
 import email
 import getpass
 import imaplib
@@ -33,17 +34,107 @@ DATA = HERE / "data"
 STORE = DATA / "invoices.json"
 PDF_DIR = DATA / "pdf"
 
+# The password lives outside the repository. This one is public, and a file
+# sitting in the working tree is one `git add -f` or one edited .gitignore away
+# from being published forever.
+if os.name == "nt":
+    CONFIG = Path(os.environ.get("APPDATA") or Path.home() / "AppData/Roaming") / "invoice-tracker"
+else:
+    CONFIG = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "invoice-tracker"
+
+SECRET = CONFIG / "gmail.dat"        # DPAPI-encrypted, Windows
+SECRET_PLAIN = CONFIG / "gmail.json"  # everywhere else
+LEGACY = HERE / "secrets.json"        # the old in-repo location, migrated on sight
+
+
+class _Blob(ctypes.Structure):
+    _fields_ = [("cbData", ctypes.c_uint), ("pbData", ctypes.POINTER(ctypes.c_char))]
+
+
+def _dpapi(data: bytes, protect: bool) -> bytes | None:
+    """Encrypt/decrypt with Windows DPAPI, tied to the logged-in account.
+
+    Returns None anywhere that isn't Windows, so callers fall back to a plain
+    file with tight permissions.
+    """
+    if os.name != "nt":
+        return None
+    try:
+        crypt32, kernel32 = ctypes.windll.crypt32, ctypes.windll.kernel32
+    except (AttributeError, OSError):
+        return None
+    buf = ctypes.create_string_buffer(data, len(data))
+    blob_in = _Blob(len(data), ctypes.cast(buf, ctypes.POINTER(ctypes.c_char)))
+    blob_out = _Blob()
+    call = crypt32.CryptProtectData if protect else crypt32.CryptUnprotectData
+    if not call(ctypes.byref(blob_in), None, None, None, None, 0, ctypes.byref(blob_out)):
+        return None
+    try:
+        return ctypes.string_at(blob_out.pbData, blob_out.cbData)
+    finally:
+        kernel32.LocalFree(blob_out.pbData)
+
+
+def _write_secret(user: str, password: str) -> Path:
+    CONFIG.mkdir(parents=True, exist_ok=True)
+    payload = json.dumps({"user": user, "password": password}).encode("utf-8")
+    sealed = _dpapi(payload, protect=True)
+    path = SECRET if sealed else SECRET_PLAIN
+    path.write_bytes(sealed or payload)
+    try:
+        path.chmod(0o600)
+    except OSError:
+        pass
+    return path
+
+
+def _read_secret() -> tuple[str | None, str | None]:
+    for path in (SECRET, SECRET_PLAIN):
+        if not path.exists():
+            continue
+        raw = path.read_bytes()
+        if path is SECRET:
+            raw = _dpapi(raw, protect=False) or b""
+        try:
+            data = json.loads(raw.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            continue
+        return data.get("user"), data.get("password")
+    return None, None
+
+
+def forget() -> None:
+    """Erase every stored copy of the credential."""
+    gone = []
+    for path in (SECRET, SECRET_PLAIN, LEGACY):
+        if path.exists():
+            path.unlink()
+            gone.append(str(path))
+    print("Deleted: " + (", ".join(gone) if gone else "nothing was stored"))
+    print("Revoke the app password itself at https://myaccount.google.com/apppasswords")
+
 
 def credentials() -> tuple[str, str]:
-    """Environment, then secrets.json, then ask — and remember the answer."""
+    """Environment, then the stored secret, then ask — and remember the answer."""
     user = os.environ.get("INVOICE_EMAIL")
     password = os.environ.get("INVOICE_APP_PASSWORD")
 
-    secrets = HERE / "secrets.json"
-    if not (user and password) and secrets.exists():
-        data = json.loads(secrets.read_text("utf-8"))
-        user = user or data.get("user")
-        password = password or data.get("password")
+    if not (user and password):
+        stored_user, stored_password = _read_secret()
+        user, password = user or stored_user, password or stored_password
+
+    # An older version kept this inside the repo. Move it out and delete it.
+    if not (user and password) and LEGACY.exists():
+        try:
+            data = json.loads(LEGACY.read_text("utf-8"))
+            user, password = user or data.get("user"), password or data.get("password")
+        except (json.JSONDecodeError, OSError):
+            pass
+        if user and password:
+            path = _write_secret(user, password.replace(" ", ""))
+            LEGACY.unlink()
+            print(f"Moved your Gmail password out of the repo to {path}")
+            print(f"Deleted {LEGACY}\n")
 
     if user and password:
         return user, password.replace(" ", "")
@@ -74,12 +165,9 @@ def credentials() -> tuple[str, str]:
             "    Carry on and see, or Ctrl+C and delete secrets.json to redo it."
         )
 
-    secrets.write_text(json.dumps({"user": user, "password": password}, indent=2), "utf-8")
-    try:
-        secrets.chmod(0o600)
-    except OSError:
-        pass  # Windows does not do POSIX modes; .gitignore is the real guard here
-    print(f"Saved to {secrets}. It is gitignored, so it stays off GitHub.\n")
+    path = _write_secret(user, password)
+    where = "encrypted with your Windows login" if path is SECRET else "readable only by you"
+    print(f"Saved to {path} — {where}, and outside the repo entirely.\n")
     return user, password
 
 
@@ -105,7 +193,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--since", default="01-Jan-2026", help="IMAP date, e.g. 01-Jun-2026")
     ap.add_argument("--query", default="INVOICE", help="text to match in the subject")
     ap.add_argument("--keep-pdfs", action="store_true", help="also archive the PDFs")
+    ap.add_argument("--forget", action="store_true", help="delete the stored password and exit")
     args = ap.parse_args(argv)
+
+    if args.forget:
+        forget()
+        return 0
 
     user, password = credentials()
     store = invoice_parser.load_store(STORE)
