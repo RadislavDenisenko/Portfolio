@@ -1,153 +1,249 @@
-# Handoff — finish pulling Radislav's invoices
+# Handoff — invoice tracker, becoming a 1099 tax tool
 
-Paste-and-go context for a fresh Claude session running **locally on the user's
-Windows PC**. Everything here is verified, not assumed.
+Everything a fresh session needs. Written for a Claude running **locally on
+Radislav's Windows PC**, where it can read his files and run things itself.
 
-## The machine
+---
 
-- **Repo:** `C:\Users\radde\Portfolio` — a real git clone, currently on branch
-  `claude/invoice-job-analytics-g9gsfs`. Do the work there.
+## 1. Who and what
+
+Radislav Denisenko, cable/field technician in North Port, FL. Paid weekly by
+**Koscom Networks** against an invoice PDF (`I0F8.pdf`) that Ashley Claravall
+(`ashley.melissa@koscomnetworks.com`) emails every Thursday. Pay lands Friday.
+
+He is **not a developer and not a terminal person**. His stated goal is that his
+whole job is talking to Claude — he should never be handed a list of steps. Do
+the work; leave him one action, not six. Read `CLAUDE.md` at the repo root for
+how to talk to him; it is not optional and he wrote most of it himself.
+
+**The product goal, in his words:** a tool that tracks what he earns *and* what
+he can deduct, where capturing a receipt is so effortless he will still be doing
+it in November. He has said plainly that he will abandon anything that feels like
+work — *"I'm a human being with emotions, I'm gonna get lazy."* **Optimise for
+him keeping the habit, not for elegance or efficiency.** A clumsier flow he
+actually uses beats a clever one he drops.
+
+---
+
+## 2. The machine
+
+- **Repo:** `C:\Users\radde\Portfolio`, branch `claude/invoice-job-analytics-g9gsfs`
 - **Tool:** `C:\Users\radde\Portfolio\tools\invoice-tracker`
-- **Shell:** Windows PowerShell. Use `python` (not `python3`); it is 3.14.7.
-- **Git:** installed and working.
-- The user is not a terminal person. Give one paste-ready block at a time, and
-  say what he should expect to see. Do not make him choose between options.
+- **Python:** 3.14.7, the command is `python` (not `python3`)
+- **Shell:** PowerShell. Claude Code lives at `C:\Users\radde\.local\bin\claude.exe`
+- **The repo is PUBLIC on GitHub.** Nothing private may ever be committed.
 
-## What the tool is
+Credentials live **outside the repo**: `%APPDATA%\invoice-tracker\gmail.dat`,
+encrypted with Windows DPAPI so they are tied to his Windows login.
+`python fetch_invoices.py --forget` erases them. `data/` and `secrets.json` are
+gitignored; check `git status` before every commit.
 
-Parses the weekly Koscom invoice PDF (`I0F8.pdf`) that Ashley Claravall
-(`ashley.melissa@koscomnetworks.com`) emails every Thursday, and reports jobs a
-day, pay a day, days worked, and how many jobs a day it takes to hit a target.
+---
 
-Zero dependencies — Python standard library only, and plain browser APIs.
+## 3. What exists and works
+
+Zero dependencies anywhere — Python standard library and plain browser APIs.
 
 | File | Does |
 |---|---|
-| `fetch_invoices.py` | logs into Gmail over IMAP, parses new invoices, writes `data/invoices.json` |
-| `invoice_parser.py` | invoice semantics + arithmetic; also a CLI (`python invoice_parser.py file.pdf`) |
+| `fetch_invoices.py` | Gmail over IMAP, parses new invoices, writes `data/invoices.json` |
+| `invoice_parser.py` | invoice semantics + arithmetic; CLI: `python invoice_parser.py file.pdf` |
 | `pdf_text.py` | PDF text extraction, stdlib only |
-| `assets/pdf-extract.js` | the same algorithm in the browser, for drag-and-drop |
-| `index.html` | the dashboard |
-| `test_parser.py` | the check — run this to prove nothing is broken |
-| `open-tracker.bat` | double-click: serves the dashboard and opens the browser |
+| `tax.py` | expenses, mileage, Schedule C categories, federal tax estimate |
+| `assets/pdf-extract.js` | the same PDF algorithm in the browser, for drag-and-drop |
+| `index.html` + `assets/` | the dashboard |
+| `test_parser.py` | the check — must print `core math OK` |
+| `open-tracker.bat` | double-click: serves the dashboard, opens the browser |
 | `fetch-invoices.bat` | double-click: runs the Gmail fetch |
-| `README.md` | fuller reference. Where it and this file differ, follow this file — README is written for any machine, this one for his |
+| `README.md` | fuller reference; where it and this file differ, follow this file |
 
 **A "job" is a distinct JOB number on a given day.** Several pay lines share one
-JOB number — those are one job, not several. Money is handled in whole cents.
+JOB number — that is one job, not several. Money is in whole cents everywhere.
 
-## The job to finish
+If you change `pdf_text.py`, change `assets/pdf-extract.js` to match. They are
+hand-ports of each other.
 
-7 invoice emails exist. Only 1 has been parsed so far. Pull the other 6.
+### Verified reference numbers — check any re-parse against these
 
-```powershell
-cd C:\Users\radde\Portfolio\tools\invoice-tracker
-git pull
-python test_parser.py
-python fetch_invoices.py
-```
+Week of **July 05–11, 2026**: 5 days worked (Mon, Tue, Wed, Fri, Sat — Thursday
+off), 35 jobs across 61 pay lines, gross **$1,530.63**, soft fee **−$6.25**,
+take home **$1,524.31**. Averages 7.0 jobs/day, $306.13/day, $43.73/job.
 
-`test_parser.py` must print `core math OK` before anything else. If it does not,
-stop and fix that first.
+Two deliberate oddities, do not "fix" either:
 
-### The one thing that has already gone wrong twice
+- **The 61 lines total $1,530.63 but the invoice prints $1,530.56** — Koscom is
+  7¢ light. The dashboard reports it under "Worth asking about".
+- **Take home is $1,524.31, not $1,524.38** — it derives from the invoice's
+  printed total, not from the summed lines.
+- The CLI prints `5.97 jobs/day` for a $1,300 target where the dashboard shows
+  `6.0`. Same number, different rounding. Neither is wrong.
 
-`fetch_invoices.py` asks for a Gmail **App Password** (16 letters, from
-<https://myaccount.google.com/apppasswords>, needs 2-Step Verification on). The
-prompt hides the paste, so **he pasted it twice and got 32 characters**, and
-Gmail answered `[AUTHENTICATIONFAILED] Invalid credentials`.
+**His real average is ~$1,107/week** before the soft fee, across all weeks — the
+July 5–11 week was well above normal. Rent he is considering is $1,380/month,
+which is ~40% of take-home after a tax set-aside. Tight but not impossible.
 
-The script now prints the character count immediately:
+---
 
-- `Got 16 characters — that is the right shape.` → good
-- `! Got 32 characters` → pasted twice; Ctrl+C, delete `secrets.json`, redo
+## 4. Tax research — findings so far
 
-The password is stored **outside the repo** — `%APPDATA%\invoice-tracker\gmail.dat`,
-encrypted with Windows DPAPI. Never write a credential into the working tree; this
-repository is public. If a stale bad password is saved, clear it with:
+Gathered by two research agents. **irs.gov is unreachable from the cloud
+container**, so nothing below was read from a primary source; it is multiple
+secondary sources agreeing (KPMG, Journal of Accountancy, Littler, Forbes,
+Thomson Reuters). **You are on his PC and are not blocked — verify the
+load-bearing items against irs.gov directly.** That is your first job.
 
-```powershell
-python fetch_invoices.py --forget
-```
+### Mileage — the big one
 
-Tell him to paste **once** and that the blank screen is normal.
+- **2026 has TWO rates.** Notice 2026-10 set **72.5¢**; Announcement 2026-11
+  raised it to **76¢ effective July 1, 2026**. A year's miles must be split at
+  June 30. `tax.py` already holds a date-keyed table — verify the figures.
+- **Commuting is not deductible** (Rev. Rul. 99-7). Home → first job of the day
+  is normally commuting. **Unless** his home qualifies as his principal place of
+  business, in which case *every* trip from home becomes deductible.
+- A vehicle is **listed property under §274(d)**, so the strict-substantiation
+  rule applies: an inadequate log is **disallowed in full**, not estimated down.
+  The log needs date, miles, start/end, and a *specific* business purpose,
+  recorded at or near the time. Weekly counts as timely; reconstructed after an
+  audit starts does not.
+- **The year-one method election is irreversible.** Claim actual expenses on a
+  vehicle in its first business year and it can never use standard mileage.
+  Start with standard and he may switch later (straight-line depreciation only).
+  Leased vehicles are locked for the whole lease. Rev. Proc. 2019-46.
+- **You cannot claim standard mileage and the van's running costs in the same
+  year.** `tax.py` enforces this and reports which method is worth more.
 
-Deleting the file only re-prompts if `INVOICE_EMAIL` and `INVOICE_APP_PASSWORD`
-are unset — the environment is checked first and wins. If a previous session set
-them, clear them too.
+### Going paperless
 
-### If Gmail still refuses
+**Rev. Proc. 97-22** permits scans to replace originals. Conditions: complete
+and legible capture, an **index** so a specific receipt can be retrieved, ability
+to **reproduce hard copies on demand**, integrity and anti-tamper controls,
+backups, and periodic checks. Paper may be destroyed **only after** testing the
+system and instituting procedures (§7).
 
-1. It must be an App Password, not his account password.
-2. IMAP must be on: Gmail → Settings → See all settings → Forwarding and
-   POP/IMAP → Enable IMAP → Save Changes.
-3. Delete `secrets.json` and re-enter.
+**Storing only extracted data is not compliant** — discarding the image destroys
+the record. **Always keep the original image.** This is a hard design rule.
 
-A network failure (rather than a credential one) says
-`Could not reach imap.gmail.com` and is about VPN/firewall/port 993, not the
-password.
+Retention: **3 years** generally; **6** if income is understated by >25%;
+**indefinitely** if no return is filed; and for the **van, until ~3 years after
+the year he disposes of it** — potentially a decade.
 
-### Reading the result
+### Substantiation and thresholds
 
-It prints one `+ <pay period>: N days, N jobs, $N` line per invoice it took, then
-a total. PDFs it cannot read are reported on stderr and skipped rather than
-crashing the run, so **compare the count it reports against the number of
-`FL INVOICE` emails in the mailbox** — a silent shortfall means something was
-skipped, not that fewer invoices exist. Re-running is safe and idempotent: it
-tracks message IDs and re-parses without duplicating.
+- Receipts are required for **any lodging expense regardless of amount**, and for
+  other §274(d) expenditures of **$75 or more** (Reg. §1.274-5(c)(2)(iii),
+  Notice 95-50). Below $75 he still must record amount, time, place and purpose
+  — he loses the receipt requirement, not the record requirement.
+- ⚠️ **Sources disagree** on whether $75 is universal or only §274(d). Most blogs
+  say universal; the regulation sits in §274. **Confirm before he shreds
+  anything.**
+- **Local meals are NOT deductible.** The "sleep or rest" rule
+  (*US v. Correll*) — meals count only when travel is overnight. Lunch between
+  job sites is personal. `tax.py` has a meals category; it should warn.
 
-## Reference numbers — use these to check your parse
+### Worth money, commonly missed
 
-The week of **July 05–11, 2026** is already verified. If you re-parse it and get
-anything different, your parse is wrong:
+- **Home office, simplified method:** $5/sq ft up to 300 sq ft = $1,500 max,
+  Schedule C line 30. Requires **regular AND exclusive** use. The deduction
+  itself is minor; what matters is that it can convert his daily commuting into
+  deductible business miles. Worth more than every receipt combined.
+- **Cell phone** business-use share (no longer listed property; Notice 2011-72).
+- **De minimis safe harbor**, Reg. §1.263(a)-1(f): expense tools up to **$2,500
+  per item** instead of depreciating — but it needs an election statement
+  attached to a timely filed return. Easy to miss, must be done annually.
+- Protective clothing/boots **only if unsuitable for everyday wear**.
+- Licenses, certifications, business-use tolls and parking.
 
-- 5 days worked (Mon, Tue, Wed, Fri, Sat — Thursday off)
-- 35 jobs across 61 pay lines
-- Gross **$1,530.63** · soft fee **-$6.25** · take home **$1,524.31**
-- Averages: 7.0 jobs/day · $306.13/day · $43.73/job
-- To take home $1,300 over 5 days: **5.97 jobs a day**
+### Other
 
-Two places where the obvious arithmetic gives a different answer, both on
-purpose:
+- **Schedule C Part IV line 47** asks, under penalty of perjury, whether he has
+  written evidence for the vehicle deduction and whether it is written.
+- **The 1099-NEC threshold rose from $600 to $2,000** for 2026 (OBBBA). He will
+  receive fewer 1099s; the income is still fully taxable and his own books
+  become the primary record. Under-reporting triggers the 6-year window.
+- Florida has **no state income tax**. SE tax 15.3% on 92.35% of net earnings.
+  Quarterly estimates (Form 1040-ES) if he expects to owe $1,000+.
 
-- **Take home is $1,524.31, not $1,524.38.** It comes off the invoice's *printed*
-  total of $1,530.56, not off the $1,530.63 the 61 lines actually sum to.
-- **The CLI says `5.97 jobs/day`; the dashboard says `6.0`.** Same number, and
-  the dashboard rounds a headline figure to one decimal. Neither is wrong.
+---
 
-**The 7¢ discrepancy is real and expected.** The 61 lines total $1,530.63 but the
-invoice prints $1,530.56. That is Koscom's arithmetic, not a bug here — the
-dashboard reports it under "Worth asking about". Do not "fix" it.
+## 5. The receipt system — design decided, not yet built
 
-As of 2026-08-09 there were 7 invoice emails: weeks ending WK06.06, WK06.13,
-WK06.20, WK06.27, WK07.04, WK07.11 and WK07.18 of 2026, arriving on Thursdays
-about two and a half weeks after the week they cover. **Pull whatever IMAP
-actually returns rather than treating that list as the target** — more will have
-arrived since this was written, and nothing is hardcoded to it.
+**Capture: email to himself.** He shares a photo to email; the existing IMAP code
+picks it up. Chosen because the code, the encrypted credential and the launcher
+already exist and are debugged, it works on cellular anywhere, and it needs no
+new app, account or sync software. Extend `pdf_attachments()` to accept
+`image/*` and add a second Gmail search keyed on a subject or label.
 
-## Then show him the numbers
+Rejected, with reasons: **OneDrive** (Files On-Demand placeholders break Python
+reads, and it sweeps in every photo he takes); **Phone Link** (cannot transfer
+iPhone photos at all, no automatic folder drop); **LAN endpoint** (fails away
+from home wifi, which is where receipts happen); **Syncthing** (best privacy,
+but pairing device IDs is beyond his configuration budget).
 
-```powershell
-python -m http.server 8080
-```
+**Extraction: Claude reads the images.** A local Claude Code session reads image
+files directly — no API key, no cost beyond his subscription. Tesseract scores
+~60% on crumpled thermal paper and is not viable. If unattended nightly runs
+become worth it later, the API path is Sonnet with the Batch API at roughly
+$0.60/month for 100 receipts; cost is not a decision factor either way.
 
-and open <http://localhost:8080/>. Or just double-click `open-tracker.bat`.
+**Validation: deterministic, never a self-reported confidence score.** Research
+is clear that LLM self-assessed confidence is badly calibrated — models report
+high confidence regardless of correctness. Use instead: line items + tax must
+equal the total in whole cents; date parses and is not in the future; duplicate
+detection on merchant+date+total; a known-merchant memory. Flag failures to a
+review queue in the dashboard. **Always keep the original image beside the
+record** — required by Rev. Proc. 97-22 and the escape hatch when extraction is
+wrong.
 
-Worth telling him once it works:
-- his true average jobs/day across all 7 weeks, not just the one
-- whether 6-day weeks actually pay proportionally more than 5-day weeks
-- how many of the 7 weeks cleared $1,300
-- whether the van reimbursement he is owed ever appeared as a line item —
-  Ashley approved it on 2026-07-24 saying "next week's payout", and on 2026-07-30
-  he replied it still had not arrived. It would show up as its own labelled row
-  next to `TRUCK` and `SOFT FEE`.
+**Categorisation: a plain rules file he can edit** (Firefly III's approach), not
+per-transaction AI. "Contains WHOLEFDS → groceries" is deterministic and
+debuggable.
 
-## Rules
+**Do not build:** Docker, a server, a database engine, a mobile app, bank
+integrations, multi-user anything.
 
-- **Never commit `secrets.json` or `data/`.** Both are gitignored. The repo is
-  **public**. Check `git status` before any commit.
-- Never print the app password, and never ask him to paste it into chat — it
-  goes only into the script's hidden prompt.
-- Commit and push to `claude/invoice-job-analytics-g9gsfs`, not `main`.
-- If you change `pdf_text.py`, change `assets/pdf-extract.js` to match. They are
-  ports of each other.
+---
+
+## 6. Answer these before building further
+
+1. **iPhone or Android?** Decides the one-tap share mechanism. Nothing else.
+2. **Is the Koscom income 1099 or W-2?** `CLAUDE.md` says he has been a Comcast
+   technician since Oct 2023, but the Koscom invoice is contractor-shaped (a
+   "soft fee" deduction, nothing withheld). **This is the threshold question:**
+   if any of it is W-2, none of these expenses are deductible against it — the
+   deduction for unreimbursed employee expenses was permanently repealed.
+3. **Does he have a space used regularly and exclusively for work at home?**
+   Decides the home office, and through it whether his daily driving is
+   deductible at all.
+4. **Has he set aside anything for taxes this year?** Nothing is withheld from
+   these invoices. If the answer is no, that matters more than the app does.
+5. **Roughly how many miles does he drive in a week, and how much of that is
+   home → first job?** Needed to size the deduction honestly.
+
+Also outstanding: he is owed a **van repair reimbursement**. Ashley approved it
+on 2026-07-24 saying "next week's payout"; on 2026-07-30 he said it still had not
+arrived. It would appear on an invoice as its own labelled row beside `TRUCK` and
+`SOFT FEE`. Check whether it ever landed.
+
+---
+
+## 7. Next build steps
+
+1. Verify the 2026 mileage rates and the §75 scope against irs.gov.
+2. Extend the fetcher to pull image attachments into `data/inbox/`.
+3. Receipt extraction + the deterministic validators + a review queue.
+4. A tax view in the dashboard: deductions, set-aside, quarterly estimates.
+5. Reconstruct mileage as far back as is honest — his invoices already give the
+   exact days he worked, which is the skeleton of a log.
+
+---
+
+## 8. Rules
+
+- **Never commit `secrets.json`, `data/`, or any credential.** The repo is public.
+- Never ask him to paste a password into chat.
+- Commit and push to `claude/invoice-job-analytics-g9gsfs`, never `main`.
+- Run `python test_parser.py` before and after changes; it must print
+  `core math OK`.
+- **You are not a tax advisor and neither is he.** Report what sources say, mark
+  what is unverified, and push him to a CPA for the two irreversible calls: the
+  year-one vehicle method election and the home-office exclusive-use test.
