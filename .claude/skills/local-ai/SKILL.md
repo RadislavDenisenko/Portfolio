@@ -65,6 +65,12 @@ python3 tools/make_hand_maps.py     # albedo + normal + roughness, baked to the 
 
 Baked-in lighting is what makes 3D look like putty; the tool divides it out.
 
+**Upscaling** — `python3 tools/upscale.py in.jpg out.png`. On this machine it finds
+ComfyUI on its own and uses the GPU and the upscale models in
+`ComfyUI/models/upscale_models`; it lists what it found before it runs, so check that
+line to confirm which model was used. Prefer regenerating a plate at the size you
+need over upscaling one that was generated small.
+
 **Hero video** — 6-10s seamless loop, under 4MB, no text baked in (text lives in HTML
 so it stays crisp). Keep resolution modest given the RAM ceiling.
 

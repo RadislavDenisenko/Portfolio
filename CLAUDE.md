@@ -59,7 +59,13 @@ local GPU pipeline (ComfyUI). Cloud sessions may have a Higgsfield MCP server in
 Either way: generate → optimize → commit into `docs/assets/`, and keep the page under
 budget.
 
-**Upscaling needs no credits.** `tools/upscale.py` runs Real-ESRGAN on the CPU —
-about ten minutes for a 1376px plate on four cores. Reach for it before spending
-credits on an AI upscale. Anything full-bleed ships as a `srcset` ladder so a phone
+**Upscaling needs no credits.** `tools/upscale.py` picks its own route. If ComfyUI
+is answering on `$COMFYUI_URL` it sends the job there — Radislav's GPU, and the
+upscale models he actually downloaded, discovered from `/object_info` rather than
+hardcoded. Otherwise it falls back to Real-ESRGAN on the CPU, about ten minutes for
+a 1376px plate on four cores. **The CPU fallback cannot use his ComfyUI models** —
+those are `.pth` and the fallback runs `ncnn`, which reads `.param`/`.bin`; it uses
+weights bundled in a PyPI wheel instead. So a cloud session upscaling something is
+NOT "using his models", and should not be described that way. Reach for either
+before spending credits. Anything full-bleed ships as a `srcset` ladder so a phone
 never downloads the retina cut.
