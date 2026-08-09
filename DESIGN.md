@@ -74,13 +74,21 @@ Full-viewport section per project, scroll-snap proximity (never JS-hijacked):
    overlay uses CustomBlending that adds RGB but not alpha: plain additive
    blending on an alpha canvas attenuates the room photo as much as it lights
    it, and a cyan glow arrives as grey haze. Skin is MeshPhysicalMaterial —
-   warm mid tone, sheen, a whisper of clearcoat, plus tileable
-   albedo/normal/roughness maps — under ACES filmic tone mapping. Those maps
-   are **synthesised, not photographic** (tools/make_skin_maps.py, 3 × 256px,
-   66KB): a cellular micro-furrow network with a mean flattened to under 1%
-   block-to-block, because the macro-of-a-palm they were derived from contained
-   only 20–40mm flexion creases, and tiled at any repeat those lined up
-   tile-to-tile into a plaid — the hand read as burlap.
+   warm mid tone, sheen, a whisper of clearcoat, plus albedo/normal/roughness
+   maps — under ACES filmic tone mapping. Those maps are **baked to the model's
+   own UV layout, not tiled** (tools/make_hand_maps.py, 1024px, 56KB): the tool
+   rasterises the UVs to recover the 3D point behind every texel, then writes
+   each crease where the rig's joints say it belongs — a flexion band at every
+   finger joint, the three palm lines struck through the joint anchors, softer
+   knuckle lines on the back. A tiled detail map cannot do this: a crease is
+   anatomy, not surface noise, and at any repeat the 20–40mm creases in a
+   macro-of-a-palm line up tile-to-tile into a plaid — the hand read as lizard
+   skin. Grain is the one thing still synthesised, sampled from model space so
+   it stays one size across islands of different density, and it lives in
+   roughness only: in a JPEG normal map its block artefacts amplify into crust.
+   Palm-side detail is masked by the surface normal, so nothing bleeds onto the
+   back of the hand, and the pose is yawed palm-forward — the model is a LEFT
+   hand, so palm-forward puts the thumb on the right.
 
    **Light is measured off the plate, never dialled by eye.** That photograph
    has median luma 41 and p95 125; its brightest surface is the pool the beam

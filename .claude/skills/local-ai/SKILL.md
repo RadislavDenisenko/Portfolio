@@ -60,7 +60,7 @@ subject is live 3D on top. Export ~1400px wide, JPEG q82, target under 100KB.
 texture (no shadows, no directional light), then run:
 
 ```bash
-python3 tools/make_skin_maps.py     # albedo + normal + roughness, tileable
+python3 tools/make_hand_maps.py     # albedo + normal + roughness, baked to the UVs
 ```
 
 Baked-in lighting is what makes 3D look like putty; the tool divides it out.

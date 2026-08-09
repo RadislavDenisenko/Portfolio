@@ -17,12 +17,17 @@ import * as T from './vendor/three-slim.min.js';
    /airmouse/, so page-relative asset paths point one directory too deep. */
 const asset = rel => new URL(rel, import.meta.url).href;
 const MODEL = asset('models/hand-rigged.glb');
+/* Baked for this mesh's UV layout, so creases land on the anatomy. Not tiled:
+   a repeat frequency is exactly what made earlier detail read as scales. */
 const SKIN = {
-  normalMap: asset('img/skin-normal.jpg'),
-  roughnessMap: asset('img/skin-rough.jpg'),
+  map: asset('img/hand-albedo.jpg'),
+  normalMap: asset('img/hand-normal.jpg'),
+  roughnessMap: asset('img/hand-rough.jpg'),
 };
 
-/* Palm to camera, fingers up, thumb splayed — found by rendering the sweep. */
+/* Palm to camera, fingers up. The model is a left hand, so palm-forward puts
+   the thumb on the right; the mirrored yaw shows the back, where none of the
+   palm creases exist. */
 const POSE = { x: 0, y: -Math.PI / 2, z: Math.PI };
 
 /* MediaPipe's 21 landmarks in WebXR joint names. MediaPipe has no metacarpal
@@ -90,8 +95,7 @@ function loadSkin(renderer) {
   const maps = {};
   for (const [slot, url] of Object.entries(SKIN)) {
     const t = loader.load(url);
-    t.wrapS = t.wrapT = T.RepeatWrapping;
-    t.repeat.set(10, 10);            // grain visible as grain, never as a motif
+    if (slot === 'map') t.colorSpace = T.SRGBColorSpace;
     t.anisotropy = renderer.capabilities.getMaxAnisotropy();
     maps[slot] = t;
   }
@@ -166,7 +170,7 @@ export async function initHand(target, opts = {}) {
     clearcoatRoughness: 0.62,
     ...loadSkin(renderer),
   });
-  mat.normalScale.set(0.28, 0.28);
+  mat.normalScale.set(0.62, 0.62);
 
   const mesh = new T.Mesh(model.geo, mat);
   spin.add(mesh);

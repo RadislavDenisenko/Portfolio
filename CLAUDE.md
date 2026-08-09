@@ -15,7 +15,8 @@ visual. If a request conflicts with it, the request wins — then update `DESIGN
   - `assets/vendor/` — Three.js, vendored locally. No CDNs, ever.
   - `assets/img/` — room background, skin PBR maps, screenshots
   - `airmouse/` — the AirMouse case study page
-- `tools/make_skin_maps.py` — turns one skin photo into albedo + normal + roughness maps
+- `tools/make_hand_maps.py` — bakes the hand's creases, knuckle lines and skin grain
+  onto the model's own UV layout, so detail lands on the anatomy instead of tiling
 - `prompts/design-discovery.md` — the interview prompt for starting a new design
 
 Working branch: `claude/portfolio-website-design-gtyyvt`.
