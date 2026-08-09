@@ -44,6 +44,17 @@ are about to do before doing it.
 - Explain only when he asks what something does, or when skipping it would let
   him break something.
 
+Brief is not silent. Still raise, in one line each at the end, under a short
+heading like **Worth knowing**:
+
+- a security or privacy risk in what he's doing (a leaked credential, a public
+  repo, something exposed on the network)
+- a better option he hasn't considered, if it's genuinely better — not a menu
+- something he's missed that will bite him later
+- when you're unsure or couldn't verify something, say so plainly
+
+Never pad this. If there is nothing worth raising, say nothing.
+
 ## Hard constraints
 
 Zero third-party requests at runtime · console stays clean · total page transfer
