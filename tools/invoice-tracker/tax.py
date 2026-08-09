@@ -28,10 +28,32 @@ from pathlib import Path
 HERE = Path(__file__).parent
 LEDGER = HERE / "data" / "ledger.json"
 
-# 2026 IRS standard mileage rate, cents per mile. VERIFY against irs.gov each
-# January — it moves every year and a stale rate quietly misstates the return.
-MILEAGE_RATE_CENTS = 70.0
-MILEAGE_RATE_YEAR = 2026
+# IRS standard mileage rates, cents per mile, keyed by the date they take
+# effect. A single constant is wrong: 2026 changed MID-YEAR (Notice 2026-10 set
+# 72.5c, Announcement 2026-11 raised it to 76c from July 1 on fuel prices), so a
+# year's miles have to be split at June 30 and multiplied separately.
+# Re-check against irs.gov every January, and after any mid-year announcement.
+MILEAGE_RATES = [
+    ("2024-01-01", 67.0),
+    ("2025-01-01", 70.0),
+    ("2026-01-01", 72.5),
+    ("2026-07-01", 76.0),
+]
+
+# Only business miles deduct. Rev. Rul. 99-7: driving between home and a work
+# location is commuting and is not deductible — unless the home qualifies as the
+# principal place of business, or the site is temporary and there is a regular
+# work location elsewhere. Schedule C line 44 demands this split anyway.
+MILE_KINDS = ("business", "commuting", "other")
+
+
+def rate_for(date_iso: str) -> float:
+    """Cents per mile in force on that date."""
+    rate = MILEAGE_RATES[0][1]
+    for start, value in MILEAGE_RATES:
+        if date_iso >= start:
+            rate = value
+    return rate
 
 # Schedule C (Form 1040) Part II lines, trimmed to what a field technician
 # driving to job sites actually incurs. `vehicle` marks the ones that standard
@@ -129,17 +151,30 @@ def add_expense(
     return entry
 
 
-def add_miles(ledger: dict, miles: float, date: str | None = None, note: str = "") -> dict:
-    """Record a day's business driving.
+def add_miles(
+    ledger: dict,
+    miles: float,
+    date: str | None = None,
+    purpose: str = "",
+    kind: str = "business",
+    route: str = "",
+) -> dict:
+    """Record a day's driving.
 
-    Pub 463 wants date, mileage and business purpose, so `note` is the purpose
-    and is worth filling in — an undated pile of numbers is not a log.
+    A vehicle is listed property, so mileage falls under the strict
+    substantiation of §274(d): amount, time, place and business purpose, all
+    recorded at or near the time. Unlike ordinary expenses, a court may NOT
+    estimate for you — an inadequate log is disallowed in full rather than
+    trimmed. Hence `purpose` and `route`, and hence the nagging below.
     """
     entry = {
         "date": date or dt.date.today().isoformat(),
         "miles": round(float(miles), 1),
-        "note": note.strip() or "job sites",
+        "kind": kind if kind in MILE_KINDS else "business",
+        "purpose": purpose.strip(),
+        "route": route.strip(),
     }
+    entry["complete"] = bool(entry["purpose"]) and bool(entry["route"])
     ledger["mileage"].append(entry)
     return entry
 
@@ -164,8 +199,21 @@ def summarize(ledger: dict, year: int | None = None) -> dict:
         slot["count"] += 1
         slot["deductible_cents"] += round(expense["cents"] * fraction)
 
-    miles = sum(m["miles"] for m in ledger["mileage"] if _year(m["date"], year))
-    mileage_cents = round(miles * MILEAGE_RATE_CENTS)
+    # Each entry is valued at the rate in force on its own date — 2026 splits
+    # at July 1 — and only business miles count toward the deduction.
+    miles_by_kind = {kind: 0.0 for kind in MILE_KINDS}
+    mileage_cents = 0
+    incomplete = 0
+    for entry in ledger["mileage"]:
+        if not _year(entry["date"], year):
+            continue
+        kind = entry.get("kind", "business")
+        miles_by_kind[kind] = miles_by_kind.get(kind, 0.0) + entry["miles"]
+        if kind == "business":
+            mileage_cents += round(entry["miles"] * rate_for(entry["date"]))
+            if not entry.get("complete"):
+                incomplete += 1
+    miles = miles_by_kind["business"]
 
     # The whole point of this module.
     vehicle_cents = sum(
@@ -190,6 +238,8 @@ def summarize(ledger: dict, year: int | None = None) -> dict:
         "method": method,
         "by_category": by_category,
         "miles": round(miles, 1),
+        "miles_by_kind": {k: round(v, 1) for k, v in miles_by_kind.items()},
+        "incomplete_trips": incomplete,
         "mileage_cents": mileage_cents,
         "vehicle_expense_cents": vehicle_cents,
         "claimed_vehicle_cents": claimed_vehicle,
@@ -251,10 +301,30 @@ def report(ledger: dict, year: int | None = None, gross_cents: int = 0) -> str:
         )
 
     out.append("")
+    kinds = stats["miles_by_kind"]
     out.append(
-        f"  {stats['miles']:,.1f} business miles at {MILEAGE_RATE_CENTS:.0f}c"
+        f"  {stats['miles']:,.1f} business miles"
         f"  ->{money(stats['mileage_cents']):>13}"
     )
+    if kinds.get("commuting") or kinds.get("other"):
+        out.append(
+            f"  ({kinds.get('commuting', 0):,.1f} commuting and "
+            f"{kinds.get('other', 0):,.1f} personal, neither deductible)"
+        )
+    elif stats["miles"]:
+        out.append(
+            "  ! Every mile is logged as business and none as commuting.\n"
+            "    Home to your first job of the day is normally commuting and is\n"
+            "    NOT deductible — unless your home qualifies as your principal\n"
+            "    place of business. That one question is worth more than every\n"
+            "    receipt combined; settle it with a preparer."
+        )
+    if stats["incomplete_trips"]:
+        out.append(
+            f"  ! {stats['incomplete_trips']} trip(s) have no purpose or route recorded.\n"
+            "    A vehicle is listed property: an incomplete log is disallowed in\n"
+            "    full, not reduced. Add where you went and why."
+        )
     if stats["method"] == "standard" and stats["vehicle_expense_cents"]:
         out.append(
             f"  Van costs of {money(stats['vehicle_expense_cents'])} are NOT claimed "
@@ -317,7 +387,9 @@ def main(argv: list[str] | None = None) -> int:
     m = sub.add_parser("miles", help="record a day's driving")
     m.add_argument("miles", type=float)
     m.add_argument("--date")
-    m.add_argument("--note", default="")
+    m.add_argument("--purpose", default="", help="why, specifically: 'service call, ticket 88213'")
+    m.add_argument("--route", default="", help="from where to where")
+    m.add_argument("--kind", default="business", choices=MILE_KINDS)
 
     r = sub.add_parser("report", help="deductions and tax estimate")
     r.add_argument("--year", type=int, default=dt.date.today().year)
@@ -337,12 +409,15 @@ def main(argv: list[str] | None = None) -> int:
         save(ledger)
         print(f"Recorded {money(entry['cents'])} at {entry['merchant']} ({entry['category']})")
     elif args.command == "miles":
-        entry = add_miles(ledger, args.miles, args.date, args.note)
+        entry = add_miles(ledger, args.miles, args.date, args.purpose, args.kind, args.route)
         save(ledger)
+        worth = round(entry["miles"] * rate_for(entry["date"])) if entry["kind"] == "business" else 0
         print(
-            f"Recorded {entry['miles']} miles on {entry['date']} "
-            f"= {money(round(entry['miles'] * MILEAGE_RATE_CENTS))} off your taxable income"
+            f"Recorded {entry['miles']} {entry['kind']} miles on {entry['date']}"
+            + (f" = {money(worth)} off your taxable income" if worth else " (not deductible)")
         )
+        if entry["kind"] == "business" and not entry["complete"]:
+            print("  Add --purpose and --route: an incomplete log is disallowed in full.")
     elif args.command == "method":
         ledger["vehicle_method"] = args.choice
         save(ledger)
