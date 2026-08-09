@@ -29,10 +29,11 @@ HERE = Path(__file__).parent
 LEDGER = HERE / "data" / "ledger.json"
 
 # IRS standard mileage rates, cents per mile, keyed by the date they take
-# effect. A single constant is wrong: 2026 changed MID-YEAR (Notice 2026-10 set
-# 72.5c, Announcement 2026-11 raised it to 76c from July 1 on fuel prices), so a
-# year's miles have to be split at June 30 and multiplied separately.
-# Re-check against irs.gov every January, and after any mid-year announcement.
+# effect. A single constant is wrong: 2026 changed MID-YEAR (72.5c from Jan 1
+# per IR-2025-128, raised to 76c from July 1 per IR-2026-29 on fuel prices), so
+# a year's miles have to be split at June 30 and multiplied separately.
+# VERIFIED 2026-08-09 against irs.gov/tax-professionals/standard-mileage-rates.
+# Re-check there every January, and after any mid-year announcement.
 MILEAGE_RATES = [
     ("2024-01-01", 67.0),
     ("2025-01-01", 70.0),
@@ -55,6 +56,15 @@ def rate_for(date_iso: str) -> float:
             rate = value
     return rate
 
+# The "$75 rule" is NOT a licence to bin small receipts, and this is why there
+# is no threshold anywhere in this file. Reg. §1.274-5(c)(2)(iii) waives the
+# receipt below $75 only for what §274(d) covers: travel away from home, gifts,
+# and listed property (the van). Lodging needs a receipt at ANY amount. Tools,
+# supplies, phone and licences are ordinary §162 expenses governed by §6001,
+# which sets no dollar floor at all — so for most of what he actually buys,
+# there is no small-purchase exemption. Capture everything.
+# VERIFIED 2026-08-09 against the regulation and 26 U.S.C. §274(d).
+#
 # Schedule C (Form 1040) Part II lines, trimmed to what a field technician
 # driving to job sites actually incurs. `vehicle` marks the ones that standard
 # mileage already covers.
@@ -80,15 +90,27 @@ SE_TAX_RATE = 0.153          # 12.4% Social Security + 2.9% Medicare
 SE_TAXABLE_FRACTION = 0.9235  # SE tax applies to 92.35% of net earnings
 SE_DEDUCTION = 0.5            # half of SE tax is an income-tax deduction
 
-# 2026 federal brackets, single filer. Also worth re-checking each January.
-STANDARD_DEDUCTION_CENTS = 1_550_000
+# Qualified business income, §199A: a sole proprietor deducts 20% of business
+# profit off taxable income on top of the standard deduction. Made permanent by
+# the OBBBA. The wage/property limits only bite above the threshold below, which
+# he is nowhere near, so the plain 20% applies. Forgetting it overstates what he
+# needs to set aside by several hundred dollars a year.
+QBI_RATE = 0.20
+QBI_PHASE_IN_START_CENTS = 20_500_000  # single filer; above this the limits start
+QBI_MINIMUM_CENTS = 40_000             # $400 floor if QBI >= $1,000 and he works it
+QBI_MINIMUM_FLOOR_CENTS = 100_000
+
+# 2026 federal brackets and standard deduction, single filer.
+# VERIFIED 2026-08-09 against irs.gov (Rev. Proc. 2025-32, as amended by OBBBA).
+# These were the 2025 figures until that check — re-verify every January.
+STANDARD_DEDUCTION_CENTS = 1_610_000
 BRACKETS = [
-    (1_192_500, 0.10),
-    (4_847_500, 0.12),
-    (10_335_000, 0.22),
-    (19_730_000, 0.24),
-    (25_052_500, 0.32),
-    (62_635_000, 0.35),
+    (1_240_000, 0.10),
+    (5_040_000, 0.12),
+    (10_570_000, 0.22),
+    (20_177_500, 0.24),
+    (25_622_500, 0.32),
+    (64_060_000, 0.35),
     (float("inf"), 0.37),
 ]
 
@@ -256,13 +278,25 @@ def estimate_tax(gross_cents: int, deduction_cents: int) -> dict:
     """Rough federal estimate for a single filer in Florida (no state income tax).
 
     An estimate for setting money aside, not a return. It ignores credits,
-    dependants, QBI, and anything else a real preparer would apply.
+    dependants, and anything else a real preparer would apply.
     """
     net_profit = max(0, gross_cents - deduction_cents)
     se_base = round(net_profit * SE_TAXABLE_FRACTION)
     se_tax = round(se_base * SE_TAX_RATE)
 
-    taxable = max(0, net_profit - round(se_tax * SE_DEDUCTION) - STANDARD_DEDUCTION_CENTS)
+    half_se = round(se_tax * SE_DEDUCTION)
+    taxable = max(0, net_profit - half_se - STANDARD_DEDUCTION_CENTS)
+
+    # §199A comes off after the standard deduction and is capped at 20% of what
+    # is left, so a thin year gets less than 20% of profit — that cap is the
+    # usual case for him, not the exception.
+    qbi = max(0, net_profit - half_se)
+    qbi_deduction = min(round(qbi * QBI_RATE), round(taxable * QBI_RATE))
+    if qbi >= QBI_MINIMUM_FLOOR_CENTS:
+        qbi_deduction = max(qbi_deduction, QBI_MINIMUM_CENTS)
+    qbi_deduction = min(qbi_deduction, taxable)
+    taxable -= qbi_deduction
+
     income_tax = 0
     last = 0
     for ceiling, rate in BRACKETS:
@@ -275,6 +309,7 @@ def estimate_tax(gross_cents: int, deduction_cents: int) -> dict:
     return {
         "net_profit_cents": net_profit,
         "se_tax_cents": se_tax,
+        "qbi_deduction_cents": qbi_deduction,
         "income_tax_cents": income_tax,
         "total_tax_cents": total,
         "effective_rate": total / net_profit if net_profit else 0.0,
@@ -359,6 +394,10 @@ def report(ledger: dict, year: int | None = None, gross_cents: int = 0) -> str:
         out.append("  " + "-" * 52)
         out.append(f"  {'Net profit after deductions':<34}{money(tax['net_profit_cents']):>10}")
         out.append(f"  {'Self-employment tax':<34}{money(tax['se_tax_cents']):>10}")
+        out.append(
+            f"  {'Business income deduction (20%)':<34}"
+            f"{money(-tax['qbi_deduction_cents']):>10}"
+        )
         out.append(f"  {'Federal income tax':<34}{money(tax['income_tax_cents']):>10}")
         out.append(f"  {'TOTAL to set aside':<34}{money(tax['total_tax_cents']):>10}")
         out.append(

@@ -86,17 +86,21 @@ which is ~40% of take-home after a tax set-aside. Tight but not impossible.
 
 ## 4. Tax research — findings so far
 
-Gathered by two research agents. **irs.gov is unreachable from the cloud
-container**, so nothing below was read from a primary source; it is multiple
-secondary sources agreeing (KPMG, Journal of Accountancy, Littler, Forbes,
-Thomson Reuters). **You are on his PC and are not blocked — verify the
-load-bearing items against irs.gov directly.** That is your first job.
+Gathered by two research agents from secondary sources (KPMG, Journal of
+Accountancy, Littler, Forbes, Thomson Reuters) because irs.gov was unreachable
+from the cloud container. **The load-bearing items were then verified against
+primary sources from his PC on 2026-08-09** — those are marked ✅ below.
+Anything not marked is still secondary-source only.
 
 ### Mileage — the big one
 
-- **2026 has TWO rates.** Notice 2026-10 set **72.5¢**; Announcement 2026-11
-  raised it to **76¢ effective July 1, 2026**. A year's miles must be split at
-  June 30. `tax.py` already holds a date-keyed table — verify the figures.
+- ✅ **2026 has TWO rates, both confirmed on irs.gov:** **72.5¢** for Jan 1 –
+  Jun 30 (IR-2025-128) and **76¢** for Jul 1 – Dec 31 (IR-2026-29), the raise
+  driven by fuel prices. Medical/moving went 20.5¢ → 23.5¢; charity stayed 14¢.
+  A year's miles must be split at June 30. `tax.py`'s date-keyed table was
+  already correct. Source: `irs.gov/tax-professionals/standard-mileage-rates`.
+  (The earlier "Notice 2026-10 / Announcement 2026-11" citations were wrong —
+  irs.gov cites the IR news-release numbers above. Use those.)
 - **Commuting is not deductible** (Rev. Rul. 99-7). Home → first job of the day
   is normally commuting. **Unless** his home qualifies as his principal place of
   business, in which case *every* trip from home becomes deductible.
@@ -129,13 +133,21 @@ the year he disposes of it** — potentially a decade.
 
 ### Substantiation and thresholds
 
-- Receipts are required for **any lodging expense regardless of amount**, and for
-  other §274(d) expenditures of **$75 or more** (Reg. §1.274-5(c)(2)(iii),
-  Notice 95-50). Below $75 he still must record amount, time, place and purpose
-  — he loses the receipt requirement, not the record requirement.
-- ⚠️ **Sources disagree** on whether $75 is universal or only §274(d). Most blogs
-  say universal; the regulation sits in §274. **Confirm before he shreds
-  anything.**
+- ✅ **The $75 threshold is NOT universal — settled.** Reg. §1.274-5(c)(2)(iii)
+  reads: documentary evidence is required for "(1) Any expenditure for lodging
+  while traveling away from home, and (2) Any other expenditure of $75 or more."
+  That regulation implements **§274(d) only**, and 26 U.S.C. §274(d) covers
+  exactly three things: **traveling expenses away from home (including meals and
+  lodging), gifts, and listed property** (§280F(d)(4) — which is where the van
+  falls). The blogs claiming it applies to all business expenses are wrong.
+- **What that means for him:** most of what he buys — tools, supplies, phone,
+  licences — is an ordinary §162 expense governed by **§6001**, which sets **no
+  dollar floor whatsoever**. There is no small-purchase exemption for a $12 box
+  of connectors. And lodging needs a receipt at **any** amount. The only place
+  the $75 waiver helps him is small van and travel costs, which under standard
+  mileage he isn't itemising anyway.
+- **Design rule: capture everything, never build a "under $75, skip it" path.**
+  `tax.py` carries this note where the categories are defined.
 - **Local meals are NOT deductible.** The "sleep or rest" rule
   (*US v. Correll*) — meals count only when travel is overnight. Lunch between
   job sites is personal. `tax.py` has a meals category; it should warn.
@@ -162,6 +174,18 @@ the year he disposes of it** — potentially a decade.
   become the primary record. Under-reporting triggers the 6-year window.
 - Florida has **no state income tax**. SE tax 15.3% on 92.35% of net earnings.
   Quarterly estimates (Form 1040-ES) if he expects to owe $1,000+.
+- ✅ **2026 single-filer figures, confirmed on irs.gov** (Rev. Proc. 2025-32 as
+  amended by the OBBBA): standard deduction **$16,100**; brackets 10% to
+  $12,400, 12% to $50,400, 22% to $105,700, 24% to $201,775, 32% to $256,225,
+  35% to $640,600, 37% above. **`tax.py` was carrying the 2025 figures** —
+  fixed 2026-08-09.
+- ✅ **QBI (§199A) was missing from the estimate entirely and is now in.** A sole
+  proprietor deducts **20% of business profit**, capped at 20% of taxable income
+  after the standard deduction — the cap is what binds at his income, not the
+  20%. Made permanent by the OBBBA, with the single-filer phase-in now starting
+  at $75,000 above the threshold and a new $400 minimum. He is far below any
+  limit, so he gets it in full. Together with the bracket fix this cut the
+  estimated set-aside on a ~$57.5k year from **$10,432 to $9,632**.
 
 ---
 
@@ -228,7 +252,8 @@ arrived. It would appear on an invoice as its own labelled row beside `TRUCK` an
 
 ## 7. Next build steps
 
-1. Verify the 2026 mileage rates and the §75 scope against irs.gov.
+1. ~~Verify the 2026 mileage rates and the $75 scope against irs.gov.~~ Done
+   2026-08-09; see the ✅ items in section 4.
 2. Extend the fetcher to pull image attachments into `data/inbox/`.
 3. Receipt extraction + the deterministic validators + a review queue.
 4. A tax view in the dashboard: deductions, set-aside, quarterly estimates.
