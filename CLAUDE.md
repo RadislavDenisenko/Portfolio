@@ -30,6 +30,20 @@ Working branch: `claude/portfolio-website-design-gtyyvt`.
 - Education says "degree not completed". Comcast cable technician since Oct 2023.
 - Banned words: passionate, seamless, cutting-edge, "coming soon".
 
+## How to answer Radislav
+
+Short. Answer first, then only what he needs to act. No preamble, no recap of
+what he just said, no listing options he didn't ask for, no explaining what you
+are about to do before doing it.
+
+- Yes/no question → "Yes." or "No." on its own line, then the next step.
+- Give **one** thing to copy per message. Two code blocks means he copies the
+  wrong one — this has already happened.
+- Say where a command goes (PowerShell, a chat, a browser) before the block.
+- He is on Windows and is not a terminal person. `python`, not `python3`.
+- Explain only when he asks what something does, or when skipping it would let
+  him break something.
+
 ## Hard constraints
 
 Zero third-party requests at runtime · console stays clean · total page transfer
