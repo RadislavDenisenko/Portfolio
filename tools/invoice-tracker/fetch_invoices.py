@@ -111,7 +111,16 @@ def main(argv: list[str] | None = None) -> int:
     store = invoice_parser.load_store(STORE)
     seen = set(store.get("seen_messages", []))
 
-    box = imaplib.IMAP4_SSL("imap.gmail.com")
+    try:
+        # Without a timeout an unreachable host hangs until the user gives up.
+        box = imaplib.IMAP4_SSL("imap.gmail.com", timeout=30)
+    except OSError as exc:
+        sys.exit(
+            f"\nCould not reach imap.gmail.com: {exc}\n\n"
+            "That is the network, not the password. Check the internet connection,\n"
+            "and any VPN, firewall or antivirus that might block port 993.\n"
+        )
+
     try:
         try:
             box.login(user, password)
