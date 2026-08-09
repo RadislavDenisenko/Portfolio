@@ -417,6 +417,53 @@ integrations, multi-user anything.
    invoices — 4.43 days/week, 5.9 jobs/day — that is roughly **280 business miles
    a week**.
 
+### Answered again 2026-08-09, later — three of these overturn earlier work
+
+- **THE VAN IS KOSCOM'S, NOT HIS.** He drives a company vehicle. **There is no
+  vehicle deduction for 2026 to date** — the whole mileage estimate above is for
+  a van he does not yet own. He expects to buy his own **within about a month**,
+  and the odometer system in 5b is built and waiting for it. Do not present
+  mileage as a current deduction. Ask whether he owns a personal car in the
+  meantime; if he drove one for the real-estate work he has miles for that.
+- **The desk is NOT exclusive** — he uses it personally. So **no home office for
+  2026 to date either**, and the Rev. Rul. 99-7 conversion does not apply yet.
+  He answered honestly against his own interest, which is the right answer; a
+  guessed "yes" is how people lose the whole deduction. Both the home office and
+  the mileage start together when he moves and buys a vehicle.
+- **He IS a licensed real estate agent** — joined Keller Williams on the Water
+  2025-12-12, Stellar MLS 2026-01-16, and has just parked his license. He was
+  operating, so the fees are deductible business expenses:
+
+  | Source | Amount |
+  |---|---|
+  | Keller Williams monthly agent invoices, Jan–Jun 2026 (7) | $797.50 |
+  | Stellar MLS, Jan / Feb / May 2026 | $1,264.75 |
+  | **Documented total** | **$2,062.25** |
+
+  Read straight out of the invoice PDFs in his Gmail. Worth **$444.70** of
+  actual tax. Possibly more — RASM dues appear in a welcome email ($801, $150,
+  $204, $40, $206) and were not separately confirmed. **He still needs to prove
+  he PAID them** (cash basis) — bank or card statements.
+- **He filed a 2025 return.** TaxSlayer, three rejections then
+  **"Your federal tax return was accepted!" on 2026-04-13**. So the
+  §6654(d)(1)(B) prior-year safe harbor **is** available. **Get Form 1040 line 24
+  from his TaxSlayer account** — that number is his whole penalty-proof
+  obligation for 2026.
+
+### Current, corrected 2026 estimate
+
+Koscom projected $31,004.84 · real-estate fees −$2,062.25 · no vehicle, no home
+office → **owe about $4,953**, i.e. **$177/week**. Once he owns a van and has a
+work-only room, a logged year saves about **$2,550**.
+
+### Note for whoever parses more PDFs
+
+`pdf_text.extract_rows` returns text with **NUL bytes between characters and
+`\xa0` as the separator** on the Keller Williams and Stellar MLS PDFs (a
+different font encoding to Koscom's). Clean with
+`s.replace("\x00","").replace("\xa0"," ")` before regexing, or every match fails
+silently.
+
 ### What the mailbox turned up that nobody had written down
 
 - **He only started with Koscom the week of 2026-05-31.** First payout 2026-06-25.
