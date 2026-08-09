@@ -18,7 +18,6 @@ import * as T from './vendor/three-slim.min.js';
 const asset = rel => new URL(rel, import.meta.url).href;
 const MODEL = asset('models/hand-rigged.glb');
 const SKIN = {
-  map: asset('img/skin-albedo.jpg'),
   normalMap: asset('img/skin-normal.jpg'),
   roughnessMap: asset('img/skin-rough.jpg'),
 };
@@ -92,9 +91,8 @@ function loadSkin(renderer) {
   for (const [slot, url] of Object.entries(SKIN)) {
     const t = loader.load(url);
     t.wrapS = t.wrapT = T.RepeatWrapping;
-    t.repeat.set(5, 5);              // pores, not paving slabs, at this on-screen size
+    t.repeat.set(10, 10);            // grain visible as grain, never as a motif
     t.anisotropy = renderer.capabilities.getMaxAnisotropy();
-    if (slot === 'map') t.colorSpace = T.SRGBColorSpace;
     maps[slot] = t;
   }
   return maps;
@@ -158,17 +156,17 @@ export async function initHand(target, opts = {}) {
   }
 
   const mat = new T.MeshPhysicalMaterial({
-    color: 0xE3AE93,
-    roughness: 0.58,
+    color: 0xF0BFA4,
+    roughness: 0.65,
     metalness: 0.0,
-    sheen: 0.35,
+    sheen: 0.45,
     sheenColor: 0xffcdb4,
     sheenRoughness: 0.7,
-    clearcoat: 0.07,
+    clearcoat: 0.02,
     clearcoatRoughness: 0.62,
     ...loadSkin(renderer),
   });
-  mat.normalScale.set(0.35, 0.35);
+  mat.normalScale.set(0.28, 0.28);
 
   const mesh = new T.Mesh(model.geo, mat);
   spin.add(mesh);
@@ -201,7 +199,7 @@ export async function initHand(target, opts = {}) {
       blendSrc: T.SrcAlphaFactor, blendDst: T.OneFactor,
       blendSrcAlpha: T.ZeroFactor, blendDstAlpha: T.OneFactor,
     }));
-    s.position.set(p[0] + centre[0], p[1] + centre[1], p[2] + centre[2] + 0.012);
+    s.position.set(p[0] + centre[0], p[1] + centre[1], p[2] + centre[2] + 0.004);
     s.scale.setScalar(TIPS.has(i) ? 0.0135 : 0.0105);
     s.renderOrder = 10;
     lm.add(s);
@@ -245,7 +243,7 @@ export async function initHand(target, opts = {}) {
   let tx = 0, ty = 0, cx = 0, cy = 0, vx = 0, vy = 0;
   const onMove = e => {
     ty = (e.clientX / window.innerWidth - 0.5) * 0.62;
-    tx = (e.clientY / window.innerHeight - 0.5) * -0.34;
+    tx = (e.clientY / window.innerHeight - 0.5) * 0.34;
   };
   window.addEventListener('mousemove', onMove, { passive: true });
 
