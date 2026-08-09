@@ -72,7 +72,17 @@
   <section class="scene snap" id="airmouse" aria-labelledby="airmouse-h">
     <div class="scene-bg" aria-hidden="true">
       <div class="scene-bg-img">
-        <img src="assets/img/airmouse-room.jpg" alt="" width="1376" height="768"
+        <!-- Full-bleed, so a laptop at 2x needs ~2900px. The plate was
+             generated at 1376 and no amount of JPEG quality adds detail that
+             was never there, so it was run through Real-ESRGAN and re-cut at
+             three widths; the browser takes the one it needs and nobody
+             downloads 198KB to fill a phone. -->
+        <img src="assets/img/airmouse-room.jpg"
+             srcset="assets/img/airmouse-room.jpg 1376w,
+                     assets/img/airmouse-room@1440.jpg 1920w,
+                     assets/img/airmouse-room@2x.jpg 2752w"
+             sizes="100vw"
+             alt="" width="1376" height="768"
              loading="lazy" decoding="async">
         <span class="rec-dot"></span>
       </div>

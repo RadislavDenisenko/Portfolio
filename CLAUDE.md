@@ -17,6 +17,8 @@ visual. If a request conflicts with it, the request wins — then update `DESIGN
   - `airmouse/` — the AirMouse case study page
 - `tools/make_hand_maps.py` — bakes the hand's creases, knuckle lines and skin grain
   onto the model's own UV layout, so detail lands on the anatomy instead of tiling
+- `tools/upscale.py` — Real-ESRGAN on CPU, no GPU and no credits. Read its docstring
+  before reaching for a paid upscale
 - `prompts/design-discovery.md` — the interview prompt for starting a new design
 
 Working branch: `claude/portfolio-website-design-gtyyvt`.
@@ -56,3 +58,8 @@ Assets are generated, not hand-drawn. See `.claude/skills/local-ai/SKILL.md` for
 local GPU pipeline (ComfyUI). Cloud sessions may have a Higgsfield MCP server instead.
 Either way: generate → optimize → commit into `docs/assets/`, and keep the page under
 budget.
+
+**Upscaling needs no credits.** `tools/upscale.py` runs Real-ESRGAN on the CPU —
+about ten minutes for a 1376px plate on four cores. Reach for it before spending
+credits on an AI upscale. Anything full-bleed ships as a `srcset` ladder so a phone
+never downloads the retina cut.
