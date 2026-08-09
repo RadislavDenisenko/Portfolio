@@ -30,6 +30,14 @@ const SKIN = {
    palm creases exist. */
 const POSE = { x: 0, y: -Math.PI / 2, z: Math.PI };
 
+/* Landmarks sit proud of the skin so they read as an overlay rather than
+   embedded in it — along the PALM NORMAL, which for this model is -x. The lift
+   used to be applied to +z, and under this pose three maps model +z to world
+   (-1,0,0): dead screen-left. So every dot was shoved sideways off its joint
+   instead of toward the camera, which is the one thing this section claims to
+   get right. -x maps to (0,0,1), straight at the viewer. */
+const LIFT = [-0.004, 0, 0];
+
 /* MediaPipe's 21 landmarks in WebXR joint names. MediaPipe has no metacarpal
    joints for the fingers, so its "MCP" is our phalanx-proximal. */
 const LANDMARKS = [
@@ -241,7 +249,9 @@ export async function initHand(target, opts = {}) {
       blendSrc: T.SrcAlphaFactor, blendDst: T.OneFactor,
       blendSrcAlpha: T.ZeroFactor, blendDstAlpha: T.OneFactor,
     }));
-    s.position.set(p[0] + centre[0], p[1] + centre[1], p[2] + centre[2] + 0.004);
+    s.position.set(p[0] + LIFT[0] + centre[0],
+                   p[1] + LIFT[1] + centre[1],
+                   p[2] + LIFT[2] + centre[2]);
     s.scale.setScalar(TIPS.has(i) ? 0.0135 : 0.0105);
     s.renderOrder = 10;
     lm.add(s);
@@ -364,7 +374,9 @@ export async function initHand(target, opts = {}) {
       const p = lmRaw[i];
       if (!p || !pts[i]) continue;
       const o = lmSlot[i] * 9;
-      const px = p[0] - wj[0], py = p[1] - wj[1], pz = p[2] + 0.004 - wj[2];
+      const px = p[0] + LIFT[0] - wj[0],
+            py = p[1] + LIFT[1] - wj[1],
+            pz = p[2] + LIFT[2] - wj[2];
       pts[i].set(
         wj[0] + mats[o]     * px + mats[o + 1] * py + mats[o + 2] * pz + centre[0],
         wj[1] + mats[o + 3] * px + mats[o + 4] * py + mats[o + 5] * pz + centre[1],
