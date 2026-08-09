@@ -63,6 +63,16 @@ def credentials() -> tuple[str, str]:
     password = password.replace(" ", "").strip()
     if not (user and password):
         sys.exit("Need both an address and a password.")
+    # The prompt is blind, so say what landed. Pasting twice is the usual mishap.
+    if len(password) == 16:
+        print("  Got 16 characters — that is the right shape.")
+    else:
+        print(
+            f"  ! Got {len(password)} characters, and app passwords are 16.\n"
+            "    32 means it went in twice — the prompt shows nothing while you paste.\n"
+            "    Anything else means it was probably your normal password.\n"
+            "    Carry on and see, or Ctrl+C and delete secrets.json to redo it."
+        )
 
     secrets.write_text(json.dumps({"user": user, "password": password}, indent=2), "utf-8")
     try:
@@ -103,7 +113,21 @@ def main(argv: list[str] | None = None) -> int:
 
     box = imaplib.IMAP4_SSL("imap.gmail.com")
     try:
-        box.login(user, password)
+        try:
+            box.login(user, password)
+        except imaplib.IMAP4.error as exc:
+            # A traceback here tells the user nothing they can act on.
+            sys.exit(
+                f"\nGmail rejected the login: {exc}\n\n"
+                "It is almost always one of these three:\n\n"
+                "  1. That was your normal Gmail password. It has to be an App Password:\n"
+                "     https://myaccount.google.com/apppasswords  (16 letters, and it needs\n"
+                "     2-Step Verification switched on first.)\n\n"
+                "  2. IMAP is turned off. Gmail > Settings > See all settings >\n"
+                "     Forwarding and POP/IMAP > Enable IMAP > Save Changes.\n\n"
+                f"  3. The saved password is wrong. Delete this file and run again:\n"
+                f"     {HERE / 'secrets.json'}\n"
+            )
         # All Mail so archived invoices still show up; INBOX if that name is absent.
         if box.select('"[Gmail]/All Mail"', readonly=True)[0] != "OK":
             box.select("INBOX", readonly=True)
