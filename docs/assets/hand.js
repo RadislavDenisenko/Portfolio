@@ -260,6 +260,23 @@ export async function initHand(target, opts = {}) {
   lm.add(skel);
   spin.add(lm);
 
+  function resize() {
+    const r = target.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    renderer.setSize(r.width, r.height, false);
+    camera.aspect = r.width / r.height;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  if ('ResizeObserver' in window) new ResizeObserver(resize).observe(target);
+  else window.addEventListener('resize', resize);
+
+  /* One frame is the whole job on a coarse pointer or under reduced motion:
+     there is no cursor to follow, so a render loop would burn battery to
+     redraw an identical image — and the bend rig below is never needed, which
+     is why it is built after this line rather than before it. */
+  if (opts.statik) { renderer.render(scene, camera); return; }
+
   /* Screen axes expressed in the geometry's own frame. The cursor turns the
      hand about the camera's axes; the vertices we move live in model space. */
   const probe = new T.Group();
@@ -353,21 +370,6 @@ export async function initHand(target, opts = {}) {
     skelPos.needsUpdate = true;
   }
 
-  function resize() {
-    const r = target.getBoundingClientRect();
-    if (!r.width || !r.height) return;
-    renderer.setSize(r.width, r.height, false);
-    camera.aspect = r.width / r.height;
-    camera.updateProjectionMatrix();
-  }
-  resize();
-  if ('ResizeObserver' in window) new ResizeObserver(resize).observe(target);
-  else window.addEventListener('resize', resize);
-
-  /* One frame is the whole job on a coarse pointer or under reduced motion:
-     there is no cursor to follow, so a render loop would burn battery to
-     redraw an identical image. */
-  if (opts.statik) { renderer.render(scene, camera); return; }
 
   let tx = 0, ty = 0, cx = 0, cy = 0, vx = 0, vy = 0;
   let gx = 0, gy = 0, ux = 0, uy = 0;
