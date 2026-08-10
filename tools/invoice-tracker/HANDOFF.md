@@ -5,45 +5,61 @@ Radislav's Windows PC**, where it can read his files and run things itself.
 
 ---
 
-## 0. READ FIRST — two facts that were wrong everywhere until 2026-08-09
+## 0. READ FIRST — his actual work history, which is NOT what the site says
 
-**It is KOSCOM, never Comcast.** He dictates by voice and "Koscom" transcribed
-as "Comcast". That error reached `CLAUDE.md`, `README.md` and — for months —
-**the live portfolio site**, which told every recruiter he worked for a company
-he has never worked for. All four fixed. He has been at **Koscom Networks since
-Oct 2023**, one employer the whole time.
+**The portfolio says *Cable Technician — Comcast, Oct 2023 – Present*. Leave it
+alone.** He was asked directly and decided it stays. Do not edit it, do not
+raise it again. It has been raised enough.
 
-**He was a W-2 EMPLOYEE at Koscom until roughly May 2026, and a 1099 contractor
-since.** Proved from his 2025 return, not assumed: total income $24,465, total
-tax $873. Less the 2025 standard deduction of $15,750 leaves $8,715 taxable, at
-10% = $871.50 against the $873 shown — a $1.50 table-rounding gap. Had that been
-self-employment income, SE tax **alone** would have been $3,457. So 2025 carried
-no self-employment income at all, and $1,699 was withheld from wages.
+**Never build tax maths from the résumé.** The real history, from him:
 
-### ⚠️ Therefore: possible worker misclassification, and it is worth real money
+| When | What |
+|---|---|
+| ~June 2026 – now | **Koscom Networks**, 1099 contractor. About two months. |
+| through 2025 | **Olive Garden**, W-2 employee |
+| before that | a construction company |
 
-Same employer, same job, **still driving Koscom's van**, but reclassified from
-employee to contractor around May 2026. The IRS common-law factors that point at
-*employee* here:
+The invoice data agrees: the first Koscom pay period starts **2026-05-31** and
+there are no earlier ones in Gmail since 01-Jan-2026. **The seven invoices are
+his entire cable-tech earnings history.**
 
-- **They provide the vehicle** — the primary tool of the trade is not his.
-- **They reimburse its repairs** (the `TRUCK` adjustment line) — he does not
+**2025 was Olive Garden wages, and the return proves it** — total income
+$24,465, total tax $873. Less the 2025 standard deduction of $15,750 leaves
+$8,715 taxable; at 10% that is $871.50 against the $873 shown, a $1.50
+table-rounding gap. Had it been self-employment income, SE tax **alone** would
+have been $3,457. So 2025 carried no self-employment income and $1,699 was
+withheld from wages.
+
+**Still open, and it decides the September payment:** did he work anywhere
+between January and May 2026, and was tax withheld? Any withholding counts
+toward the $873 safe harbour and §6654(g) spreads it across the whole year.
+
+### Possible worker misclassification — weaker than first written, still real
+
+**Corrected 2026-08-09.** An earlier version of this section leaned on "he did
+the identical job as a Koscom W-2 employee weeks earlier." **That was wrong** —
+he was never their employee; he came from Olive Garden. That was the strongest
+fact and it is gone. What survives is circumstantial:
+
+- **They provide the van** — the primary tool of the trade is not his.
+- **They reimburse its repairs** (the `TRUCK` adjustment line), so he does not
   bear the cost of the equipment.
-- **He did the identical job as a W-2 employee weeks earlier.** Nothing about
-  the work changed, only the paperwork. This is the strongest single fact.
-- A **`TRAINING` adjustment of $400.00** appears on one invoice. Companies train
-  employees; contractors arrive trained.
-- Work is dispatched to him as numbered jobs; he works for them exclusively.
+- A **`TRAINING` adjustment of $400.00** on one invoice. Firms generally train
+  employees; contractors are expected to arrive trained.
+- Work reaches him as dispatched numbered jobs, and he works for them
+  exclusively.
 
-If he is in fact an employee, he owes the **7.65% employee share** rather than
-**15.3% self-employment tax** — roughly **$1,900 a year** on his current profit.
-The mechanism is **Form SS-8** (worker-status determination) and **Form 8919**
-(uncollected Social Security and Medicare tax on wages).
+Against it: he invoices, he is new, and a genuine subcontractor can be handed a
+vehicle. Company-supplied vehicles are common in cable subcontracting.
 
-**Do not push him into this.** The IRS sends Koscom a copy of an SS-8. It is his
-only source of income, he is about to move and buy a vehicle, and losing the job
-would cost far more than $1,900. Present it as a real option with a real risk and
-let him decide — with a professional, not with us.
+If he *were* an employee he would owe the **7.65% employee share** instead of
+**15.3% self-employment tax** — roughly **$1,900 a year** at his run rate — via
+**Form SS-8** and **Form 8919**.
+
+**Do not raise this with him unprompted.** The IRS copies Koscom on an SS-8. He
+has been there two months, it is his only income, and he is about to move and
+buy a vehicle. The downside dwarfs $1,900. If he asks, lay out both sides and
+send him to a professional.
 
 ## 1. Who and what
 

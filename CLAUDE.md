@@ -27,10 +27,16 @@ Working branch: `claude/portfolio-website-design-gtyyvt`.
   Python · MediaPipe · OpenCV · Win32.
 - **Roomly** — a first working draft, being reworked. NOT launched. Never call it live
   or polished. Its button says "Follow the build".
-- Education says "degree not completed". **Koscom Networks** cable technician
-  since Oct 2023 — W-2 employee until roughly May 2026, 1099 contractor since.
-  It is Koscom, never Comcast; he dictates by voice and the mis-transcription
-  reached the live site and sat there.
+- Education says "degree not completed".
+- **Day job on the site: *Cable Technician — Koscom Networks, Oct 2023 – Present*.**
+  The company name is Koscom (voice dictation kept turning it into "Comcast").
+  **The dates are his call and they stay — do not "correct" them, do not raise
+  it again.** Settled, and already re-raised once too often.
+- The real employment history is **only ever used by `tools/invoice-tracker/`**,
+  never on the site: Koscom Networks from roughly June 2026 (about two months as
+  of Aug 2026), Olive Garden before that, a construction company before that.
+  See `tools/invoice-tracker/HANDOFF.md` §0 — the tax maths depends on it and
+  must never be built from the résumé.
 - Banned words: passionate, seamless, cutting-edge, "coming soon".
 
 ## How to answer Radislav
