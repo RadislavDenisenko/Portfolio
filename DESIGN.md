@@ -14,13 +14,16 @@ hiring manager to download AirMouse or email me. Fun and professional at once.
 ## Accents (2–3 per section, never all at once)
 - Cobalt `#2B5CFF` — site primary: buttons, links, focus rings
 - Sun `#FFC838` · Candy `#FF4F79` · Mint `#26D9A3` · Aqua `#00B4E6` · Coral `#FF6247`
+- Fern `#2F6F4A` · Brick `#8E3B2F` — Roomly's pair (owner direction: planted
+  apartment, green leading, brick as the note it sits against)
 
 ### Derived tints (the only off-palette values allowed)
 - Cobalt-lift `#5478FF` — highlight stop inside cobalt gradient cards
 - Navy-2 `#1B2456` (+ `#18204A` in the 3D scene) — inner glow of navy stages
 - Stage fill `#EEF1FB` — hero stage ground
-- Roomly photo gradients blend only within the coral↔sun family
-  (`#FF8A5C`, `#FF9A4A`, `#FFB55C`)
+- Roomly blends only within the fern↔brick family: Fern-lift `#4E9468`,
+  Sage `#7DA96F`, Olive `#5B7F4A` (the bridge from green into brick),
+  Brick-lift `#A9564A`, Loam `#F2F5EC` (the section's green-washed ground)
 - Everything else derives via `color-mix()` from the tokens above.
 
 ## Type
@@ -153,8 +156,15 @@ Full-viewport section per project, scroll-snap proximity (never JS-hijacked):
    stage corner. Palette: navy room + aqua + mint.
 3. **Roomly** — swipe-card stack that tears the top card off on a loop, clipped
    inside its own area (never across copy). Honest copy: first working draft,
-   being reworked, not launched. Palette: white + coral + sun (two accent
-   families max in this world).
+   being reworked, not launched — the button says "Follow the build", never
+   "coming soon". Palette: **fern + brick on a loam ground** (owner direction).
+   Green leads and brick answers: three of the four listing cards are
+   green-dominant and one is brick, and the brick one is deliberately the card
+   that peeks from behind the top of the stack, so both colours are in the
+   resting composition instead of brick only turning up mid-animation. The
+   section carries its own washed ground rather than only recoloured buttons —
+   that is what makes it a world instead of a theme — but it stays a BRIGHT
+   ground: the full-bleed dark exception belongs to AirMouse alone.
 4. **Contact** — short, cobalt CTA. On cobalt/navy surfaces the focus ring is
    white with a dark halo; body text on cobalt is ≥ .95 white.
 

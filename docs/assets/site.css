@@ -49,6 +49,15 @@
   --cobalt-lift:#5478FF;   /* cobalt gradient highlight */
   --navy-2:#1B2456;        /* navy stage inner glow */
   --stage-fill:#EEF1FB;    /* hero stage ground */
+  /* Roomly's world: planted green with a brick note. Green leads — the section
+     is about somewhere you live, not a warning. */
+  --fern:#2F6F4A;          /* Roomly primary  5.67:1 on paper, 6.01:1 under white */
+  --fern-lift:#4E9468;     /* leaf highlight in card gradients */
+  --sage:#7DA96F;          /* soft leaf */
+  --olive:#5B7F4A;         /* the bridge from green into brick */
+  --brick:#8E3B2F;         /* Roomly secondary 7.03:1 on paper */
+  --brick-lift:#A9564A;    /* lit brick face */
+  --loam:#F2F5EC;          /* Roomly section ground, a green-washed paper */
   --sans:'Space Grotesk',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:'JetBrains Mono',ui-monospace,'Cascadia Code','SF Mono',Menlo,Consolas,monospace;
   --ease:cubic-bezier(.32,1.25,.4,1);
@@ -149,6 +158,7 @@ section{position:relative}
   margin-bottom:16px;
 }
 .eyebrow-coral{color:var(--coral)}
+.eyebrow-fern{color:var(--fern)}
 /* solid white: sits under the cobalt-lift gradient hotspot, needs ≥4.5:1 */
 .eyebrow-light{color:#fff}
 
@@ -174,6 +184,8 @@ section{position:relative}
 }
 .btn-coral{background:var(--coral);color:#fff;box-shadow:0 6px 18px -8px rgba(255,98,71,.5)}
 .btn-coral:hover{box-shadow:0 14px 30px -10px rgba(255,98,71,.62)}
+.btn-fern{background:var(--fern);color:#fff;box-shadow:0 6px 18px -8px rgba(47,111,74,.55)}
+.btn-fern:hover{box-shadow:0 14px 30px -10px rgba(47,111,74,.68)}
 .btn-onblue{background:#fff;color:var(--cobalt)}
 .btn-onblue:hover{box-shadow:0 14px 30px -10px rgba(9,20,60,.55)}
 .btn-outline-light{border:1.5px solid rgba(255,255,255,.75);color:#fff}
@@ -186,6 +198,7 @@ section{position:relative}
 }
 .badge-mint{background:rgba(38,217,163,.16);color:#0B7A57;border:1px solid rgba(38,217,163,.4)}
 .badge-sun{background:rgba(255,200,56,.2);color:#8A6400;border:1px solid rgba(255,200,56,.55)}
+.badge-brick{background:rgba(142,59,47,.13);color:#7E3227;border:1px solid rgba(142,59,47,.42)}
 
 .tags{
   font-family:var(--mono);font-size:13px;color:var(--soft);
@@ -385,6 +398,16 @@ section{position:relative}
   display:grid;align-content:center;
   padding-block:clamp(84px,10svh,120px) clamp(40px,6svh,72px);
 }
+/* Roomly is its own world (DESIGN.md: three of them), so it gets a ground
+   rather than only recoloured buttons: paper washed toward green, with the
+   brick note kept to a low warm bloom in the corner. Still a bright ground —
+   the dark-scene exception belongs to AirMouse alone. */
+#roomly{
+  background:
+    radial-gradient(120% 80% at 88% 8%, rgba(142,59,47,.07), transparent 60%),
+    radial-gradient(90% 70% at 6% 96%, rgba(47,111,74,.09), transparent 62%),
+    var(--loam);
+}
 .proj-grid{
   display:grid;grid-template-columns:1.02fr 1fr;
   gap:clamp(32px,5vw,72px);align-items:center;width:100%;
@@ -576,16 +599,27 @@ section{position:relative}
    zero inside the clip instead of being sliced by it. */
 .deck-area{
   display:grid;justify-items:center;
-  padding:80px 44px 48px 120px;
-  margin:-64px -20px 0 -96px;
+  /* The pockets scale with the deck, but bottom out at exactly the values a
+     phone had: their negative margins make this box wider than the wrap, and
+     at 390px the larger pockets pushed the document into horizontal scroll.
+     The net visual inset stays 16px top / 24px sides at every size. */
+  --pocket-t:clamp(80px,7vw,96px);
+  --pocket-x:clamp(44px,4vw,60px);
+  --pocket-l:clamp(120px,10vw,150px);
+  padding:var(--pocket-t) var(--pocket-x) 48px var(--pocket-l);
+  margin:calc(16px - var(--pocket-t)) calc(24px - var(--pocket-x))
+         0 calc(24px - var(--pocket-l));
   overflow:hidden;
 }
 .deck{
   position:relative;
   /* 88px = wrap side padding (2×20) + deck-area net side inset (2×24),
      so the deck can never inflate the section past the viewport */
-  width:min(348px,100vw - 88px);
-  height:min(456px,105vw);
+  /* Grows with the viewport like everything else, instead of sitting at 348px
+     in the middle of a 27" screen. Aspect-locked so the cards stay proportional;
+     the 100vw term still hands the phone the same size it had. */
+  width:min(clamp(348px,26vw,468px),100vw - 88px);
+  aspect-ratio:348/456;
   pointer-events:none;
 }
 .rcard{
@@ -609,11 +643,15 @@ section{position:relative}
   transition:transform .68s var(--ease),opacity .22s ease-out;
 }
 .rphoto{position:relative;flex:1 1 58%}
-/* photo gradients stay inside the coral↔sun family (DESIGN.md: Roomly world) */
-.g1{background:linear-gradient(145deg,#FF8A5C 0%,var(--coral) 46%,var(--sun) 120%)}
-.g2{background:linear-gradient(155deg,var(--sun) 0%,#FF9A4A 55%,var(--coral) 115%)}
-.g3{background:linear-gradient(150deg,var(--coral) 0%,#FF8A5C 70%,#FFB55C 120%)}
-.g4{background:linear-gradient(160deg,#FFB55C 0%,var(--sun) 45%,#FF8A5C 110%)}
+/* Photo gradients run the fern↔brick family. Three of the four lead with green
+   and only one is brick, because the brief is planted-apartment, not brickyard —
+   green carries it and brick is the accent it sits against. The brick one is the
+   card that peeks out from behind the top of the stack, so both colours are in
+   the resting composition rather than brick only appearing mid-animation. */
+.g1{background:linear-gradient(145deg,var(--fern-lift) 0%,var(--fern) 48%,#1F4C35 120%)}
+.g2{background:linear-gradient(155deg,var(--brick-lift) 0%,var(--brick) 48%,#5B3A32 112%)}
+.g3{background:linear-gradient(150deg,var(--fern) 0%,var(--olive) 62%,var(--brick) 122%)}
+.g4{background:linear-gradient(160deg,var(--sage) 0%,var(--fern-lift) 52%,var(--fern) 115%)}
 .rphoto::before{
   content:'';position:absolute;right:-14%;top:-26%;width:70%;aspect-ratio:1;
   border-radius:50%;background:rgba(255,255,255,.22);
@@ -641,15 +679,15 @@ section{position:relative}
   background:color-mix(in srgb, var(--line) 55%, var(--white));
   border:1px solid var(--line);
 }
-.pips i.on{background:var(--coral);border-color:var(--coral)}
+.pips i.on{background:var(--fern);border-color:var(--fern)}
 .ractions{display:flex;justify-content:center;gap:16px;padding:12px 0 16px}
 .rbtn{
   width:42px;height:42px;border-radius:50%;display:grid;place-items:center;
   font-size:16px;border:1.5px solid var(--line);background:#fff;
 }
 .rno{color:var(--soft)}
-.ryes{color:#fff;background:var(--coral);border-color:var(--coral);
-  box-shadow:0 8px 18px -8px rgba(255,98,71,.6)}
+.ryes{color:#fff;background:var(--fern);border-color:var(--fern);
+  box-shadow:0 8px 18px -8px rgba(47,111,74,.6)}
 
 /* ------------------------------ about ------------------------------------- */
 .about{
