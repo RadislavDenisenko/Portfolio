@@ -21,9 +21,13 @@ hiring manager to download AirMouse or email me. Fun and professional at once.
 - Cobalt-lift `#5478FF` — highlight stop inside cobalt gradient cards
 - Navy-2 `#1B2456` (+ `#18204A` in the 3D scene) — inner glow of navy stages
 - Stage fill `#EEF1FB` — hero stage ground
-- Roomly blends only within the fern↔brick family: Fern-lift `#4E9468`,
-  Sage `#7DA96F`, Olive `#5B7F4A` (the bridge from green into brick),
-  Brick-lift `#A9564A`, Loam `#F2F5EC` (the section's green-washed ground)
+- Roomly blends only within the fern↔brick family. The listing cards run a
+  **dark forest** range well below the UI green — they are imagery, not a
+  control, so they are free to go deep: Forest-lift `#2E6B49`, Forest `#1A4630`,
+  Forest-deep `#0C2718`, Olive `#3D5B34` (the bridge into brick), Brick-lift
+  `#A9564A`, Loam `#F2F5EC` (the section's green-washed ground). The soft
+  circles inside a card sit at 13%/8% white — any brighter and they wash the
+  forest back out to mid-green.
 - Everything else derives via `color-mix()` from the tokens above.
 
 ## Type
