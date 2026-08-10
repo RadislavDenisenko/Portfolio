@@ -99,6 +99,25 @@ def check_tax() -> None:
     assert tax.estimate_tax(500_000, 900_000)["total_tax_cents"] == 0
     assert tax.estimate_tax(0, 0)["effective_rate"] == 0.0
 
+    # A SPLIT YEAR, which is his actual 2026: wages Jan-May, contracting after.
+    split = tax.estimate_tax(3_100_500, 206_225, wage_cents=1_020_000, withheld_cents=70_000)
+    only_se = tax.estimate_tax(3_100_500, 206_225)
+    # SE tax must be identical -- wages already had FICA taken at source, so
+    # taxing them again here would roughly double-count.
+    assert split["se_tax_cents"] == only_se["se_tax_cents"], (split, only_se)
+    # ...but income tax must be HIGHER, because the wages push the profit up
+    # through the brackets. Ignoring them understates the bill.
+    assert split["income_tax_cents"] > only_se["income_tax_cents"]
+    # Withholding comes off what he still has to find, not off the tax itself.
+    assert split["still_owed_cents"] == split["total_tax_cents"] - 70_000
+    # QBI is 20% of BUSINESS income; wages never qualify.
+    assert split["qbi_deduction_cents"] <= round((3_100_500 - 206_225) * 0.20)
+
+    # A pure-wage year owes no SE tax at all.
+    wages_only = tax.estimate_tax(0, 0, wage_cents=2_446_500, withheld_cents=169_900)
+    assert wages_only["se_tax_cents"] == 0, wages_only
+    assert wages_only["qbi_deduction_cents"] == 0
+
     # The safe harbour. His real 2025: $873 total tax on $24,465 of income,
     # against a projected 2026 bill near $4,950.
     sh = tax.safe_harbor(495_329, prior_year_tax_cents=87_300, prior_year_agi_cents=2_446_500)

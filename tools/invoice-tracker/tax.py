@@ -390,8 +390,25 @@ def summarize(ledger: dict, year: int | None = None) -> dict:
     }
 
 
-def estimate_tax(gross_cents: int, deduction_cents: int) -> dict:
+def estimate_tax(
+    gross_cents: int,
+    deduction_cents: int,
+    wage_cents: int = 0,
+    withheld_cents: int = 0,
+) -> dict:
     """Rough federal estimate for a single filer in Florida (no state income tax).
+
+    Handles a **split year**, which is his actual 2026: wages from a job for part
+    of it, then contracting for the rest. The two are taxed differently and
+    mixing them up gets the answer badly wrong:
+
+      - Self-employment tax hits ONLY the business profit. Wages already had
+        Social Security and Medicare taken out at source, so taxing them again
+        here would roughly double-count.
+      - Income tax hits BOTH together, so the wages push the business profit up
+        into higher brackets. Ignoring them understates the bill.
+      - The §199A deduction is 20% of BUSINESS income only. Wages do not qualify.
+      - Tax already withheld from those wages comes straight off the total.
 
     An estimate for setting money aside, not a return. It ignores credits,
     dependants, and anything else a real preparer would apply.
@@ -401,7 +418,7 @@ def estimate_tax(gross_cents: int, deduction_cents: int) -> dict:
     se_tax = round(se_base * SE_TAX_RATE)
 
     half_se = round(se_tax * SE_DEDUCTION)
-    taxable = max(0, net_profit - half_se - STANDARD_DEDUCTION_CENTS)
+    taxable = max(0, wage_cents + net_profit - half_se - STANDARD_DEDUCTION_CENTS)
 
     # §199A comes off after the standard deduction and is capped at 20% of what
     # is left, so a thin year gets less than 20% of profit - that cap is the
@@ -422,13 +439,19 @@ def estimate_tax(gross_cents: int, deduction_cents: int) -> dict:
         last = ceiling
 
     total = se_tax + income_tax
+    base = wage_cents + net_profit
     return {
         "net_profit_cents": net_profit,
+        "wage_cents": wage_cents,
         "se_tax_cents": se_tax,
         "qbi_deduction_cents": qbi_deduction,
         "income_tax_cents": income_tax,
         "total_tax_cents": total,
-        "effective_rate": total / net_profit if net_profit else 0.0,
+        "withheld_cents": withheld_cents,
+        # What he actually has to find. The withholding is already gone from his
+        # paychecks, so the bill he must fund is the remainder.
+        "still_owed_cents": max(0, total - withheld_cents),
+        "effective_rate": total / base if base else 0.0,
         "quarterly_cents": round(total / 4),
     }
 
