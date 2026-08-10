@@ -2,7 +2,7 @@
 
 Radislav Denisenko — self-taught developer in North Port, Florida. Two years of
 physics and computer science coursework at Penn State, currently a cable
-technician at Comcast. I learn by building things, then rebuilding them once I
+technician at Koscom Networks. I learn by building things, then rebuilding them once I
 understand what I got wrong the first time.
 
 ## Projects

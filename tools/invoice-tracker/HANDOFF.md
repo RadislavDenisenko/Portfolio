@@ -5,6 +5,46 @@ Radislav's Windows PC**, where it can read his files and run things itself.
 
 ---
 
+## 0. READ FIRST — two facts that were wrong everywhere until 2026-08-09
+
+**It is KOSCOM, never Comcast.** He dictates by voice and "Koscom" transcribed
+as "Comcast". That error reached `CLAUDE.md`, `README.md` and — for months —
+**the live portfolio site**, which told every recruiter he worked for a company
+he has never worked for. All four fixed. He has been at **Koscom Networks since
+Oct 2023**, one employer the whole time.
+
+**He was a W-2 EMPLOYEE at Koscom until roughly May 2026, and a 1099 contractor
+since.** Proved from his 2025 return, not assumed: total income $24,465, total
+tax $873. Less the 2025 standard deduction of $15,750 leaves $8,715 taxable, at
+10% = $871.50 against the $873 shown — a $1.50 table-rounding gap. Had that been
+self-employment income, SE tax **alone** would have been $3,457. So 2025 carried
+no self-employment income at all, and $1,699 was withheld from wages.
+
+### ⚠️ Therefore: possible worker misclassification, and it is worth real money
+
+Same employer, same job, **still driving Koscom's van**, but reclassified from
+employee to contractor around May 2026. The IRS common-law factors that point at
+*employee* here:
+
+- **They provide the vehicle** — the primary tool of the trade is not his.
+- **They reimburse its repairs** (the `TRUCK` adjustment line) — he does not
+  bear the cost of the equipment.
+- **He did the identical job as a W-2 employee weeks earlier.** Nothing about
+  the work changed, only the paperwork. This is the strongest single fact.
+- A **`TRAINING` adjustment of $400.00** appears on one invoice. Companies train
+  employees; contractors arrive trained.
+- Work is dispatched to him as numbered jobs; he works for them exclusively.
+
+If he is in fact an employee, he owes the **7.65% employee share** rather than
+**15.3% self-employment tax** — roughly **$1,900 a year** on his current profit.
+The mechanism is **Form SS-8** (worker-status determination) and **Form 8919**
+(uncollected Social Security and Medicare tax on wages).
+
+**Do not push him into this.** The IRS sends Koscom a copy of an SS-8. It is his
+only source of income, he is about to move and buy a vehicle, and losing the job
+would cost far more than $1,900. Present it as a real option with a real risk and
+let him decide — with a professional, not with us.
+
 ## 1. Who and what
 
 Radislav Denisenko, cable/field technician in North Port, FL. Paid weekly by
@@ -469,8 +509,15 @@ silently.
 - **He only started with Koscom the week of 2026-05-31.** First payout 2026-06-25.
   There are no earlier Koscom invoices in Gmail since 01-Jan-2026, so **2026 is a
   part-year 1099**: ~$31,000 projected, not the ~$57,600 full-year run rate.
-  **Still unknown: what he was doing Jan–May 2026.** If that was W-2 at Comcast,
-  the income stacks and the bracket shifts — ask.
+  **He was almost certainly a W-2 employee at Koscom Jan–May 2026** (see section
+  0). That means 2026 has BOTH W-2 wages and 1099 income. Two consequences: the
+  wage income stacks on top and shifts the bracket, and — more usefully —
+  **tax withheld from those wages counts toward the §6654 safe harbour**, and
+  §6654(g) treats it as paid evenly across the whole year no matter when it came
+  out. At his 2025 rate (~$2,039/month of wages, 6.9% withheld) four to five
+  months of 2026 wages would be ~$566–708 of withholding, leaving only **$165–307**
+  of the $873 still to pay. **Get his final Koscom pay stub or 2026 W-2 before he
+  pays anything.**
 - **He appears to have a second business.** Monthly *Keller Williams Realty*
   agent invoices and *Stellar MLS* annual billing run through his inbox from
   January onward. If he is licensed in real estate, those fees are deductible and

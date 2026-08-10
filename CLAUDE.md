@@ -27,7 +27,10 @@ Working branch: `claude/portfolio-website-design-gtyyvt`.
   Python · MediaPipe · OpenCV · Win32.
 - **Roomly** — a first working draft, being reworked. NOT launched. Never call it live
   or polished. Its button says "Follow the build".
-- Education says "degree not completed". Comcast cable technician since Oct 2023.
+- Education says "degree not completed". **Koscom Networks** cable technician
+  since Oct 2023 — W-2 employee until roughly May 2026, 1099 contractor since.
+  It is Koscom, never Comcast; he dictates by voice and the mis-transcription
+  reached the live site and sat there.
 - Banned words: passionate, seamless, cutting-edge, "coming soon".
 
 ## How to answer Radislav
