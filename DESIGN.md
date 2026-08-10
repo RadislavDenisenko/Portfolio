@@ -21,13 +21,16 @@ hiring manager to download AirMouse or email me. Fun and professional at once.
 - Cobalt-lift `#5478FF` — highlight stop inside cobalt gradient cards
 - Navy-2 `#1B2456` (+ `#18204A` in the 3D scene) — inner glow of navy stages
 - Stage fill `#EEF1FB` — hero stage ground
-- Roomly blends only within the fern↔brick family. The listing cards run a
-  **dark forest** range well below the UI green — they are imagery, not a
-  control, so they are free to go deep: Forest-lift `#2E6B49`, Forest `#1A4630`,
-  Forest-deep `#0C2718`, Olive `#3D5B34` (the bridge into brick), Brick-lift
-  `#A9564A`, Loam `#F2F5EC` (the section's green-washed ground). The soft
-  circles inside a card sit at 13%/8% white — any brighter and they wash the
-  forest back out to mid-green.
+- Roomly's listing cards are **one colour each, all soft-dark and matte** — a
+  different apartment should look like a different apartment, but they must
+  still read as one set. Forest `#1A4630`, Brick `#6E3028`, Petrol `#1C4247`,
+  Ochre `#5A4A26`, each a three-stop gradient landing near-black in the shaded
+  corner. All are desaturated; none is allowed to arrive bright. Forest sits on
+  top and brick is the card that peeks from behind it, so the section's two
+  headline colours are both in the resting composition. The soft circles inside
+  a card sit at 13%/8% white — any brighter and they wash a dark card back out
+  to mid-tone, which is what "make it darker" actually turns out to mean.
+  Ground: Loam `#F2F5EC`.
 - Everything else derives via `color-mix()` from the tokens above.
 
 ## Type

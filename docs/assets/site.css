@@ -52,14 +52,9 @@
   /* Roomly's world: planted green with a brick note. Green leads — the section
      is about somewhere you live, not a warning. */
   --fern:#2F6F4A;          /* Roomly primary  5.67:1 on paper, 6.01:1 under white */
-  /* The listing cards run a dark forest range, well below the UI green: they are
-     imagery, not a control, so they can go as deep as they like. */
-  --forest-lift:#2E6B49;   /* lit face of a card */
-  --forest:#1A4630;        /* body of a card */
-  --forest-deep:#0C2718;   /* the shaded corner it falls into */
-  --olive:#3D5B34;         /* the bridge from forest into brick */
+  /* Card colours live on .g1-.g4 rather than here: one colour per listing, each
+     used once, so a token apiece would be five names for four literals. */
   --brick:#8E3B2F;         /* Roomly secondary 7.03:1 on paper */
-  --brick-lift:#A9564A;    /* lit brick face */
   --loam:#F2F5EC;          /* Roomly section ground, a green-washed paper */
   --sans:'Space Grotesk',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:'JetBrains Mono',ui-monospace,'Cascadia Code','SF Mono',Menlo,Consolas,monospace;
@@ -201,7 +196,8 @@ section{position:relative}
 }
 .badge-mint{background:rgba(38,217,163,.16);color:#0B7A57;border:1px solid rgba(38,217,163,.4)}
 .badge-sun{background:rgba(255,200,56,.2);color:#8A6400;border:1px solid rgba(255,200,56,.55)}
-.badge-brick{background:rgba(142,59,47,.13);color:#7E3227;border:1px solid rgba(142,59,47,.42)}
+.badge-brick{background:color-mix(in srgb, var(--brick) 13%, transparent);color:#7E3227;
+  border:1px solid color-mix(in srgb, var(--brick) 42%, transparent)}
 
 .tags{
   font-family:var(--mono);font-size:13px;color:var(--soft);
@@ -407,8 +403,8 @@ section{position:relative}
    the dark-scene exception belongs to AirMouse alone. */
 #roomly{
   background:
-    radial-gradient(120% 80% at 88% 8%, rgba(142,59,47,.07), transparent 60%),
-    radial-gradient(90% 70% at 6% 96%, rgba(47,111,74,.09), transparent 62%),
+    radial-gradient(120% 80% at 88% 8%, color-mix(in srgb, var(--brick) 8%, transparent), transparent 60%),
+    radial-gradient(90% 70% at 6% 96%, color-mix(in srgb, var(--fern) 10%, transparent), transparent 62%),
     var(--loam);
 }
 .proj-grid{
@@ -646,15 +642,16 @@ section{position:relative}
   transition:transform .68s var(--ease),opacity .22s ease-out;
 }
 .rphoto{position:relative;flex:1 1 58%}
-/* Photo gradients run the fern↔brick family. Three of the four lead with green
-   and only one is brick, because the brief is planted-apartment, not brickyard —
-   green carries it and brick is the accent it sits against. The brick one is the
-   card that peeks out from behind the top of the stack, so both colours are in
-   the resting composition rather than brick only appearing mid-animation. */
-.g1{background:linear-gradient(145deg,var(--forest-lift) 0%,var(--forest) 48%,var(--forest-deep) 120%)}
-.g2{background:linear-gradient(155deg,var(--brick-lift) 0%,var(--brick) 48%,#4A2C24 112%)}
-.g3{background:linear-gradient(150deg,var(--forest) 0%,var(--olive) 62%,var(--brick) 122%)}
-.g4{background:linear-gradient(160deg,#3B8058 0%,var(--forest-lift) 52%,var(--forest) 115%)}
+/* One colour per listing, all inside the same soft-dark matte family: a
+   different apartment should look like a different apartment. Every one is
+   desaturated and lands dark, so the stack still reads as one set rather than
+   four unrelated swatches. Forest stays on top and brick is the card that peeks
+   from behind it, so the section's two headline colours are both in the resting
+   composition instead of the rest only arriving mid-animation. */
+.g1{background:linear-gradient(145deg,#2E6B49 0%,#1A4630 48%,#0C2718 120%)}   /* forest */
+.g2{background:linear-gradient(155deg,#8E4A3C 0%,#6E3028 48%,#3E1C17 112%)}   /* brick  */
+.g3{background:linear-gradient(150deg,#2E6A6F 0%,#1C4247 52%,#0D2528 115%)}   /* petrol */
+.g4{background:linear-gradient(160deg,#7A6733 0%,#5A4A26 50%,#2E2513 115%)}   /* ochre  */
 .rphoto::before{
   content:'';position:absolute;right:-14%;top:-26%;width:70%;aspect-ratio:1;
   border-radius:50%;background:rgba(255,255,255,.13);
