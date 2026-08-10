@@ -144,47 +144,23 @@
     hero.addEventListener('mouseleave', function () { tx = 0; ty = 0; kick(); });
   }
 
-  /* ---------- Roomly: tear the top card off on a loop ---------- */
-  var deck = $('#deck');
-  if (deck && !REDUCE) {
-    var cards = $$('.rcard', deck);
-    var timer = null;
-    var tearing = false;
-    var deckVisible = false;
-    var restack = function () {
-      cards.forEach(function (c, i) {
-        c.className = 'rcard c' + Math.min(i, 3);
-      });
-    };
-    var tick = function () {
-      if (tearing || document.hidden) return;
-      tearing = true;
-      var topCard = cards[0];
-      topCard.classList.add('tear');
-      setTimeout(function () {
-        topCard.style.transition = 'none';
-        deck.appendChild(topCard);
-        cards.push(cards.shift());
-        restack();
-        /* force reflow, then restore the transition so it settles in place */
-        void topCard.offsetWidth;
-        topCard.style.transition = '';
-        tearing = false;
-      }, 700);
-    };
-    var start = function () { if (!timer) timer = setInterval(tick, 4000); };
-    var stop = function () { if (timer) { clearInterval(timer); timer = null; } };
+  /* ---------- Roomly: play the move-in scene once, on arrival ---------- */
+  var moveScene = $('#move-scene');
+  if (moveScene && !REDUCE) {
+    /* Once, not on a loop: it tells a story with an ending, and a story that
+       restarts every few seconds behind someone's reading is a distraction.
+       Under reduced motion it is never started, and the CSS already rests on
+       the final frame, so those visitors get the finished scene. */
     if ('IntersectionObserver' in window) {
-      new IntersectionObserver(function (entries) {
+      var mio = new IntersectionObserver(function (entries) {
         entries.forEach(function (en) {
-          deckVisible = en.isIntersecting;
-          deckVisible ? start() : stop();
+          if (!en.isIntersecting) return;
+          moveScene.classList.add('play');
+          mio.disconnect();
         });
-      }, { threshold: 0.2 }).observe(deck);
-    } else { deckVisible = true; start(); }
-    document.addEventListener('visibilitychange', function () {
-      if (document.hidden) stop(); else if (deckVisible) start();
-    });
+      }, { threshold: 0.35 });
+      mio.observe(moveScene);
+    } else { moveScene.classList.add('play'); }
   }
 
   /* ---------- AirMouse room: cover-fit the photo box ---------- */

@@ -161,17 +161,24 @@ Full-viewport section per project, scroll-snap proximity (never JS-hijacked):
    framed navy stage, whose backdrop glow is a CSS gradient rather than a disc
    in the scene: a disc has a silhouette, and it cut a hard arc across the
    stage corner. Palette: navy room + aqua + mint.
-3. **Roomly** — swipe-card stack that tears the top card off on a loop, clipped
-   inside its own area (never across copy). Honest copy: first working draft,
-   being reworked, not launched — the button says "Follow the build", never
-   "coming soon". Palette: **fern + brick on a loam ground** (owner direction).
-   Green leads and brick answers: three of the four listing cards are
-   green-dominant and one is brick, and the brick one is deliberately the card
-   that peeks from behind the top of the stack, so both colours are in the
-   resting composition instead of brick only turning up mid-animation. The
-   section carries its own washed ground rather than only recoloured buttons —
-   that is what makes it a world instead of a theme — but it stays a BRIGHT
-   ground: the full-bleed dark exception belongs to AirMouse alone.
+3. **Roomly** — a **top-down move-in scene**, replacing the swipe-card deck
+   (owner direction). Seen from above: three people sit on their phones,
+   swipe through listings until one sticks, swipe again and match with *each
+   other*, then leave their chairs, walk to the middle, and a roofless room
+   fades in around them — Sims-style — where they settle and wave. About 7.6s.
+   Top-down is the whole reason it is affordable: no faces to animate, no limbs
+   to rig, and a seated person and a standing one are nearly the same shape from
+   above, so it is circles and rounded rectangles in inline SVG at roughly 6KB
+   against the 133KB gzipped that the 3D hand's three.js costs. It says what the
+   card stack could only imply — match a place, then match the people.
+   **It plays once, on arrival, and holds.** A story with an ending that restarts
+   every few seconds behind someone's reading is a distraction, not a delight.
+   The CSS **rests on the final frame**, so reduced-motion visitors and anyone
+   whose JS never runs get the finished scene standing still rather than a frozen
+   first frame; `.play` rewinds it. Character bodies carry three of the four card
+   colours and the listings they swipe carry the fourth. Honest copy: first
+   working draft, being reworked, not launched — the button says "Follow the
+   build", never "coming soon". Palette: fern + brick on a loam ground.
 4. **Contact** — short, cobalt CTA. On cobalt/navy surfaces the focus ring is
    white with a dark halo; body text on cobalt is ≥ .95 white.
 
