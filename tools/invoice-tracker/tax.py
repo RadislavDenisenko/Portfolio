@@ -22,6 +22,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import re
 from pathlib import Path
 
@@ -49,9 +50,22 @@ MILE_KINDS = ("business", "commuting", "other")
 
 
 def rate_for(date_iso: str) -> float:
-    """Cents per mile in force on that date."""
+    """Cents per mile in force on that date. ISO only, and it says so.
+
+    These are compared as strings, so anything not YYYY-MM-DD sorts wrongly:
+    '06/30/2026' lands below '2024-01-01' and used to price silently at 67c
+    instead of 72.5c. The CLI then printed that wrong figure as confirmation,
+    and `_year` - which also matches on the string - dropped the same entry from
+    the year's report entirely. The miles were recorded, confirmed on screen,
+    and then quietly missing from the deduction. Refuse instead.
+    """
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(date_iso or "")):
+        raise ValueError(
+            f"{date_iso!r} is not a date I can price. Use YYYY-MM-DD, "
+            "e.g. 2026-06-30."
+        )
     rate = MILEAGE_RATES[0][1]
-    for start, value in MILEAGE_RATES:
+    for start, value in sorted(MILEAGE_RATES):   # not merely lucky ordering
         if date_iso >= start:
             rate = value
     return rate
@@ -77,7 +91,17 @@ CATEGORIES = {
     # Hence vehicle=False: it means "the mileage rate already covers this", and
     # for tolls it does not. SunPass on the run up to Sarasota is real money.
     "tolls":      {"line": "9",   "label": "Car and truck - tolls & parking", "vehicle": False},
-    "insurance":  {"line": "15",  "label": "Insurance (not health)", "vehicle": False},
+    # IRS Topic 510 lists what the standard rate replaces: "gas, oil, repairs,
+    # tires, insurance, registration fees, licenses, and depreciation (or lease
+    # payments)". Only parking and tolls survive it. Every one of these needs a
+    # home where it can be EXCLUDED, or a photographed tag renewal quietly gets
+    # claimed twice - and this module's whole purpose is that it cannot.
+    "van_insurance":  {"line": "9",  "label": "Car and truck - insurance", "vehicle": True},
+    "registration":   {"line": "9",  "label": "Car and truck - tag & registration", "vehicle": True},
+    "tires":          {"line": "9",  "label": "Car and truck - tires", "vehicle": True},
+    "lease":          {"line": "9",  "label": "Car and truck - lease payments", "vehicle": True},
+    "depreciation":   {"line": "13", "label": "Depreciation (Form 4562)", "vehicle": True},
+    "insurance":  {"line": "15",  "label": "Insurance (not health, not the van)", "vehicle": False},
     "office":     {"line": "18",  "label": "Office expense", "vehicle": False},
     "supplies":   {"line": "22",  "label": "Supplies", "vehicle": False},
     "tools":      {"line": "22",  "label": "Supplies - tools", "vehicle": False},
@@ -94,6 +118,26 @@ DEDUCTIBLE_FRACTION = {"meals": 0.5}
 SE_TAX_RATE = 0.153          # 12.4% Social Security + 2.9% Medicare
 SE_TAXABLE_FRACTION = 0.9235  # SE tax applies to 92.35% of net earnings
 SE_DEDUCTION = 0.5            # half of SE tax is an income-tax deduction
+
+# The two halves of SE tax behave differently and a flat 15.3% is wrong above
+# the base. §1402(b)(1): the 12.4% Social Security half applies only to net
+# earnings above "the contribution and benefit base ... minus ... the wages paid
+# to such individual during such taxable year" - so **W-2 wages consume the base
+# first**, which matters for a split year like his. Medicare's 2.9% is uncapped.
+# 2026 base is $184,500 (SSA). Re-check each January with the mileage rates.
+OASDI_RATE = 0.124
+MEDICARE_RATE = 0.029
+SS_WAGE_BASE_CENTS = 18_450_000
+
+# §1401(b)(2): a further 0.9% Medicare above this, on wages plus SE earnings
+# combined. Not deductible under §164(f), unlike the rest of SE tax.
+ADDITIONAL_MEDICARE_RATE = 0.009
+ADDITIONAL_MEDICARE_THRESHOLD_CENTS = 20_000_000
+
+# §1402(b)(2): "the term 'self-employment income' does not include ... the net
+# earnings from self-employment, if such net earnings for the taxable year are
+# less than $400." The test is on the 92.35% figure, matching Schedule SE 4c.
+SE_MINIMUM_CENTS = 40_000
 
 # Qualified business income, §199A: a sole proprietor deducts 20% of business
 # profit off taxable income on top of the standard deduction. Made permanent by
@@ -121,19 +165,48 @@ BRACKETS = [
 
 
 def load() -> dict:
+    """Read the ledger, or refuse.
+
+    It must NEVER quietly hand back an empty ledger when the file is unreadable.
+    Every command is load -> mutate -> save, so returning `{}` from a damaged
+    file meant the next save overwrote the damaged-but-still-present bytes with
+    nothing, printed a cheerful success message, and destroyed the record for
+    good. Unlike invoices.json none of this is re-fetchable: the real-estate
+    fees, the prior-year safe-harbour figures and every odometer reading only
+    exist here, and data/ is gitignored so there is no other copy.
+    """
     if LEDGER.exists():
+        raw = LEDGER.read_text("utf-8")
         try:
-            return json.loads(LEDGER.read_text("utf-8"))
-        except json.JSONDecodeError:
-            pass
+            return json.loads(raw)
+        except json.JSONDecodeError as exc:
+            wreck = LEDGER.with_suffix(".corrupt")
+            wreck.write_text(raw, "utf-8")
+            raise SystemExit(
+                f"\n{LEDGER} is damaged and I will not overwrite it.\n"
+                f"  {exc}\n\n"
+                f"A copy of exactly what was on disk is at:\n  {wreck}\n\n"
+                "Nothing has been changed. Ask Claude to salvage it - the\n"
+                "expenses and odometer readings are usually still in there.\n"
+            )
     return {"expenses": [], "mileage": [], "vehicle_method": "standard"}
 
 
 def save(ledger: dict) -> None:
+    """Write the ledger atomically.
+
+    A plain write_text truncates first, so a crash, a Ctrl+C or a full disk
+    partway through leaves a half-written file - which `load` above would then
+    refuse, blocking him until someone repairs it. Writing to a temporary file
+    and renaming means the ledger on disk is always one whole version or the
+    other, never a fragment.
+    """
     ledger["expenses"].sort(key=lambda e: e.get("date") or "")
     ledger["mileage"].sort(key=lambda m: m.get("date") or "")
     LEDGER.parent.mkdir(parents=True, exist_ok=True)
-    LEDGER.write_text(json.dumps(ledger, indent=2) + "\n", "utf-8")
+    temp = LEDGER.with_suffix(".tmp")
+    temp.write_text(json.dumps(ledger, indent=2) + "\n", "utf-8")
+    os.replace(temp, LEDGER)   # atomic on Windows and POSIX alike
 
 
 def money(cents: int) -> str:
@@ -142,11 +215,26 @@ def money(cents: int) -> str:
 
 
 def to_cents(amount: str | float) -> int:
-    """'45.99', '$45.99', 45.99 -> 4599."""
+    """'45.99', '$45.99', 45.99 -> 4599. And '-47.32' or '($47.32)' -> -4732.
+
+    The sign matters and used to be stripped along with the currency symbol, so
+    a return slip from Home Depot - ordinary when a technician takes parts back -
+    was booked as money spent rather than money refunded. It also made the
+    "total is negative" check in receipts.py unreachable, since nothing could
+    ever arrive negative. `invoice_parser.money_to_cents` already handled both
+    forms; the two disagreed.
+    """
     if isinstance(amount, (int, float)):
         return round(float(amount) * 100)
-    digits = re.sub(r"[^\d.]", "", str(amount))
-    return round(float(digits) * 100) if digits else 0
+    text = str(amount).strip()
+    negative = text.startswith("-") or "$-" in text or "-$" in text or (
+        text.startswith("(") and text.endswith(")")
+    )
+    digits = re.sub(r"[^\d.]", "", text)
+    if not digits:
+        return 0
+    value = round(float(digits) * 100)
+    return -value if negative else value
 
 
 def add_expense(
@@ -226,7 +314,9 @@ def workdays_from_invoices(store_path: Path | None = None) -> dict[str, list[str
     return {day: sorted(jobs) for day, jobs in sorted(days.items())}
 
 
-def odometer_to_mileage(ledger: dict, store_path: Path | None = None) -> dict:
+def odometer_to_mileage(
+    ledger: dict, store_path: Path | None = None, year: int | None = None
+) -> dict:
     """Pair each day's odometer readings into one business trip for that day.
 
     The first reading of a day is leaving, the last is getting home, and the gap
@@ -238,7 +328,20 @@ def odometer_to_mileage(ledger: dict, store_path: Path | None = None) -> dict:
     anything hand-entered alone.
     """
     workdays = workdays_from_invoices(store_path)
-    last_invoiced = max(workdays) if workdays else ""
+    # None, not "". Every ISO date sorts above the empty string, so an empty
+    # sentinel made the "no invoice yet" branch below fire for EVERY day - and a
+    # missing or corrupt invoices.json (load_store swallows a decode error and
+    # returns no invoices) turned a fortnight of personal errands into fully
+    # substantiated business mileage, reporting no problems at all. An absent
+    # proof set must prove nothing.
+    last_invoiced = max(workdays) if workdays else None
+
+    # Days already logged by hand. Generating a second trip for the same date
+    # would double it, because rebuilding only replaces source=='odometer'
+    # entries - and the fetcher rebuilds automatically whenever readings arrive.
+    manual_days = {
+        m["date"] for m in ledger.get("mileage", []) if m.get("source") != "odometer"
+    }
 
     by_day: dict[str, list[dict]] = {}
     for reading in ledger.get("odometer", []):
@@ -249,6 +352,13 @@ def odometer_to_mileage(ledger: dict, store_path: Path | None = None) -> dict:
         readings = sorted(by_day[day], key=lambda r: r["at"])
         jobs = workdays.get(day)
 
+        if day in manual_days:
+            problems.append(
+                f"{day}: you already logged this day by hand, so the odometer "
+                "readings were left out rather than counted twice. Delete one."
+            )
+            continue
+
         if len(readings) < 2:
             problems.append(
                 f"{day}: only one odometer reading, so there is no distance for "
@@ -256,7 +366,19 @@ def odometer_to_mileage(ledger: dict, store_path: Path | None = None) -> dict:
             )
             continue
 
-        miles = readings[-1]["reading"] - readings[0]["reading"]
+        # Pair them up consecutively - out and back, out and back - instead of
+        # taking the widest span. Four readings mean he went out again in the
+        # evening, and first-to-last would sweep that personal round trip into
+        # the business total, which is the one direction this must never err.
+        miles = sum(
+            readings[i + 1]["reading"] - readings[i]["reading"]
+            for i in range(0, len(readings) - 1, 2)
+        )
+        if len(readings) % 2:
+            problems.append(
+                f"{day}: {len(readings)} readings, which is an odd number, so the "
+                "last one has no pair and was ignored. Send them two at a time."
+            )
         if miles < 0:
             problems.append(
                 f"{day}: the readings go backwards ({readings[0]['reading']} then "
@@ -276,7 +398,7 @@ def odometer_to_mileage(ledger: dict, store_path: Path | None = None) -> dict:
             purpose = f"{len(jobs)} cable job(s), ticket(s) {', '.join(jobs[:6])}"
             purpose += "..." if len(jobs) > 6 else ""
             kind = "business"
-        elif day > last_invoiced:
+        elif last_invoiced and day > last_invoiced:
             # Invoices arrive ~2.5 weeks after the work, so recent days have no
             # invoice yet. That is a wait, not a problem.
             purpose = "worked - invoice not issued yet"
@@ -299,11 +421,12 @@ def odometer_to_mileage(ledger: dict, store_path: Path | None = None) -> dict:
         })
 
     # Days he demonstrably worked but sent no readings - the deduction he is
-    # losing, which is worth naming out loud.
-    missing = [
-        day for day in workdays
-        if day not in by_day and _year(day, dt.date.today().year)
-    ]
+    # losing, which is worth naming out loud. Filtered by the TAX year asked
+    # about, not by today's calendar year: from January until he files, the year
+    # that matters is the previous one, and those December days were silently
+    # dropped from the nag exactly when he could still reconstruct them.
+    want = year if year is not None else dt.date.today().year
+    missing = [day for day in workdays if day not in by_day and _year(day, want)]
 
     kept = [m for m in ledger.get("mileage", []) if m.get("source") != "odometer"]
     ledger["mileage"] = sorted(kept + trips, key=lambda m: m["date"])
@@ -359,12 +482,20 @@ def summarize(ledger: dict, year: int | None = None) -> dict:
         for name, slot in by_category.items()
         if CATEGORIES[name]["vehicle"]
     )
+    # Topic 510: with a vehicle used for both, "you may deduct only the cost of
+    # its business use", so actual costs are scaled by the business share of the
+    # miles. Claiming 100% both overstated the deduction and made the "switch
+    # method" hint recommend the worse method, because it compared a full-cost
+    # figure against a business-only mileage figure.
+    total_miles = sum(miles_by_kind.values())
+    business_share = (miles / total_miles) if total_miles else 0.0
+    actual_cents = round(vehicle_cents * business_share)
+
     if method == "standard":
-        claimed_vehicle = mileage_cents
-        excluded = vehicle_cents
+        claimed_vehicle, alternative = mileage_cents, actual_cents
     else:
-        claimed_vehicle = vehicle_cents
-        excluded = mileage_cents
+        claimed_vehicle, alternative = actual_cents, mileage_cents
+    excluded = vehicle_cents if method == "standard" else mileage_cents
 
     non_vehicle = sum(
         slot["deductible_cents"]
@@ -380,7 +511,11 @@ def summarize(ledger: dict, year: int | None = None) -> dict:
         "incomplete_trips": incomplete,
         "mileage_cents": mileage_cents,
         "vehicle_expense_cents": vehicle_cents,
+        "business_share": round(business_share, 4),
         "claimed_vehicle_cents": claimed_vehicle,
+        # What the OTHER method would be worth, already scaled. The switch hint
+        # must compare against this, never against the raw cost total.
+        "alternative_cents": alternative,
         "excluded_cents": excluded,
         "non_vehicle_cents": non_vehicle,
         "total_deduction_cents": claimed_vehicle + non_vehicle,
@@ -413,11 +548,33 @@ def estimate_tax(
     An estimate for setting money aside, not a return. It ignores credits,
     dependants, and anything else a real preparer would apply.
     """
-    net_profit = max(0, gross_cents - deduction_cents)
-    se_base = round(net_profit * SE_TAXABLE_FRACTION)
-    se_tax = round(se_base * SE_TAX_RATE)
+    # NOT clamped at zero. A net Schedule C loss is an above-the-line deduction
+    # under §62(a)(1), so it reduces AGI and offsets W-2 wages dollar for dollar
+    # (Schedule 1 line 3 is allowed to be negative). Clamping here would throw
+    # the loss away - and a pure loss is exactly his real-estate business:
+    # $2,062.25 of brokerage and MLS fees against zero commission.
+    net_profit = gross_cents - deduction_cents
 
-    half_se = round(se_tax * SE_DEDUCTION)
+    # The clamp belongs here instead: §1402(a) charges no SE tax on a loss.
+    se_earnings = round(max(0, net_profit) * SE_TAXABLE_FRACTION)
+    if se_earnings < SE_MINIMUM_CENTS:
+        se_tax_base = 0
+    else:
+        oasdi_room = max(0, SS_WAGE_BASE_CENTS - wage_cents)
+        se_tax_base = (
+            round(min(se_earnings, oasdi_room) * OASDI_RATE)
+            + round(se_earnings * MEDICARE_RATE)
+        )
+
+    combined = wage_cents + se_earnings
+    extra_medicare = (
+        round((combined - ADDITIONAL_MEDICARE_THRESHOLD_CENTS) * ADDITIONAL_MEDICARE_RATE)
+        if combined > ADDITIONAL_MEDICARE_THRESHOLD_CENTS else 0
+    )
+    se_tax = se_tax_base + extra_medicare
+
+    # §164(f) deducts half of SE tax - but not the Additional Medicare part.
+    half_se = round(se_tax_base * SE_DEDUCTION)
     taxable = max(0, wage_cents + net_profit - half_se - STANDARD_DEDUCTION_CENTS)
 
     # §199A comes off after the standard deduction and is capped at 20% of what
@@ -439,7 +596,7 @@ def estimate_tax(
         last = ceiling
 
     total = se_tax + income_tax
-    base = wage_cents + net_profit
+    base = max(0, wage_cents + net_profit)
     return {
         "net_profit_cents": net_profit,
         "wage_cents": wage_cents,
@@ -501,8 +658,12 @@ def safe_harbor(
 
     required = ninety if prior_option is None else min(ninety, prior_option)
 
-    # §6654(g) treats tax withheld from wages as paid evenly across the year,
-    # regardless of when it actually came out.
+    # §6654(g)(1) spreads withholding evenly across the year no matter when it
+    # actually came out - but that grace is for "the credit allowed under
+    # section 31", i.e. wage withholding ONLY. An estimated payment counts on
+    # the day it is made and is credited to the oldest unpaid instalment, so
+    # pooling the two here treated a September cheque as though it had been
+    # sitting there since April. They are reported separately for that reason.
     covered = withheld_cents + paid_cents
     still_needed = max(0, required - covered)
 
@@ -514,6 +675,14 @@ def safe_harbor(
         "which": "prior year" if prior_option is not None and prior_option < ninety else "90% of this year",
         "installment_cents": round(required / 4),
         "already_covered_cents": covered,
+        "withheld_cents": withheld_cents,
+        "estimated_paid_cents": paid_cents,
+        # True once any instalment due date has passed with nothing paid: a
+        # payment now caps the interest but cannot undo what has accrued, and
+        # saying "this stops the penalty" would be a lie.
+        "late_installments": paid_cents == 0 and dt.date.today() > dt.date(
+            dt.date.today().year, 4, 15
+        ),
         "pay_by_sept_15_cents": still_needed,
         "due_next_april_cents": max(0, bill_cents - covered - still_needed),
         "exempt": bill_cents - withheld_cents < DE_MINIMIS_CENTS,
@@ -594,7 +763,9 @@ def snapshot(ledger: dict, year: int | None = None) -> dict:
     for r in receipts:
         buckets[r.get("status", "?")] = buckets.get(r.get("status", "?"), 0) + 1
 
-    mileage = odometer_to_mileage(dict(ledger))  # on a copy: reporting must not write
+    # On a copy, and told which tax year it is reporting on: reporting must
+    # neither write to the ledger nor answer about a different year.
+    mileage = odometer_to_mileage(dict(ledger), year=year)
 
     # If the van belongs to the company there is no vehicle deduction at all, so
     # counting "days with no odometer reading" would be nagging him about money
@@ -702,8 +873,12 @@ def report(ledger: dict, year: int | None = None, gross_cents: int = 0) -> str:
 
     # Whichever method is worth more is the one to claim. Say so rather than
     # letting the default quietly cost him money.
-    gap = stats["excluded_cents"] - stats["claimed_vehicle_cents"]
-    if gap > 0:
+    # Compare against the business-use-scaled alternative, and never fire on an
+    # empty mileage log: with no business miles the actual method is worth 0% of
+    # the costs, not 100%, and the old comparison invented upside that a switch
+    # would have destroyed.
+    gap = stats["alternative_cents"] - stats["claimed_vehicle_cents"]
+    if gap > 0 and stats["miles"]:
         other = "actual van costs" if stats["method"] == "standard" else "standard mileage"
         out.append("")
         out.append(
@@ -741,9 +916,15 @@ def report(ledger: dict, year: int | None = None, gross_cents: int = 0) -> str:
         out.append(
             f"  {'Effective rate':<34}{tax['effective_rate'] * 100:>9.1f}%"
         )
-        saved = round(stats["total_deduction_cents"] * tax["effective_rate"])
+        # The MARGINAL value, worked out by asking what the bill would have been
+        # with no deductions at all. The average effective rate is dragged down
+        # by the standard deduction and the untaxed floor, and understated this
+        # by about a third - and this is the only line that tells him whether
+        # chasing receipts is worth the trouble.
+        without = estimate_tax(gross_cents, 0, wages, withheld)
+        saved = without["total_tax_cents"] - tax["total_tax_cents"]
         out.append("")
-        out.append(f"  Those deductions saved you about {money(saved)}.")
+        out.append(f"  Those deductions saved you {money(saved)}.")
 
         prior = ledger.get("prior_year") or {}
         if prior.get("total_tax_cents") is not None:
@@ -768,13 +949,19 @@ def report(ledger: dict, year: int | None = None, gross_cents: int = 0) -> str:
                 )
             out.append(f"  {'Pay by September 15':<34}{money(sh['pay_by_sept_15_cents']):>10}")
             out.append(f"  {'Then due April 15':<34}{money(sh['due_next_april_cents']):>10}")
-            weeks = 35
+            # Was hardcoded to 35, which was right only in the week it was
+            # written and understated by 6x if he ran the report in March.
+            deadline = dt.date((year or dt.date.today().year) + 1, 4, 15)
+            weeks = max(1, (deadline - dt.date.today()).days // 7)
             out.append("")
             out.append(
-                f"  The September payment stops the penalty. It does NOT shrink the\n"
-                f"  bill - {money(sh['due_next_april_cents'])} still lands in April, which is about\n"
-                f"  {money(round(sh['due_next_april_cents'] / weeks))} a week between now and then. That is the number\n"
-                f"  that matters; the penalty was never more than pocket change."
+                "  A payment now stops the interest running from here on. It does not\n"
+                "  cancel it: the April and June instalments were already late, so a\n"
+                "  few dollars have accrued whatever you do. And it does NOT shrink\n"
+                f"  the bill - {money(sh['due_next_april_cents'])} still lands in April, about "
+                f"{money(round(sh['due_next_april_cents'] / weeks))} a week\n"
+                f"  across the {weeks} weeks left. That is the number that matters; the\n"
+                "  penalty was never more than pocket change."
             )
 
     return "\n".join(out)
@@ -920,18 +1107,20 @@ def main(argv: list[str] | None = None) -> int:
     else:
         gross = to_cents(args.gross) if args.gross else 0
         if not gross:
-            # Fall back to whatever the invoice store already knows.
-            try:
-                import invoice_parser
-                store = invoice_parser.load_store(HERE / "data" / "invoices.json")
-                gross = sum(
-                    item["cents"]
-                    for inv in store["invoices"]
-                    for item in inv["line_items"]
-                    if str(item["date"]).startswith(str(args.year))
+            # The PROJECTED year, not just what has landed so far - the same
+            # figure the dashboard uses. Summing only the invoices received to
+            # date answers "what have I earned", but the question this report
+            # exists to answer is "what will I owe", and in August that made the
+            # two screens disagree by thousands.
+            income = invoice_income(args.year)
+            gross = income["projected_cents"]
+            if income["weeks"]:
+                print(
+                    f"\n  Projecting {money(gross)} for {args.year}: "
+                    f"{money(income['received_cents'])} received over "
+                    f"{income['weeks']} week(s), then {income['weeks_remaining']} "
+                    f"more at {money(income['per_week_cents'])}."
                 )
-            except Exception:
-                gross = 0
         print()
         print(report(ledger, args.year, gross))
         print()

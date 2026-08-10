@@ -82,10 +82,33 @@ def check_tax() -> None:
     assert s["by_category"]["tolls"]["deductible_cents"] == 1240
     assert s["total_deduction_cents"] == 14850 + 1240 + 4732, s["total_deduction_cents"]
 
-    # Switching to actual costs must flip which side is claimed.
+    # Switching to actual costs flips which side is claimed - and scales the
+    # costs by BUSINESS USE. 200 business miles against 500 personal is 28.57%,
+    # so $50 of fuel is worth $14.29, not the whole $50. Claiming 100% both
+    # overstated the deduction and made the switch hint recommend the worse
+    # method, because it compared full costs against business-only mileage.
     ledger["vehicle_method"] = "actual"
     s = tax.summarize(ledger, 2026)
-    assert s["claimed_vehicle_cents"] == 5000 and s["excluded_cents"] == 14850
+    assert abs(s["business_share"] - 200 / 700) < 0.0001, s["business_share"]
+    assert s["claimed_vehicle_cents"] == round(5000 * 200 / 700), s["claimed_vehicle_cents"]
+    assert s["excluded_cents"] == 14850
+
+    # With no business miles at all, actual costs are worth 0% - never 100% -
+    # and the "you should switch" hint must not fire on imaginary upside.
+    empty = tax.load()
+    tax.add_expense(empty, 30000, "Wawa", "gas", "2026-07-03")
+    assert tax.summarize(empty, 2026)["alternative_cents"] == 0
+    assert "would be worth" not in tax.report(empty, 2026)
+
+    # Van insurance and the tag are covered by the standard rate (Topic 510), so
+    # they must be EXCLUDED, not stacked on top of the mileage deduction.
+    van = tax.load()
+    tax.add_miles(van, 63, "2026-07-01", "cable jobs", "business", "80000-80063")
+    tax.add_expense(van, 128400, "Progressive", "van_insurance", "2026-08-01")
+    tax.add_expense(van, 32500, "FL Tax Collector", "registration", "2026-07-06")
+    sv = tax.summarize(van, 2026)
+    assert sv["excluded_cents"] == 160900, sv["excluded_cents"]
+    assert sv["total_deduction_cents"] == sv["mileage_cents"], sv
 
     # QBI: 20% of profit, but capped at 20% of what is left after the standard
     # deduction. At his income the cap is what binds, so a flat 20% is wrong.
@@ -102,9 +125,12 @@ def check_tax() -> None:
     # A SPLIT YEAR, which is his actual 2026: wages Jan-May, contracting after.
     split = tax.estimate_tax(3_100_500, 206_225, wage_cents=1_020_000, withheld_cents=70_000)
     only_se = tax.estimate_tax(3_100_500, 206_225)
-    # SE tax must be identical -- wages already had FICA taken at source, so
-    # taxing them again here would roughly double-count.
+    # SE tax must be identical HERE -- wages already had FICA taken at source,
+    # so taxing them again would double-count. True only while wages plus SE
+    # earnings stay under the Social Security base; above it §1402(b)(1) makes
+    # the wages eat the base and SE tax FALLS, which check_audit_fixes pins.
     assert split["se_tax_cents"] == only_se["se_tax_cents"], (split, only_se)
+    assert 1_020_000 + split["net_profit_cents"] < tax.SS_WAGE_BASE_CENTS
     # ...but income tax must be HIGHER, because the wages push the profit up
     # through the brackets. Ignoring them understates the bill.
     assert split["income_tax_cents"] > only_se["income_tax_cents"]
@@ -141,6 +167,90 @@ def check_tax() -> None:
     assert covered["pay_by_sept_15_cents"] == 0, covered
 
     print("tax math OK")
+
+
+def check_audit_fixes() -> None:
+    """One case per bug the adversarial audit confirmed on 2026-08-09.
+
+    Every one of these was reproducible and put a wrong number somewhere real.
+    """
+    import json
+
+    import receipts
+    import tax
+
+    tmp = _sandbox()
+
+    # [1] A Schedule C loss is above the line under §62(a)(1) and offsets wages.
+    # Clamping it to zero threw away his entire real-estate loss.
+    loss = tax.estimate_tax(0, 206_225, wage_cents=2_446_500)
+    assert loss["net_profit_cents"] == -206_225, loss
+    assert loss["income_tax_cents"] < tax.estimate_tax(0, 0, wage_cents=2_446_500)["income_tax_cents"]
+    assert loss["se_tax_cents"] == 0, "no SE tax on a loss, §1402(a)"
+
+    # [2] §1402(b)(2): no SE tax under $400 of net earnings.
+    assert tax.estimate_tax(40_000, 0)["se_tax_cents"] == 0      # $369.40 earnings
+    assert tax.estimate_tax(43_313, 0)["se_tax_cents"] > 0       # just over $400
+
+    # [3] §1402(b)(1): the 12.4% half stops at the base, and WAGES EAT IT FIRST.
+    big = tax.estimate_tax(50_000_000, 0)
+    earnings = round(50_000_000 * tax.SE_TAXABLE_FRACTION)
+    assert big["se_tax_cents"] < round(earnings * 0.153), "no wage-base cap"
+    capped = tax.estimate_tax(10_000_000, 0, wage_cents=tax.SS_WAGE_BASE_CENTS)
+    uncapped = tax.estimate_tax(10_000_000, 0, wage_cents=0)
+    assert capped["se_tax_cents"] < uncapped["se_tax_cents"], "wage offset ignored"
+
+    # [10] A date it cannot price must be refused, not quietly charged at 2024.
+    assert tax.rate_for("2026-07-01") == 76.0
+    for bad in ("06/30/2026", "", "yesterday"):
+        try:
+            tax.rate_for(bad)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"rate_for({bad!r}) should refuse")
+
+    # [15] to_cents must keep the sign, or a refund becomes a deduction.
+    assert tax.to_cents("-47.32") == -4732
+    assert tax.to_cents("($47.32)") == -4732
+    assert tax.to_cents("$47.32") == 4732
+
+    # [17] A damaged ledger must never be silently replaced by an empty one.
+    tax.LEDGER.write_text("{not json", "utf-8")
+    try:
+        tax.load()
+    except SystemExit:
+        pass
+    else:
+        raise AssertionError("a corrupt ledger was loaded as empty - it would be overwritten")
+    assert tax.LEDGER.read_text("utf-8") == "{not json", "the damaged file was altered"
+    assert tax.LEDGER.with_suffix(".corrupt").exists(), "no copy kept"
+    tax.LEDGER.unlink()
+
+    # [18] Writes are atomic - no .tmp left behind, and the file is whole.
+    ledger = tax.load()
+    tax.add_expense(ledger, 1000, "Test", "tools", "2026-07-01")
+    tax.save(ledger)
+    assert not tax.LEDGER.with_suffix(".tmp").exists()
+    json.loads(tax.LEDGER.read_text("utf-8"))
+
+    # [12] Filing the same receipt twice must not deduct it twice.
+    import fetch_invoices
+    index = fetch_invoices.load_receipts()
+    index["receipts"].append({
+        "id": "dup1", "file": "dup1.jpg", "received": "2026-08-01", "email_subject": "RCPT",
+        "email_date": "", "bytes": 1, "status": "needs extraction",
+        "extracted": None, "problems": [],
+    })
+    fetch_invoices.save_receipts(index)
+    receipts.main(["record", "dup1", "--merchant", "Staples", "--date", "2026-08-01",
+                   "--total", "20.00"])
+    before = len(tax.load()["expenses"])
+    receipts.main(["ok", "dup1"])
+    receipts.main(["ok", "dup1"])          # the re-run a nervous user makes
+    assert len(tax.load()["expenses"]) == before + 1, "same receipt filed twice"
+
+    print("audit fixes OK")
 
 
 def check_odometer() -> None:
@@ -364,6 +474,7 @@ def main() -> int:
 
     print("core math OK")
     check_tax()
+    check_audit_fixes()
     check_odometer()
     check_snapshot()
     check_receipts()

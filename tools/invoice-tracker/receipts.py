@@ -88,6 +88,22 @@ sunpass         = tolls
 toll            = tolls
 parking         = tolls
 
+# Anything the standard mileage rate already covers. These MUST map to a
+# vehicle category or they get claimed a second time on top of the mileage.
+progressive     = van_insurance
+geico           = van_insurance
+state farm      = van_insurance
+allstate        = van_insurance
+usaa            = van_insurance
+tax collector   = registration
+dhsmv           = registration
+tag agency      = registration
+tire kingdom    = tires
+costco tire     = tires
+car wash        = repairs
+penske          = lease
+enterprise truck = lease
+
 verizon         = phone
 t-mobile        = phone
 at&t            = phone
@@ -111,11 +127,9 @@ target          = supplies
 """
 
 
-def load_rules() -> list[tuple[str, str]]:
-    if not RULES.exists():
-        RULES.write_text(DEFAULT_RULES, "utf-8")
+def _parse_rules(text: str) -> list[tuple[str, str]]:
     rules = []
-    for line in RULES.read_text("utf-8").splitlines():
+    for line in text.splitlines():
         line = line.split("#")[0].strip()
         if "=" not in line:
             continue
@@ -124,6 +138,23 @@ def load_rules() -> list[tuple[str, str]]:
         if pattern and category in tax.CATEGORIES:
             rules.append((pattern, category))
     return rules
+
+
+def load_rules() -> list[tuple[str, str]]:
+    """His file first, then the built-ins.
+
+    Merged rather than either-or. If his copy simply replaced the defaults, then
+    the moment the file exists he stops receiving new built-in rules - and the
+    ones added since matter: they route van insurance, tag renewals and tires
+    into categories the standard mileage rate already covers, so without them
+    those get deducted a second time. His own lines still win, because first
+    match takes it and his come first.
+    """
+    if not RULES.exists():
+        RULES.write_text(DEFAULT_RULES, "utf-8")
+    mine = _parse_rules(RULES.read_text("utf-8"))
+    seen = {pattern for pattern, _ in mine}
+    return mine + [r for r in _parse_rules(DEFAULT_RULES) if r[0] not in seen]
 
 
 def categorise(merchant: str) -> str:
@@ -200,6 +231,18 @@ def validate(index: dict, receipt: dict, extracted: dict) -> list[str]:
         problems.append(
             "Meals: only deductible if the trip kept you away overnight. Lunch "
             "between job sites is personal, however work-related it felt."
+        )
+
+    # An unrecognised merchant lands in 'other', which is a claimable line-27a
+    # expense. That is the wrong default: a van insurance premium, a tag
+    # renewal or a set of tires would file itself alongside the mileage
+    # deduction that already covers it. Make the unknown case ASK.
+    if extracted.get("category") == "other":
+        problems.append(
+            f"No rule matches {extracted.get('merchant', '')!r}, so it landed in "
+            "'other'. Check the category before filing - if it is anything to do "
+            "with the van, the mileage rate may already cover it. Add a line to "
+            "receipt-rules.txt and it will be automatic next time."
         )
 
     return problems
@@ -295,6 +338,14 @@ def cmd_ok(index: dict, args) -> int:
         if not one:
             print(f"No single receipt matching {args.id!r}.", file=sys.stderr)
             return 1
+        # `ok <id>` is the ONLY way to file a flagged receipt, so it is the path
+        # he re-runs when unsure whether the first go worked - and it used to
+        # deduct the same purchase twice, silently, with the same success
+        # message. Re-running a command is the most ordinary thing a
+        # non-technical person does.
+        if one.get("status") == "filed":
+            print(f"{one['id']} was already filed. Nothing to do.")
+            return 0
         chosen = [one]
 
     chosen = [r for r in chosen if r.get("extracted")]

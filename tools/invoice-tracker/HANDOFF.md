@@ -361,6 +361,48 @@ part of the problem.
 - `Save to Photo Album` is the cheap insurance: if the send fails in a dead zone
   the photo still exists on the phone.
 
+## 4c. Adversarial audit of the tax engine, 2026-08-09 — 20 bugs, all fixed
+
+Five hunters across the engine, each finding attacked by a separate agent that
+tried to refute it. 20 confirmed, 10 dismissed. **All 20 are fixed and each has
+a regression test in `check_audit_fixes()` or `check_tax()`.** The ones worth
+remembering, because they are the shapes that recur:
+
+- **A Schedule C loss was clamped to zero**, so his real-estate loss never
+  offset his wages. §62(a)(1) makes it above-the-line. The clamp belongs on the
+  SE-tax base only (§1402(a)), not on the income-tax base.
+- **Van insurance and registration were `vehicle: False`**, so they were claimed
+  *on top of* standard mileage — the exact double-dip the module exists to
+  prevent. IRS Topic 510: the rate replaces "gas, oil, repairs, tires,
+  insurance, registration fees, licenses, and depreciation"; **only parking and
+  tolls survive it.** New vehicle categories, and merchant rules so a
+  photographed tag renewal cannot file itself wrongly.
+- **The actual-expense method claimed 100% of costs** with no business-use
+  percentage, which also made the "switch method" hint recommend the worse
+  method. Now scaled by the business share of miles, and it never fires on an
+  empty log.
+- **A missing or corrupt `invoices.json` turned every odometer day into
+  deductible business miles.** `last_invoiced = "" ` made "no invoice yet" true
+  for every date. Sentinel is `None` now: an absent proof set proves nothing.
+- **A corrupt `ledger.json` was silently replaced by an empty one** on the next
+  command, destroying the only copy of his fees, safe-harbour figures and
+  odometer history. `load()` now refuses and keeps a `.corrupt` copy; `save()`
+  is atomic via `os.replace`.
+- **`to_cents` stripped the minus sign**, so a refund became a deduction and the
+  negative-total validator was unreachable.
+- **Filing the same receipt twice deducted it twice.** `ok <id>` is the only way
+  to file a flagged receipt, so it is exactly the command he re-runs.
+- **Three or more odometer readings in a day** took the widest span, sweeping an
+  evening personal trip into business miles. Paired consecutively now.
+- **"Those deductions saved you X" used the average effective rate**, about a
+  third too low, and it is the only line telling him whether receipts are worth
+  the trouble. Now a real counterfactual.
+- **`weeks = 35` was hardcoded** in the report, correct only in the week it was
+  written; by March it understated the weekly pace six-fold.
+
+Still true and deliberately not "fixed": no Social Security wage-base cap was a
+real bug and is now in, but it cannot bite until his profit roughly quadruples.
+
 ## 5a. The receipt system — BUILT 2026-08-09
 
 Working end to end on the PC side. `fetch-invoices.bat` now pulls invoices and

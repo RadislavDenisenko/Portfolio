@@ -263,9 +263,12 @@ def fetch_odometer(box, since: str, subject: str) -> int:
         print("odometer search failed", file=sys.stderr)
         return 0
 
-    ledger = tax.load()
-    readings = ledger.setdefault("odometer", [])
-    known = {r["message_id"] for r in readings if r.get("message_id")}
+    # Collect first, then load-mutate-save at the very end. Holding the ledger
+    # open across a whole IMAP session meant anything written meanwhile - by him
+    # at the command line, or by receipts.py - was silently overwritten when
+    # this finally saved, because the in-memory copy was minutes stale.
+    fresh: list[dict] = []
+    known = {r["message_id"] for r in tax.load().get("odometer", []) if r.get("message_id")}
     added = 0
 
     for num in data[0].split():
@@ -290,7 +293,7 @@ def fetch_odometer(box, since: str, subject: str) -> int:
             when = parsedate_to_datetime(message.get("Date", ""))
         except (TypeError, ValueError):
             continue
-        readings.append({
+        fresh.append({
             "at": when.astimezone().replace(tzinfo=None).isoformat(timespec="minutes"),
             "reading": value,
             "message_id": message_id,
@@ -299,6 +302,10 @@ def fetch_odometer(box, since: str, subject: str) -> int:
         added += 1
 
     if added:
+        ledger = tax.load()          # re-read: minutes have passed since we started
+        readings = ledger.setdefault("odometer", [])
+        seen = {r["message_id"] for r in readings if r.get("message_id")}
+        readings.extend(r for r in fresh if r["message_id"] not in seen)
         readings.sort(key=lambda r: r["at"])
         # Rebuild the trips here rather than making him remember a second step.
         # It is idempotent, so running it every fetch costs nothing.
