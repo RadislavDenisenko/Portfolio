@@ -42,7 +42,7 @@ MILEAGE_RATES = [
 ]
 
 # Only business miles deduct. Rev. Rul. 99-7: driving between home and a work
-# location is commuting and is not deductible — unless the home qualifies as the
+# location is commuting and is not deductible - unless the home qualifies as the
 # principal place of business, or the site is temporary and there is a regular
 # work location elsewhere. Schedule C line 44 demands this split anyway.
 MILE_KINDS = ("business", "commuting", "other")
@@ -61,7 +61,7 @@ def rate_for(date_iso: str) -> float:
 # receipt below $75 only for what §274(d) covers: travel away from home, gifts,
 # and listed property (the van). Lodging needs a receipt at ANY amount. Tools,
 # supplies, phone and licences are ordinary §162 expenses governed by §6001,
-# which sets no dollar floor at all — so for most of what he actually buys,
+# which sets no dollar floor at all - so for most of what he actually buys,
 # there is no small-purchase exemption. Capture everything.
 # VERIFIED 2026-08-09 against the regulation and 26 U.S.C. §274(d).
 #
@@ -70,21 +70,21 @@ def rate_for(date_iso: str) -> float:
 # mileage already covers.
 CATEGORIES = {
     "mileage":    {"line": "9",   "label": "Car and truck expenses", "vehicle": True},
-    "gas":        {"line": "9",   "label": "Car and truck — fuel", "vehicle": True},
-    "repairs":    {"line": "9",   "label": "Car and truck — repairs", "vehicle": True},
+    "gas":        {"line": "9",   "label": "Car and truck - fuel", "vehicle": True},
+    "repairs":    {"line": "9",   "label": "Car and truck - repairs", "vehicle": True},
     # Tolls and parking sit on line 9 with the rest of the vehicle costs but are
-    # NOT part of the standard mileage rate — they are claimable on top of it.
+    # NOT part of the standard mileage rate - they are claimable on top of it.
     # Hence vehicle=False: it means "the mileage rate already covers this", and
     # for tolls it does not. SunPass on the run up to Sarasota is real money.
-    "tolls":      {"line": "9",   "label": "Car and truck — tolls & parking", "vehicle": False},
+    "tolls":      {"line": "9",   "label": "Car and truck - tolls & parking", "vehicle": False},
     "insurance":  {"line": "15",  "label": "Insurance (not health)", "vehicle": False},
     "office":     {"line": "18",  "label": "Office expense", "vehicle": False},
     "supplies":   {"line": "22",  "label": "Supplies", "vehicle": False},
-    "tools":      {"line": "22",  "label": "Supplies — tools", "vehicle": False},
+    "tools":      {"line": "22",  "label": "Supplies - tools", "vehicle": False},
     "licenses":   {"line": "23",  "label": "Taxes and licenses", "vehicle": False},
     "travel":     {"line": "24a", "label": "Travel", "vehicle": False},
     "meals":      {"line": "24b", "label": "Meals (50% deductible)", "vehicle": False},
-    "phone":      {"line": "25",  "label": "Utilities — phone", "vehicle": False},
+    "phone":      {"line": "25",  "label": "Utilities - phone", "vehicle": False},
     "other":      {"line": "27a", "label": "Other expenses", "vehicle": False},
 }
 
@@ -107,7 +107,7 @@ QBI_MINIMUM_FLOOR_CENTS = 100_000
 
 # 2026 federal brackets and standard deduction, single filer.
 # VERIFIED 2026-08-09 against irs.gov (Rev. Proc. 2025-32, as amended by OBBBA).
-# These were the 2025 figures until that check — re-verify every January.
+# These were the 2025 figures until that check - re-verify every January.
 STANDARD_DEDUCTION_CENTS = 1_610_000
 BRACKETS = [
     (1_240_000, 0.10),
@@ -191,7 +191,7 @@ def add_miles(
     A vehicle is listed property, so mileage falls under the strict
     substantiation of §274(d): amount, time, place and business purpose, all
     recorded at or near the time. Unlike ordinary expenses, a court may NOT
-    estimate for you — an inadequate log is disallowed in full rather than
+    estimate for you - an inadequate log is disallowed in full rather than
     trimmed. Hence `purpose` and `route`, and hence the nagging below.
     """
     entry = {
@@ -211,8 +211,8 @@ def workdays_from_invoices(store_path: Path | None = None) -> dict[str, list[str
 
     This is the business-purpose half of the mileage record, and it is the part
     that makes the whole thing defensible: §274(d) wants the date and the
-    business purpose of each use, and "7 cable jobs, tickets 144158, 144203…" is
-    exactly that — generated from a document Koscom issued, not from memory.
+    business purpose of each use, and "7 cable jobs, tickets 144158, 144203..." is
+    exactly that - generated from a document Koscom issued, not from memory.
     """
     try:
         import invoice_parser
@@ -231,7 +231,7 @@ def odometer_to_mileage(ledger: dict, store_path: Path | None = None) -> dict:
 
     The first reading of a day is leaving, the last is getting home, and the gap
     between them is the working day. Deliberately NOT the difference between one
-    day's reading and the next day's — that would sweep in every evening errand
+    day's reading and the next day's - that would sweep in every evening errand
     and overstate business miles, which is the one direction it must never err.
 
     Idempotent: re-running replaces the trips it made last time and leaves
@@ -252,7 +252,7 @@ def odometer_to_mileage(ledger: dict, store_path: Path | None = None) -> dict:
         if len(readings) < 2:
             problems.append(
                 f"{day}: only one odometer reading, so there is no distance for "
-                "that day. Send a second one next time — leaving and getting back."
+                "that day. Send a second one next time - leaving and getting back."
             )
             continue
 
@@ -274,12 +274,12 @@ def odometer_to_mileage(ledger: dict, store_path: Path | None = None) -> dict:
 
         if jobs:
             purpose = f"{len(jobs)} cable job(s), ticket(s) {', '.join(jobs[:6])}"
-            purpose += "…" if len(jobs) > 6 else ""
+            purpose += "..." if len(jobs) > 6 else ""
             kind = "business"
         elif day > last_invoiced:
             # Invoices arrive ~2.5 weeks after the work, so recent days have no
             # invoice yet. That is a wait, not a problem.
-            purpose = "worked — invoice not issued yet"
+            purpose = "worked - invoice not issued yet"
             kind = "business"
         else:
             problems.append(
@@ -293,12 +293,12 @@ def odometer_to_mileage(ledger: dict, store_path: Path | None = None) -> dict:
             "miles": float(miles),
             "kind": kind,
             "purpose": purpose,
-            "route": f"odometer {readings[0]['reading']} → {readings[-1]['reading']}",
+            "route": f"odometer {readings[0]['reading']} -> {readings[-1]['reading']}",
             "complete": True,
             "source": "odometer",
         })
 
-    # Days he demonstrably worked but sent no readings — the deduction he is
+    # Days he demonstrably worked but sent no readings - the deduction he is
     # losing, which is worth naming out loud.
     missing = [
         day for day in workdays
@@ -337,8 +337,8 @@ def summarize(ledger: dict, year: int | None = None) -> dict:
         slot["count"] += 1
         slot["deductible_cents"] += round(expense["cents"] * fraction)
 
-    # Each entry is valued at the rate in force on its own date — 2026 splits
-    # at July 1 — and only business miles count toward the deduction.
+    # Each entry is valued at the rate in force on its own date - 2026 splits
+    # at July 1 - and only business miles count toward the deduction.
     miles_by_kind = {kind: 0.0 for kind in MILE_KINDS}
     mileage_cents = 0
     incomplete = 0
@@ -404,7 +404,7 @@ def estimate_tax(gross_cents: int, deduction_cents: int) -> dict:
     taxable = max(0, net_profit - half_se - STANDARD_DEDUCTION_CENTS)
 
     # §199A comes off after the standard deduction and is capped at 20% of what
-    # is left, so a thin year gets less than 20% of profit — that cap is the
+    # is left, so a thin year gets less than 20% of profit - that cap is the
     # usual case for him, not the exception.
     qbi = max(0, net_profit - half_se)
     qbi_deduction = min(round(qbi * QBI_RATE), round(taxable * QBI_RATE))
@@ -433,11 +433,75 @@ def estimate_tax(gross_cents: int, deduction_cents: int) -> dict:
     }
 
 
+# The four 1040-ES dates for 2026. None fall on a weekend or holiday, so none
+# shift. VERIFIED 2026-08-09.
+ESTIMATE_DUE = ["2026-04-15", "2026-06-15", "2026-09-15", "2027-01-15"]
+
+# §6654(d)(1)(C): the prior-year safe harbour becomes 110% only above this much
+# prior-year AGI. A fixed statutory figure - it is NOT inflation-indexed.
+SAFE_HARBOR_110_THRESHOLD_CENTS = 15_000_000
+
+# §6654(e)(1): no penalty at all if the year's tax, less withholding, is under
+# this. Nothing is withheld from his invoices, so this rarely saves him.
+DE_MINIMIS_CENTS = 100_000
+
+
+def safe_harbor(
+    bill_cents: int,
+    prior_year_tax_cents: int | None = None,
+    prior_year_filed: bool = True,
+    prior_year_agi_cents: int = 0,
+    withheld_cents: int = 0,
+    paid_cents: int = 0,
+) -> dict:
+    """How little he can pay in during the year and still owe no penalty.
+
+    §6654(d)(1)(B): the required annual payment is the **lesser** of 90% of this
+    year's tax or 100% of the tax shown on last year's return. For someone whose
+    income jumped - a W-2 year followed by a contracting year - the prior-year
+    figure is dramatically smaller, and it is the whole game.
+
+    Two conditions people miss, both fatal if assumed:
+      - the final sentence of §6654(d)(1)(B) voids the prior-year option
+        entirely if he **did not file** last year, and
+      - §6654(d)(1)(C) raises it to 110% above $150,000 of prior-year AGI.
+
+    This buys protection from the penalty and nothing else. The tax itself is
+    still owed on April 15, which is the part that actually hurts.
+    """
+    ninety = round(bill_cents * 0.90)
+
+    prior_option = None
+    if prior_year_filed and prior_year_tax_cents is not None:
+        multiplier = 1.10 if prior_year_agi_cents > SAFE_HARBOR_110_THRESHOLD_CENTS else 1.00
+        prior_option = round(prior_year_tax_cents * multiplier)
+
+    required = ninety if prior_option is None else min(ninety, prior_option)
+
+    # §6654(g) treats tax withheld from wages as paid evenly across the year,
+    # regardless of when it actually came out.
+    covered = withheld_cents + paid_cents
+    still_needed = max(0, required - covered)
+
+    return {
+        "bill_cents": bill_cents,
+        "ninety_percent_cents": ninety,
+        "prior_year_option_cents": prior_option,
+        "required_annual_cents": required,
+        "which": "prior year" if prior_option is not None and prior_option < ninety else "90% of this year",
+        "installment_cents": round(required / 4),
+        "already_covered_cents": covered,
+        "pay_by_sept_15_cents": still_needed,
+        "due_next_april_cents": max(0, bill_cents - covered - still_needed),
+        "exempt": bill_cents - withheld_cents < DE_MINIMIS_CENTS,
+    }
+
+
 def report(ledger: dict, year: int | None = None, gross_cents: int = 0) -> str:
     stats = summarize(ledger, year)
     out: list[str] = []
     label = year or "all years"
-    out.append(f"  DEDUCTIONS — {label}")
+    out.append(f"  DEDUCTIONS - {label}")
     out.append("  " + "-" * 52)
 
     for name, slot in sorted(
@@ -466,7 +530,7 @@ def report(ledger: dict, year: int | None = None, gross_cents: int = 0) -> str:
         out.append(
             "  ! Every mile is logged as business and none as commuting.\n"
             "    Home to your first job of the day is normally commuting and is\n"
-            "    NOT deductible — unless your home qualifies as your principal\n"
+            "    NOT deductible - unless your home qualifies as your principal\n"
             "    place of business. That one question is worth more than every\n"
             "    receipt combined; settle it with a preparer."
         )
@@ -479,7 +543,7 @@ def report(ledger: dict, year: int | None = None, gross_cents: int = 0) -> str:
     if stats["method"] == "standard" and stats["vehicle_expense_cents"]:
         out.append(
             f"  Van costs of {money(stats['vehicle_expense_cents'])} are NOT claimed "
-            "separately —\n  standard mileage already covers fuel, repairs and "
+            "separately -\n  standard mileage already covers fuel, repairs and "
             "depreciation."
         )
     out.append("  " + "-" * 52)
@@ -495,7 +559,7 @@ def report(ledger: dict, year: int | None = None, gross_cents: int = 0) -> str:
             f"  ! Claiming {other} instead would be worth {money(gap)} more this year.\n"
             f"    Switch with:  python3 tax.py method "
             f"{'actual' if stats['method'] == 'standard' else 'standard'}\n"
-            "    Check with a preparer first — the first year you use a vehicle\n"
+            "    Check with a preparer first - the first year you use a vehicle\n"
             "    can lock you out of switching later."
         )
 
@@ -523,6 +587,38 @@ def report(ledger: dict, year: int | None = None, gross_cents: int = 0) -> str:
         saved = round(stats["total_deduction_cents"] * tax["effective_rate"])
         out.append("")
         out.append(f"  Those deductions saved you about {money(saved)}.")
+
+        prior = ledger.get("prior_year") or {}
+        if prior.get("total_tax_cents") is not None:
+            sh = safe_harbor(
+                tax["total_tax_cents"],
+                prior.get("total_tax_cents"),
+                prior.get("filed", True),
+                prior.get("agi_cents", 0),
+                ledger.get("withheld_cents", 0),
+                ledger.get("estimated_paid_cents", 0),
+            )
+            out.append("")
+            out.append("  WHAT TO PAY, AND WHEN")
+            out.append("  " + "-" * 52)
+            out.append(
+                f"  {'Penalty-free if you pay in':<34}"
+                f"{money(sh['required_annual_cents']):>10}  ({sh['which']})"
+            )
+            if sh["already_covered_cents"]:
+                out.append(
+                    f"  {'Already covered':<34}{money(sh['already_covered_cents']):>10}"
+                )
+            out.append(f"  {'Pay by September 15':<34}{money(sh['pay_by_sept_15_cents']):>10}")
+            out.append(f"  {'Then due April 15':<34}{money(sh['due_next_april_cents']):>10}")
+            weeks = 35
+            out.append("")
+            out.append(
+                f"  The September payment stops the penalty. It does NOT shrink the\n"
+                f"  bill - {money(sh['due_next_april_cents'])} still lands in April, which is about\n"
+                f"  {money(round(sh['due_next_april_cents'] / weeks))} a week between now and then. That is the number\n"
+                f"  that matters; the penalty was never more than pocket change."
+            )
 
     return "\n".join(out)
 
@@ -557,6 +653,13 @@ def main(argv: list[str] | None = None) -> int:
     o.add_argument("reading", nargs="?", type=int, help="what the dash says right now")
     o.add_argument("--at", help="ISO datetime; defaults to now")
 
+    p = sub.add_parser("prior", help="last year's return - the safe-harbour numbers")
+    p.add_argument("--tax", required=True, help="Form 1040 line 24, total tax")
+    p.add_argument("--agi", default="0", help="Form 1040 line 11, adjusted gross income")
+    p.add_argument("--not-filed", action="store_true", help="he did NOT file last year")
+    p.add_argument("--withheld", default="0", help="tax withheld from wages THIS year")
+    p.add_argument("--paid", default="0", help="estimated tax already paid THIS year")
+
     args = ap.parse_args(argv)
     ledger = load()
 
@@ -581,6 +684,21 @@ def main(argv: list[str] | None = None) -> int:
         ledger["vehicle_method"] = args.choice
         save(ledger)
         print(f"Vehicle method set to {args.choice}.")
+    elif args.command == "prior":
+        ledger["prior_year"] = {
+            "total_tax_cents": to_cents(args.tax),
+            "agi_cents": to_cents(args.agi),
+            "filed": not args.not_filed,
+        }
+        ledger["withheld_cents"] = to_cents(args.withheld)
+        ledger["estimated_paid_cents"] = to_cents(args.paid)
+        save(ledger)
+        print(
+            f"Last year: {money(ledger['prior_year']['total_tax_cents'])} total tax on "
+            f"{money(ledger['prior_year']['agi_cents'])} of income"
+            + ("" if ledger["prior_year"]["filed"] else "  (NOT FILED - no safe harbour)")
+        )
+        print("Run  python tax.py report  to see what to pay.")
     elif args.command == "odometer":
         if args.reading is not None:
             ledger.setdefault("odometer", []).append({
@@ -603,7 +721,7 @@ def main(argv: list[str] | None = None) -> int:
             print(
                 f"\n  {len(days)} day(s) you worked with no odometer readings at all.\n"
                 f"  At your usual ~63 miles that is about {money(worth)} of deduction\n"
-                f"  you cannot claim: {', '.join(days[:8])}" + ("…" if len(days) > 8 else "")
+                f"  you cannot claim: {', '.join(days[:8])}" + ("..." if len(days) > 8 else "")
             )
     else:
         gross = to_cents(args.gross) if args.gross else 0

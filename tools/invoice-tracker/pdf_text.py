@@ -453,8 +453,8 @@ def extract_runs(pdf: bytes) -> list[TextRun]:
 def extract_rows(pdf: bytes, tolerance: float = 3.0) -> list[list[str]]:
     """Group text runs into visual rows of cells, top to bottom.
 
-    Runs that sit flush against each other belong to the same table cell — the
-    generator emits a fresh run per kerning pair — so they are glued back
+    Runs that sit flush against each other belong to the same table cell - the
+    generator emits a fresh run per kerning pair - so they are glued back
     together, and only a real horizontal gap starts a new cell.
 
     Returns a list of rows, each a list of cell strings ordered left to right.

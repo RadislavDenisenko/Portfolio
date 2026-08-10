@@ -91,13 +91,35 @@ def check_tax() -> None:
     # deduction. At his income the cap is what binds, so a flat 20% is wrong.
     t = tax.estimate_tax(5_756_400, 800_000)
     assert t["net_profit_cents"] == 4_956_400
-    assert t["qbi_deduction_cents"] > 0, "QBI missing — overstates the set-aside"
+    assert t["qbi_deduction_cents"] > 0, "QBI missing - overstates the set-aside"
     taxable = t["net_profit_cents"] - round(t["se_tax_cents"] * 0.5) - tax.STANDARD_DEDUCTION_CENTS
     assert t["qbi_deduction_cents"] == round(taxable * 0.20), t["qbi_deduction_cents"]
 
     # A thin year owes nothing and must never go negative.
     assert tax.estimate_tax(500_000, 900_000)["total_tax_cents"] == 0
     assert tax.estimate_tax(0, 0)["effective_rate"] == 0.0
+
+    # The safe harbour. His real 2025: $873 total tax on $24,465 of income,
+    # against a projected 2026 bill near $4,950.
+    sh = tax.safe_harbor(495_329, prior_year_tax_cents=87_300, prior_year_agi_cents=2_446_500)
+    assert sh["required_annual_cents"] == 87_300, sh   # the LESSER wins
+    assert sh["which"] == "prior year"
+    assert sh["pay_by_sept_15_cents"] == 87_300
+    assert sh["due_next_april_cents"] == 495_329 - 87_300
+
+    # Not filing last year voids the prior-year option entirely - the final
+    # sentence of §6654(d)(1)(B), and the easiest condition in the code to miss.
+    unfiled = tax.safe_harbor(495_329, 87_300, prior_year_filed=False)
+    assert unfiled["required_annual_cents"] == round(495_329 * 0.90), unfiled
+    assert unfiled["which"] == "90% of this year"
+
+    # Above $150k of prior-year AGI it becomes 110%, not 100%.
+    rich = tax.safe_harbor(9_000_000, 500_000, prior_year_agi_cents=20_000_000)
+    assert rich["required_annual_cents"] == 550_000, rich
+
+    # Withheld wages count as paid evenly across the year, §6654(g).
+    covered = tax.safe_harbor(495_329, 87_300, withheld_cents=90_000)
+    assert covered["pay_by_sept_15_cents"] == 0, covered
 
     print("tax math OK")
 
@@ -168,7 +190,7 @@ def check_odometer() -> None:
     # reported through `problems` instead, so they must NOT show up here.
     assert result["missing_days"] == ["2026-07-08"], result["missing_days"]
 
-    # A day after the last invoice still counts — invoices lag ~2.5 weeks.
+    # A day after the last invoice still counts - invoices lag ~2.5 weeks.
     reading("2026-08-01T07:00", 81_000)
     reading("2026-08-01T18:00", 81_070)
     fresh = tax.odometer_to_mileage(ledger, store)

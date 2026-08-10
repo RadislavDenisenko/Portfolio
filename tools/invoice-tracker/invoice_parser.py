@@ -60,7 +60,7 @@ def _parse_period(text: str) -> tuple[str | None, str | None]:
     Handles ``July 05-11, 2026``, ``June 28-July 04, 2026`` and
     ``December 28, 2025-January 03, 2026``.
     """
-    text = text.replace("–", "-").replace("—", "-").strip()
+    text = text.replace("-", "-").replace("-", "-").strip()
 
     m = re.fullmatch(r"([A-Za-z]+)\s+(\d{1,2})\s*-\s*(\d{1,2}),\s*(\d{4})", text)
     if m and m.group(1).lower() in MONTHS:

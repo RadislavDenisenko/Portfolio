@@ -3,7 +3,7 @@
 Runs on a schedule (the invoices land on Thursdays) or by hand. Stdlib only.
 
 Credentials come from the environment, or from a `secrets.json` sitting next to
-this script — which .gitignore keeps out of the repo:
+this script - which .gitignore keeps out of the repo:
 
     {"user": "raddenisenko@gmail.com", "password": "abcd efgh ijkl mnop"}
 
@@ -52,7 +52,7 @@ RECEIPT_SUBJECT = "RCPT"
 # is needed: "You can satisfy the requirements by recording the length of the
 # delivery route once, the date of each trip at or near the time of the trips,
 # and the total miles you drove the car during the tax year." His invoices
-# already carry the dates and the job numbers — the business purpose — so the
+# already carry the dates and the job numbers - the business purpose - so the
 # only thing missing was the distance, and two numbers a day supply it.
 ODOMETER_SUBJECT = "MILES"
 
@@ -137,7 +137,7 @@ def forget() -> None:
 
 
 def credentials() -> tuple[str, str]:
-    """Environment, then the stored secret, then ask — and remember the answer."""
+    """Environment, then the stored secret, then ask - and remember the answer."""
     user = os.environ.get("INVOICE_EMAIL")
     password = os.environ.get("INVOICE_APP_PASSWORD")
 
@@ -167,7 +167,7 @@ def credentials() -> tuple[str, str]:
             "INVOICE_EMAIL and INVOICE_APP_PASSWORD."
         )
 
-    print("First run — I need a Gmail App Password (not your normal password).")
+    print("First run - I need a Gmail App Password (not your normal password).")
     print("Make one at https://myaccount.google.com/apppasswords, then paste it below.")
     user = user or input("Gmail address: ").strip()
     if not password:
@@ -178,18 +178,18 @@ def credentials() -> tuple[str, str]:
         sys.exit("Need both an address and a password.")
     # The prompt is blind, so say what landed. Pasting twice is the usual mishap.
     if len(password) == 16:
-        print("  Got 16 characters — that is the right shape.")
+        print("  Got 16 characters - that is the right shape.")
     else:
         print(
             f"  ! Got {len(password)} characters, and app passwords are 16.\n"
-            "    32 means it went in twice — the prompt shows nothing while you paste.\n"
+            "    32 means it went in twice - the prompt shows nothing while you paste.\n"
             "    Anything else means it was probably your normal password.\n"
             "    Carry on and see, or Ctrl+C and delete secrets.json to redo it."
         )
 
     path = _write_secret(user, password)
     where = "encrypted with your Windows login" if path is SECRET else "readable only by you"
-    print(f"Saved to {path} — {where}, and outside the repo entirely.\n")
+    print(f"Saved to {path} - {where}, and outside the repo entirely.\n")
     return user, password
 
 
@@ -223,7 +223,7 @@ def pdf_attachments(message):
 
 
 # HEIC is the iPhone default and nothing here can read it, so it is accepted and
-# then flagged rather than dropped — losing a receipt silently is the one failure
+# then flagged rather than dropped - losing a receipt silently is the one failure
 # this whole system exists to prevent. The fix is one action in the Shortcut.
 IMAGE_SUFFIXES = (".jpg", ".jpeg", ".png", ".heic", ".heif", ".webp", ".gif", ".tif", ".tiff")
 UNREADABLE_SUFFIXES = (".heic", ".heif")
@@ -351,8 +351,8 @@ def fetch_receipts(box, since: str, subject: str) -> int:
     everything extracted from it later refers back to it by id. Storing only the
     numbers we read off it would destroy the record and the deduction with it.
 
-    Deduplicated on the bytes, so mailing the same photo twice — which he will,
-    on a bad signal — costs nothing.
+    Deduplicated on the bytes, so mailing the same photo twice - which he will,
+    on a bad signal - costs nothing.
     """
     status, data = box.search(None, "SUBJECT", f'"{subject}"', "SINCE", since)
     if status != "OK":

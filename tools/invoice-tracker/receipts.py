@@ -14,7 +14,7 @@ report high confidence whether or not they are right, so a score would only
 launder a guess into a number. What is checked instead is checkable: do the line
 items plus tax equal the printed total to the cent, does the date parse and sit
 in the past, and have we seen this merchant/date/total before. Those catch the
-failure that actually happens — a digit misread off crumpled thermal paper.
+failure that actually happens - a digit misread off crumpled thermal paper.
 
 The image is never deleted and never edited. Rev. Proc. 97-22 only lets a scan
 replace the paper if the image itself survives and can be produced on demand;
@@ -52,7 +52,7 @@ DEFAULT_RULES = """\
 # Categories: gas repairs tolls insurance office supplies tools licenses
 #             travel meals phone other
 #
-# Edit this file freely — it is read fresh every time.
+# Edit this file freely - it is read fresh every time.
 
 home depot      = tools
 lowes           = tools
@@ -149,7 +149,7 @@ def validate(index: dict, receipt: dict, extracted: dict) -> list[str]:
     item_tax = extracted.get("tax_cents") or 0
 
     if total <= 0:
-        problems.append("Total is zero or negative — that is a misread.")
+        problems.append("Total is zero or negative - that is a misread.")
 
     # The one check that actually catches a misread digit.
     if items:
@@ -157,7 +157,7 @@ def validate(index: dict, receipt: dict, extracted: dict) -> list[str]:
         if summed != total:
             problems.append(
                 f"Line items plus tax come to {tax.money(summed)} but the receipt "
-                f"says {tax.money(total)} — off by {tax.money(abs(summed - total))}."
+                f"says {tax.money(total)} - off by {tax.money(abs(summed - total))}."
             )
 
     if item_tax > total:
@@ -175,7 +175,7 @@ def validate(index: dict, receipt: dict, extracted: dict) -> list[str]:
             if when > dt.date.today():
                 problems.append(f"Date {date} is in the future.")
             if when.year < 2020:
-                problems.append(f"Date {date} looks far too old — check the year.")
+                problems.append(f"Date {date} looks far too old - check the year.")
 
     if not (extracted.get("merchant") or "").strip():
         problems.append("No merchant name.")
@@ -192,7 +192,7 @@ def validate(index: dict, receipt: dict, extracted: dict) -> list[str]:
             and prior.get("total_cents") == total
         ):
             problems.append(
-                f"Looks like a duplicate of receipt {other['id']} ({other['file']}) — "
+                f"Looks like a duplicate of receipt {other['id']} ({other['file']}) - "
                 "same shop, same day, same amount."
             )
 
@@ -266,7 +266,7 @@ def cmd_queue(index: dict) -> int:
 
     if ready:
         total = sum(r["extracted"]["total_cents"] for r in ready)
-        print(f"{len(ready)} receipt(s) checked out and ready to file — {tax.money(total)}")
+        print(f"{len(ready)} receipt(s) checked out and ready to file - {tax.money(total)}")
         for r in ready:
             e = r["extracted"]
             print(f"  {r['id']}  {e['date']}  {e['merchant']:<24} "
