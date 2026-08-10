@@ -70,6 +70,36 @@
   <div id="history"></div>
   <div class="warnings" id="warnings"></div>
 
+  <!-- Taxes. Rendered from data/tax-summary.json, which Python writes. The
+       browser does no tax arithmetic of its own on purpose: pdf_text.py and
+       assets/pdf-extract.js already have to be kept in step by hand, and a
+       second hand-port where the two copies disagree about what he OWES is not
+       a bug anyone would notice until it was expensive. -->
+  <section class="tax" id="tax" hidden>
+    <h2>Taxes</h2>
+    <p class="sub" id="tax-when"></p>
+
+    <div class="tiles" id="tax-tiles"></div>
+
+    <div class="tax-cols">
+      <div>
+        <h3>What comes off your income</h3>
+        <div id="tax-deductions"></div>
+      </div>
+      <div>
+        <h3>Needs you</h3>
+        <div id="tax-todo"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tax" id="tax-missing" hidden>
+    <h2>Taxes</h2>
+    <p class="soft">Nothing here yet. Double-click <code>fetch-invoices.bat</code>,
+       or ask Claude for your tax report — either one writes the numbers this
+       page reads.</p>
+  </section>
+
   <footer class="foot">
     <button type="button" id="export" class="btn">Export JSON</button>
     <button type="button" id="clear" class="btn btn-quiet">Clear stored invoices</button>

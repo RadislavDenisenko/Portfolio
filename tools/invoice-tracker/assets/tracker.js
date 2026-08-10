@@ -358,6 +358,107 @@
       '</strong>';
   }
 
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+    });
+  }
+
+  // Everything below is DISPLAY only. The arithmetic happens once, in tax.py,
+  // and arrives as data/tax-summary.json. Recomputing any of it here would mean
+  // two copies of the tax code that can silently disagree about what he owes.
+  function renderTax(tax) {
+    var box = el('tax');
+    var missing = el('tax-missing');
+    if (!tax) { box.hidden = true; missing.hidden = false; return; }
+    missing.hidden = true;
+    box.hidden = false;
+
+    // Tax data can exist before any PDF has been dropped in this browser.
+    if (!state.invoices.length) { el('dashboard').hidden = false; el('empty').hidden = true; }
+
+    var est = tax.estimate || {};
+    var sh = tax.safe_harbor;
+    var inc = tax.income || {};
+
+    el('tax-when').textContent = 'Worked out ' + (tax.generated || '').replace('T', ' at ') +
+      ' from ' + plural(inc.weeks || 0, 'week') + ' of invoices.';
+
+    var tiles = statTile(
+      'Put aside each week',
+      money(tax.set_aside_per_week_cents, true),
+      'for the ' + plural(tax.weeks_until_due, 'week') + ' until April 15'
+    );
+    tiles += statTile('Tax for ' + tax.year, money(est.total_tax_cents, true),
+      est.withheld_cents ? money(est.withheld_cents, true) + ' already withheld' : 'nothing withheld');
+    tiles += statTile('Left to find', money(est.still_owed_cents, true), 'by April 15');
+    if (sh) {
+      tiles += statTile('Pay by Sept 15', money(sh.pay_by_sept_15_cents, true),
+        sh.pay_by_sept_15_cents ? 'stops the late-payment interest' : 'already covered');
+    }
+    tiles += statTile('Deductions', money((tax.deductions || {}).total_cents, true),
+      'off your taxable income');
+    el('tax-tiles').innerHTML = tiles;
+
+    var d = tax.deductions || {};
+    var rows = Object.keys(d.by_category || {}).map(function (k) { return d.by_category[k]; })
+      .sort(function (a, b) { return b.cents - a.cents; })
+      .map(function (c) {
+        return '<div class="tax-row' + (c.excluded ? ' is-out' : '') + '">' +
+          '<span>' + esc(c.label) + '<em class="soft"> x' + c.count + '</em></span>' +
+          '<span class="num">' + money(c.cents, true) +
+          (c.excluded ? ' <em class="soft">(covered by mileage)</em>' : '') + '</span></div>';
+      }).join('');
+    if (d.miles) {
+      rows += '<div class="tax-row"><span>' + d.miles.toLocaleString() +
+        ' business miles</span><span class="num">' + money(d.mileage_cents, true) + '</span></div>';
+    }
+    el('tax-deductions').innerHTML = rows ||
+      '<p class="soft">Nothing recorded yet. Photograph a receipt and email it to ' +
+      'yourself with the subject RCPT.</p>';
+
+    var todo = [];
+    if (tax.unreviewed) {
+      todo.push(plural(tax.unreviewed, 'scanned item') + ' still need a quick look — ' +
+        'run <code>python receipts.py queue</code>.');
+    }
+    Object.keys(tax.receipts || {}).forEach(function (status) {
+      if (status === 'needs extraction') {
+        todo.push(plural(tax.receipts[status], 'receipt photo') + ' waiting to be read. ' +
+          'Ask Claude: "read my new receipts".');
+      } else if (status === 'needs a look') {
+        todo.push(plural(tax.receipts[status], 'receipt') + " didn't add up and needs your eyes.");
+      }
+    });
+    (tax.mileage_problems || []).forEach(function (p) { todo.push(esc(p)); });
+    var miss = tax.missing_mileage_days || [];
+    if (miss.length) {
+      todo.push(plural(miss.length, 'day') + ' you worked with no odometer reading, so ' +
+        'those miles cannot be claimed: ' + esc(miss.slice(0, 6).join(', ')) +
+        (miss.length > 6 ? '…' : ''));
+    }
+    if (!d.miles && !tax.owns_vehicle) {
+      todo.push('You drive the company van, so there is no mileage to claim and ' +
+        'nothing to log. The day you buy your own is the day this becomes the ' +
+        'biggest deduction you have — tell Claude and it switches on.');
+    } else if (!d.miles) {
+      todo.push('No mileage logged yet. Email yourself the odometer twice a day ' +
+        'with the subject MILES — leaving, and getting home.');
+    }
+    el('tax-todo').innerHTML = todo.length
+      ? '<ul class="tax-todo">' + todo.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul>'
+      : '<p class="soft">Nothing needs you right now.</p>';
+  }
+
+  function loadTax() {
+    // file:// has no fetch; open-tracker.bat serves over localhost, which does.
+    if (!window.fetch || location.protocol === 'file:') { renderTax(null); return; }
+    fetch('data/tax-summary.json', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(renderTax)
+      .catch(function () { renderTax(null); });
+  }
+
   function render() {
     var hasData = state.invoices.length > 0;
     el('empty').hidden = hasData;
@@ -582,4 +683,5 @@
   wireTooltip();
   render();
   loadStoreFile();
+  loadTax();
 })();

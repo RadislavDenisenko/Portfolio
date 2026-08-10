@@ -271,3 +271,48 @@ code { font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* ---------------------------------------------------------------- taxes */
+
+.tax {
+  margin-top: 32px;
+  padding: 20px;
+  background: var(--white);
+  border: 1px solid var(--hair);
+  border-radius: var(--radius);
+}
+.tax h2 { margin-top: 0; }
+.tax h3 { font-size: 14px; margin: 0 0 8px; }
+.tax .sub { margin-top: -6px; }
+.tax .tiles { margin-bottom: 24px; }
+
+.tax-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+}
+
+.tax-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--hair);
+  font-size: 14px;
+}
+.tax-row:last-child { border-bottom: 0; }
+.tax-row em { font-style: normal; font-size: 12px; }
+/* Struck through, not hidden: he should see that the van costs were counted and
+   then deliberately left out, or he will wonder where they went. */
+.tax-row.is-out span:last-child { text-decoration: line-through; color: var(--soft); }
+.tax-row.is-out span:last-child em { text-decoration: none; }
+
+.tax-todo { margin: 0; padding-left: 18px; font-size: 14px; }
+.tax-todo li { margin-bottom: 8px; line-height: 1.45; }
+.tax-todo code {
+  background: var(--paper);
+  border: 1px solid var(--hair);
+  border-radius: 5px;
+  padding: 1px 5px;
+  font-size: 12.5px;
+}

@@ -220,6 +220,60 @@ def check_odometer() -> None:
     print("odometer checks OK")
 
 
+def check_snapshot() -> None:
+    """What the dashboard reads. Two things matter: it must never write to the
+    ledger, and it must not nag about mileage he cannot claim."""
+    import json
+
+    import tax
+
+    tmp = _sandbox()
+    tax.SUMMARY = tmp / "tax-summary.json"
+
+    ledger = tax.load()
+    tax.add_expense(ledger, 12875, "Keller Williams", "licenses", "2026-01-09")
+    ledger["prior_year"] = {"total_tax_cents": 87_300, "agi_cents": 2_446_500, "filed": True}
+    ledger["wage_cents"] = 1_019_400
+    ledger["withheld_cents"] = 70_800
+    ledger["odometer"] = [
+        {"at": "2026-07-01T07:00", "reading": 80_000, "message_id": "a"},
+        {"at": "2026-07-01T18:00", "reading": 80_063, "message_id": "b"},
+    ]
+    tax.save(ledger)
+
+    before = tax.LEDGER.read_text("utf-8")
+    snap = tax.snapshot(tax.load(), 2026)
+    assert tax.LEDGER.read_text("utf-8") == before, "snapshot() wrote to the ledger"
+
+    assert snap["year"] == 2026
+    assert snap["wages_cents"] == 1_019_400
+    assert snap["safe_harbor"]["required_annual_cents"] == 87_300
+    assert snap["estimate"]["still_owed_cents"] == (
+        snap["estimate"]["total_tax_cents"] - 70_800
+    )
+    assert snap["deductions"]["by_category"]["licenses"]["cents"] == 12875
+
+    # The company's van: no mileage deduction, so no nagging about a log he
+    # cannot use. Telling him he is losing miles he was never entitled to is
+    # worse than saying nothing.
+    assert snap["owns_vehicle"] is False
+    assert snap["missing_mileage_days"] == []
+    assert snap["mileage_problems"] == []
+
+    # His own van: the nagging comes back on.
+    ledger = tax.load()
+    ledger["owns_vehicle"] = True
+    tax.save(ledger)
+    owned = tax.snapshot(tax.load(), 2026)
+    assert owned["owns_vehicle"] is True
+
+    path = tax.write_snapshot(tax.load(), 2026)
+    reloaded = json.loads(path.read_text("utf-8"))
+    assert reloaded["year"] == 2026, "snapshot must round-trip through JSON"
+
+    print("snapshot checks OK")
+
+
 def check_receipts() -> None:
     """The validators, which are the only thing standing between a misread
     digit and a wrong number on a return."""
@@ -311,6 +365,7 @@ def main() -> int:
     print("core math OK")
     check_tax()
     check_odometer()
+    check_snapshot()
     check_receipts()
 
     if len(sys.argv) > 1:

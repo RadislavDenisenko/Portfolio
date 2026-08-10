@@ -520,6 +520,134 @@ def safe_harbor(
     }
 
 
+SUMMARY = HERE / "data" / "tax-summary.json"
+
+
+def invoice_income(year: int, store_path: Path | None = None) -> dict:
+    """What the invoices say he has been paid, and where the year is heading.
+
+    Projected forward at his own average rather than annualising from a single
+    week, because his weeks swing by hundreds of dollars and a bad projection
+    is what makes someone stop trusting the number.
+    """
+    try:
+        import invoice_parser
+        store = invoice_parser.load_store(store_path or HERE / "data" / "invoices.json")
+    except Exception:
+        return {"received_cents": 0, "weeks": 0, "projected_cents": 0, "per_week_cents": 0}
+
+    received, weeks = 0, 0
+    for invoice in store.get("invoices", []):
+        items = [i for i in invoice.get("line_items", []) if str(i["date"]).startswith(str(year))]
+        if items:
+            received += sum(i["cents"] for i in items)
+            weeks += 1
+
+    per_week = round(received / weeks) if weeks else 0
+    today = dt.date.today()
+    # Invoices land about 2.5 weeks after the work, so weeks still to be paid
+    # for is what is left of the year plus that lag.
+    remaining = max(0, (dt.date(year, 12, 31) - today).days // 7) if today.year == year else 0
+    return {
+        "received_cents": received,
+        "weeks": weeks,
+        "per_week_cents": per_week,
+        "projected_cents": received + per_week * remaining,
+        "weeks_remaining": remaining,
+    }
+
+
+def snapshot(ledger: dict, year: int | None = None) -> dict:
+    """Everything the dashboard shows, computed once, here.
+
+    The browser deliberately does no tax arithmetic of its own. `pdf_text.py`
+    and `assets/pdf-extract.js` already have to be kept in step by hand and that
+    is one hand-port too many; a second one where the two copies disagree about
+    what he owes is not a bug anyone would catch.
+    """
+    year = year or dt.date.today().year
+    stats = summarize(ledger, year)
+    income = invoice_income(year)
+
+    wages = ledger.get("wage_cents", 0)
+    withheld = ledger.get("withheld_cents", 0)
+    paid = ledger.get("estimated_paid_cents", 0)
+
+    estimate = estimate_tax(
+        income["projected_cents"], stats["total_deduction_cents"], wages, withheld
+    )
+
+    prior = ledger.get("prior_year") or {}
+    harbor = None
+    if prior.get("total_tax_cents") is not None:
+        harbor = safe_harbor(
+            estimate["total_tax_cents"], prior.get("total_tax_cents"),
+            prior.get("filed", True), prior.get("agi_cents", 0), withheld, paid,
+        )
+
+    try:
+        import fetch_invoices
+        receipts = fetch_invoices.load_receipts()["receipts"]
+    except Exception:
+        receipts = []
+    buckets: dict[str, int] = {}
+    for r in receipts:
+        buckets[r.get("status", "?")] = buckets.get(r.get("status", "?"), 0) + 1
+
+    mileage = odometer_to_mileage(dict(ledger))  # on a copy: reporting must not write
+
+    # If the van belongs to the company there is no vehicle deduction at all, so
+    # counting "days with no odometer reading" would be nagging him about money
+    # he was never entitled to. Wrong advice is worse than none: he would start
+    # logging a number that can never be claimed, and stop trusting the rest.
+    owns_vehicle = ledger.get("owns_vehicle", False)
+    if not owns_vehicle:
+        mileage = dict(mileage, problems=[], missing_days=[])
+
+    deadline = dt.date(year + 1, 4, 15)
+    weeks_left = max(1, (deadline - dt.date.today()).days // 7)
+    owed = estimate["still_owed_cents"] - (harbor["pay_by_sept_15_cents"] if harbor else 0)
+
+    return {
+        "generated": dt.datetime.now().isoformat(timespec="minutes"),
+        "year": year,
+        "income": income,
+        "wages_cents": wages,
+        "withheld_cents": withheld,
+        "deductions": {
+            "total_cents": stats["total_deduction_cents"],
+            "by_category": {
+                name: {
+                    "label": CATEGORIES[name]["label"],
+                    "line": CATEGORIES[name]["line"],
+                    "cents": slot["deductible_cents"],
+                    "count": slot["count"],
+                    "excluded": CATEGORIES[name]["vehicle"] and stats["method"] == "standard",
+                }
+                for name, slot in stats["by_category"].items()
+            },
+            "miles": stats["miles"],
+            "mileage_cents": stats["mileage_cents"],
+            "method": stats["method"],
+        },
+        "estimate": estimate,
+        "safe_harbor": harbor,
+        "set_aside_per_week_cents": max(0, round(owed / weeks_left)),
+        "weeks_until_due": weeks_left,
+        "receipts": buckets,
+        "owns_vehicle": owns_vehicle,
+        "mileage_problems": mileage["problems"],
+        "missing_mileage_days": mileage["missing_days"],
+        "unreviewed": stats["unreviewed"],
+    }
+
+
+def write_snapshot(ledger: dict, year: int | None = None) -> Path:
+    SUMMARY.parent.mkdir(parents=True, exist_ok=True)
+    SUMMARY.write_text(json.dumps(snapshot(ledger, year), indent=2) + "\n", "utf-8")
+    return SUMMARY
+
+
 def report(ledger: dict, year: int | None = None, gross_cents: int = 0) -> str:
     stats = summarize(ledger, year)
     out: list[str] = []
@@ -591,10 +719,14 @@ def report(ledger: dict, year: int | None = None, gross_cents: int = 0) -> str:
         out.append(f"  ! {stats['unreviewed']} scanned item(s) still need a quick look.")
 
     if gross_cents:
-        tax = estimate_tax(gross_cents, stats["total_deduction_cents"])
+        wages = ledger.get("wage_cents", 0)
+        withheld = ledger.get("withheld_cents", 0)
+        tax = estimate_tax(gross_cents, stats["total_deduction_cents"], wages, withheld)
         out.append("")
         out.append(f"  TAX ESTIMATE on {money(gross_cents)} of invoices")
         out.append("  " + "-" * 52)
+        if wages:
+            out.append(f"  {'Plus W-2 wages this year':<34}{money(wages):>10}")
         out.append(f"  {'Net profit after deductions':<34}{money(tax['net_profit_cents']):>10}")
         out.append(f"  {'Self-employment tax':<34}{money(tax['se_tax_cents']):>10}")
         out.append(
@@ -602,11 +734,13 @@ def report(ledger: dict, year: int | None = None, gross_cents: int = 0) -> str:
             f"{money(-tax['qbi_deduction_cents']):>10}"
         )
         out.append(f"  {'Federal income tax':<34}{money(tax['income_tax_cents']):>10}")
-        out.append(f"  {'TOTAL to set aside':<34}{money(tax['total_tax_cents']):>10}")
+        out.append(f"  {'TOTAL tax for the year':<34}{money(tax['total_tax_cents']):>10}")
+        if withheld:
+            out.append(f"  {'Already withheld from wages':<34}{money(-withheld):>10}")
+            out.append(f"  {'LEFT TO FIND':<34}{money(tax['still_owed_cents']):>10}")
         out.append(
             f"  {'Effective rate':<34}{tax['effective_rate'] * 100:>9.1f}%"
         )
-        out.append(f"  {'Per quarter':<34}{money(tax['quarterly_cents']):>10}")
         saved = round(stats["total_deduction_cents"] * tax["effective_rate"])
         out.append("")
         out.append(f"  Those deductions saved you about {money(saved)}.")
@@ -683,6 +817,15 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--withheld", default="0", help="tax withheld from wages THIS year")
     p.add_argument("--paid", default="0", help="estimated tax already paid THIS year")
 
+    j = sub.add_parser("job", help="a W-2 job this year: wages and tax withheld")
+    j.add_argument("--wages", required=True, help="box 1, wages")
+    j.add_argument("--withheld", required=True, help="box 2, federal income tax withheld")
+
+    sub.add_parser("snapshot", help="write data/tax-summary.json for the dashboard")
+
+    veh = sub.add_parser("vehicle", help="whose van is it? decides the mileage deduction")
+    veh.add_argument("whose", choices=["mine", "company"])
+
     args = ap.parse_args(argv)
     ledger = load()
 
@@ -707,6 +850,34 @@ def main(argv: list[str] | None = None) -> int:
         ledger["vehicle_method"] = args.choice
         save(ledger)
         print(f"Vehicle method set to {args.choice}.")
+    elif args.command == "job":
+        ledger["wage_cents"] = to_cents(args.wages)
+        ledger["withheld_cents"] = to_cents(args.withheld)
+        save(ledger)
+        write_snapshot(ledger)
+        print(
+            f"W-2 wages {money(ledger['wage_cents'])}, "
+            f"{money(ledger['withheld_cents'])} already withheld."
+        )
+        print("Run  python tax.py report  to see what that changes.")
+    elif args.command == "snapshot":
+        path = write_snapshot(ledger)
+        print(f"Wrote {path}")
+    elif args.command == "vehicle":
+        ledger["owns_vehicle"] = args.whose == "mine"
+        save(ledger)
+        write_snapshot(ledger)
+        if ledger["owns_vehicle"]:
+            print(
+                "Your van. Every business mile is now deductible - email yourself\n"
+                "the odometer with the subject MILES, leaving and getting home."
+            )
+        else:
+            print(
+                "The company's van, so there is no mileage deduction and nothing\n"
+                "to log. Tell me the day you buy your own - that is worth more\n"
+                "than every receipt put together."
+            )
     elif args.command == "prior":
         ledger["prior_year"] = {
             "total_tax_cents": to_cents(args.tax),
@@ -764,6 +935,8 @@ def main(argv: list[str] | None = None) -> int:
         print()
         print(report(ledger, args.year, gross))
         print()
+        # Keep the dashboard in step without making him remember a second step.
+        write_snapshot(ledger, args.year)
     return 0
 
 
