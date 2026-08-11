@@ -512,13 +512,28 @@ def summarize(ledger: dict, year: int | None = None) -> dict:
     if not ledger.get("owns_vehicle", False):
         mode = "company"
         # The van goes home with him every night, so part of every tank is
-        # commuting - personal under §262 / Rev. Rul. 99-7 - and §4.01 allows
-        # only costs "allocable to traveling those business miles". The share
-        # is stored, not hardcoded: today an estimate from his own geometry,
-        # to be replaced by a sampled week of odometer readings, which Reg.
-        # §1.274-5T(c)(3)(ii) accepts for the whole year. 1.0 would be wrong
-        # in the direction that loses audits.
-        business_share = ledger.get("van_business_share", 1.0)
+        # commuting - personal under §262 / Rev. Rul. 99-7. But his warehouse
+        # stop every morning is a regular work location, so under Rev. Rul.
+        # 99-7 exception (2) the ONLY personal leg is home->warehouse (21 mi);
+        # the drive home from the last job is business.
+        #
+        # Best evidence first: if odometer readings exist, each workday's
+        # business miles are that day's total minus the fixed commute leg -
+        # measured, contemporaneous, and §1.274-5T-shaped. Without readings,
+        # fall back to the stored estimate. 1.0 would be wrong in the
+        # direction that loses audits.
+        commute = ledger.get("van_commute_miles_per_day", 0.0)
+        odo_days = [
+            m for m in ledger.get("mileage", [])
+            if m.get("source") == "odometer" and m.get("kind") == "business"
+            and _year(m["date"], year)
+        ]
+        if odo_days and commute:
+            total_odo = sum(m["miles"] for m in odo_days)
+            business_odo = sum(max(0.0, m["miles"] - commute) for m in odo_days)
+            business_share = (business_odo / total_odo) if total_odo else 0.0
+        else:
+            business_share = ledger.get("van_business_share", 1.0)
         claimed_vehicle = round(vehicle_cents * business_share)
         alternative = 0
         excluded = mileage_cents + (vehicle_cents - claimed_vehicle)

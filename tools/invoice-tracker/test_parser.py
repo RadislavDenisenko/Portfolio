@@ -140,6 +140,28 @@ def check_tax() -> None:
     assert sc["excluded_cents"] == 3319 - round(3319 * 0.62)
     assert "commuting and not deductible" in tax.report(company, 2026)
 
+    # Measured beats estimated. Once odometer days exist, the share is each
+    # day's real miles less the fixed home->warehouse commute leg, rather than
+    # the stored guess - Rev. Rul. 99-7 exception (2) makes the warehouse a
+    # regular work location, so only the MORNING leg is personal.
+    company["van_commute_miles_per_day"] = 20.0
+    company["mileage"] = [
+        {"date": "2026-07-01", "miles": 100.0, "kind": "business",
+         "purpose": "jobs", "route": "odo", "complete": True, "source": "odometer"},
+        {"date": "2026-07-02", "miles": 60.0, "kind": "business",
+         "purpose": "jobs", "route": "odo", "complete": True, "source": "odometer"},
+    ]
+    sm = tax.summarize(company, 2026)
+    assert sm["business_share"] == round((80 + 40) / 160, 4), sm["business_share"]
+    assert sm["business_share"] != 0.62, "measured data must override the estimate"
+    # A day shorter than the commute itself cannot produce negative business
+    # miles and drag the ratio below zero.
+    company["mileage"].append(
+        {"date": "2026-07-03", "miles": 5.0, "kind": "business", "purpose": "jobs",
+         "route": "odo", "complete": True, "source": "odometer"}
+    )
+    assert tax.summarize(company, 2026)["business_share"] > 0
+
     # QBI: 20% of profit, but capped at 20% of what is left after the standard
     # deduction. At his income the cap is what binds, so a flat 20% is wrong.
     t = tax.estimate_tax(5_756_400, 800_000)

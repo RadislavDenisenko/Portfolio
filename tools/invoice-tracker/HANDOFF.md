@@ -475,11 +475,41 @@ available, in order of value:
   sample week must be computed by hand from the stored readings, not through
   `odometer_to_mileage()`.
 
-**Fact 2 still open: is the van branded with permanent racking?** §274(i)/Reg.
-§1.274-5(k): a "qualified nonpersonal use vehicle" (the reg's example is a
-company van with front bench seat, permanent shelving, company livery) escapes
-§274(d) strict substantiation entirely. Photos of the inside and outside settle
-it. Asked for; not yet received.
+**Fact 2 ANSWERED 2026-08-11: NOT a qualified nonpersonal use vehicle.** Four
+photos in `data/van/` (gitignored, keep them — they are substantiation
+evidence): a white 2009 Chrysler Town & Country minivan, VIN 2A8HR54199R572429,
+Minnesota plate TJN-591, roof-rack ladder, boxes of Xfinity gateways and tools
+in the back, full passenger seating, and a **removable magnetic** "xfinity
+Authorized Contractor" sign. Reg. §1.274-5(k) wants the van "specially
+modified" — permanent shelving, driver-only seating, painted company livery.
+This is none of those, so **§274(d) strict substantiation stays** and the
+business-use ratio needs a real record.
+
+**The warehouse, ANSWERED 2026-08-11: he stops at Koscom's warehouse EVERY
+morning for equipment.** That is a regular work location, so under Rev. Rul.
+99-7 exception (2) his trips between home and *temporary* work locations
+(customer sites) are deductible — meaning **only the morning home→warehouse leg
+is commuting**, and the drive home from the last job counts. The 0.62 share is
+now conservative and should rise once the home→warehouse distance is known.
+**Home→warehouse is 21 miles** (his figure, 2026-08-11). Stored as
+`van_commute_miles_per_day: 21.0`; share raised 0.62 → **0.6667** (63 mi typical
+day less the 21-mile morning leg). `summarize()` prefers MEASURED data when it
+exists: with odometer days recorded it computes each day's miles less the
+commute leg instead of using the stored estimate, which is the §1.274-5T-shaped
+number. Clamped at zero so a short day cannot go negative.
+
+**STANDING RULE, his words, 2026-08-11:** the van under discussion is ALWAYS
+Koscom's work van — "until I say, hey, this is my new car, look what I got, and
+I send you photos." Ownership was double-checked against the MN plate and his
+Cowboys sticker; he confirmed company van, twice. **Do not re-ask.** When the
+announcement comes: flip `owns_vehicle`, elect standard mileage in year one
+(per 4c/5c), and start the MILES odometer habit that day.
+
+**Loose thread he dropped 2026-08-11: "I'm still renting it."** If money
+actually leaves his pocket for the van (a weekly rig fee to Koscom), that
+payment is deductible — and a genuine lease could even reopen the standard
+mileage door (§4.01 covers a car the taxpayer "owns or leases"). One question,
+asked 2026-08-11: does he PAY Koscom for the van? Await the answer.
 
 **Orvis risk, stated honestly:** Koscom demonstrably has a reimbursement channel
 (TRUCK line), and *Orvis v. Commissioner*, 788 F.2d 1406 (9th Cir. 1986) denies
