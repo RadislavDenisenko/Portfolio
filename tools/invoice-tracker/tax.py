@@ -511,8 +511,17 @@ def summarize(ledger: dict, year: int | None = None) -> dict:
     #   §274(i) qualified nonpersonal use vehicle (branded, permanent racking).
     if not ledger.get("owns_vehicle", False):
         mode = "company"
-        claimed_vehicle, alternative = vehicle_cents, 0
-        excluded = mileage_cents          # miles in a van that isn't his
+        # The van goes home with him every night, so part of every tank is
+        # commuting - personal under §262 / Rev. Rul. 99-7 - and §4.01 allows
+        # only costs "allocable to traveling those business miles". The share
+        # is stored, not hardcoded: today an estimate from his own geometry,
+        # to be replaced by a sampled week of odometer readings, which Reg.
+        # §1.274-5T(c)(3)(ii) accepts for the whole year. 1.0 would be wrong
+        # in the direction that loses audits.
+        business_share = ledger.get("van_business_share", 1.0)
+        claimed_vehicle = round(vehicle_cents * business_share)
+        alternative = 0
+        excluded = mileage_cents + (vehicle_cents - claimed_vehicle)
     elif method == "standard":
         mode = "standard"
         claimed_vehicle, alternative = mileage_cents, actual_cents
@@ -893,6 +902,13 @@ def report(ledger: dict, year: int | None = None, gross_cents: int = 0) -> str:
             f"  Van costs of {money(stats['vehicle_expense_cents'])} are NOT claimed "
             "separately -\n  standard mileage already covers fuel, repairs and "
             "depreciation."
+        )
+    if stats["mode"] == "company" and stats["vehicle_expense_cents"] and stats["business_share"] < 1:
+        held_back = stats["vehicle_expense_cents"] - stats["claimed_vehicle_cents"]
+        out.append(
+            f"  Van costs counted at {stats['business_share']:.0%} business use - "
+            f"{money(held_back)} of them is\n  the drive to and from home, which is "
+            "commuting and not deductible."
         )
     out.append("  " + "-" * 52)
     out.append(f"  {'TOTAL DEDUCTION':<34}{money(stats['total_deduction_cents']):>10}")

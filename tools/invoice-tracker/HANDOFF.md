@@ -459,18 +459,27 @@ Both research findings **survived attack**. What holds, and what is still open:
   that might have gone into the rental or a personal car are **dropped, not
   estimated** — Cohan is barred for vehicles.
 
-**The two facts that decide "claim in full", still UNANSWERED:**
-1. **Does the van go home with him at night, or stay at Koscom's shop?**
-   Home↔work fuel is personal (§262, Rev. Rul. 99-7) unless an exception
-   applies; at his geometry (~24 mi/day commute vs ~39 between jobs) that is
-   roughly a third of the fuel. Shop-kept van → 100% stands. Also worth
-   developing: if the shop is a "regular work location", Rev. Rul. 99-7
-   exception (2) makes home→temporary-site trips deductible anyway.
-2. **Is the van branded with permanent racking?** §274(i)/Reg. §1.274-5(k):
-   a "qualified nonpersonal use vehicle" (the reg's own example is a company
-   van with front bench seat, permanent shelving, company livery) is exempt
-   from §274(d) strict substantiation entirely. **Photos of the inside and
-   outside of the van settle it.**
+**Fact 1 ANSWERED 2026-08-10: the van goes home with him every night.** So
+commuting fuel is personal and the ledger now carries
+`van_business_share: 0.62` — an ESTIMATE from his own geometry (~39 mi between
+jobs of ~63/day), applied by `summarize()` in company mode. Two upgrades
+available, in order of value:
+- **Ask whether he regularly stops at a Koscom shop/warehouse.** If that is a
+  "regular work location", Rev. Rul. 99-7 exception (2) makes home→customer
+  trips deductible regardless of distance and the share climbs toward 100%.
+- **Replace the estimate with a sampled week** — Reg. §1.274-5T(c)(3)(ii)
+  accepts a sample period for the year's business-use percentage. One week of
+  FOUR odometer numbers a day (leave home / arrive first job / leave last job /
+  arrive home) gives the real ratio. NOTE: the MILES pipeline pairs readings
+  consecutively, which on a 4-reading day sums exactly the COMMUTE legs — the
+  sample week must be computed by hand from the stored readings, not through
+  `odometer_to_mileage()`.
+
+**Fact 2 still open: is the van branded with permanent racking?** §274(i)/Reg.
+§1.274-5(k): a "qualified nonpersonal use vehicle" (the reg's example is a
+company van with front bench seat, permanent shelving, company livery) escapes
+§274(d) strict substantiation entirely. Photos of the inside and outside settle
+it. Asked for; not yet received.
 
 **Orvis risk, stated honestly:** Koscom demonstrably has a reimbursement channel
 (TRUCK line), and *Orvis v. Commissioner*, 788 F.2d 1406 (9th Cir. 1986) denies

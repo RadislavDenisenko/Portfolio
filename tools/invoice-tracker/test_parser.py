@@ -123,12 +123,22 @@ def check_tax() -> None:
     tax.add_expense(company, 3319, "Murphy USA 7360", "gas", "2026-07-14")
     sc = tax.summarize(company, 2026)
     assert sc["mode"] == "company"
-    assert sc["claimed_vehicle_cents"] == 3319, sc
+    assert sc["claimed_vehicle_cents"] == 3319, sc      # no share set -> full
     assert sc["excluded_cents"] == 0
     assert sc["total_deduction_cents"] == 3319
     assert not sc["by_category"]["gas"].get("excluded")
     assert "covered by mileage" not in tax.report(company, 2026)
     assert "would be worth" not in tax.report(company, 2026)
+
+    # The van goes home with him every night, so commuting fuel is carved out
+    # by the stored business share - §262 and Rev. Rul. 99-7; Rev. Proc.
+    # 2019-46 §4.01 allows only costs allocable to the business miles.
+    company["van_business_share"] = 0.62
+    sc = tax.summarize(company, 2026)
+    assert sc["business_share"] == 0.62
+    assert sc["claimed_vehicle_cents"] == round(3319 * 0.62), sc
+    assert sc["excluded_cents"] == 3319 - round(3319 * 0.62)
+    assert "commuting and not deductible" in tax.report(company, 2026)
 
     # QBI: 20% of profit, but capped at 20% of what is left after the standard
     # deduction. At his income the cap is what binds, so a flat 20% is wrong.
