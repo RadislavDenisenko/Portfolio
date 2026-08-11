@@ -314,6 +314,53 @@ def workdays_from_invoices(store_path: Path | None = None) -> dict[str, list[str
     return {day: sorted(jobs) for day, jobs in sorted(days.items())}
 
 
+def import_van_charges(ledger: dict, store_path: Path | None = None) -> int:
+    """Pull the weekly TRUCK charge off the invoices into the ledger.
+
+    He pays Koscom for the van and it is deducted on the invoice, which makes it
+    the best-substantiated expense in the whole file - a third party issues the
+    document, weekly, with the amount and period on its face. It was invisible
+    to the tax side until now because adjustments live in invoices.json and the
+    ledger only ever saw photographed receipts.
+
+    Stored as `lease` (vehicle=True), so standard mileage correctly excludes it
+    - §4.02 puts "depreciation or lease payments" among the costs the per-mile
+    rate replaces - while company mode claims it at the business-use share.
+
+    Idempotent: keyed on the invoice period, so re-running cannot double it.
+    """
+    try:
+        import invoice_parser
+        store = invoice_parser.load_store(store_path or HERE / "data" / "invoices.json")
+    except Exception:
+        return 0
+
+    already = {e.get("source") for e in ledger["expenses"]}
+    added = 0
+    for invoice in store.get("invoices", []):
+        period = invoice.get("period_end") or ""
+        for adjustment in invoice.get("adjustments") or []:
+            if adjustment.get("label") != "TRUCK":
+                continue
+            # Negative on the invoice because it is taken off his pay; an
+            # expense to him is the positive amount. A $0.00 line is a week
+            # they did not charge him, not a $0 expense.
+            cents = abs(adjustment.get("cents") or 0)
+            source = f"invoice:TRUCK:{period}"
+            if not cents or source in already:
+                continue
+            add_expense(
+                ledger, cents, "Koscom Networks - van charge", "lease", period,
+                note=f"TRUCK line, week ending {period}",
+                source=source, confidence="invoice",
+            )
+            # An invoice IS the documentary evidence; nothing to eyeball.
+            ledger["expenses"][-1]["reviewed"] = True
+            already.add(source)
+            added += 1
+    return added
+
+
 def odometer_to_mileage(
     ledger: dict, store_path: Path | None = None, year: int | None = None
 ) -> dict:

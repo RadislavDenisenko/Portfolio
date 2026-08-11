@@ -562,6 +562,15 @@ def main(argv: list[str] | None = None) -> int:
 
     store["seen_messages"] = sorted(seen)
     invoice_parser.save_store(STORE, store)
+
+    # The van charge rides in on the invoice, so fold it into the ledger the
+    # moment the invoice lands rather than making him notice it.
+    import tax
+    ledger = tax.load()
+    charges = tax.import_van_charges(ledger)
+    if charges:
+        tax.save(ledger)
+        print(f"{charges} van charge(s) picked up off the invoices")
     print(f"\n{added} new invoice(s); {len(store['invoices'])} total in {STORE}")
 
     pending = [r for r in load_receipts()["receipts"] if r["status"] == "needs extraction"]

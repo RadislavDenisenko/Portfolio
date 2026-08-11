@@ -505,11 +505,48 @@ Cowboys sticker; he confirmed company van, twice. **Do not re-ask.** When the
 announcement comes: flip `owns_vehicle`, elect standard mileage in year one
 (per 4c/5c), and start the MILES odometer habit that day.
 
-**Loose thread he dropped 2026-08-11: "I'm still renting it."** If money
-actually leaves his pocket for the van (a weekly rig fee to Koscom), that
-payment is deductible — and a genuine lease could even reopen the standard
-mileage door (§4.01 covers a car the taxpayer "owns or leases"). One question,
-asked 2026-08-11: does he PAY Koscom for the van? Await the answer.
+### 5d. HE PAYS FOR THE VAN — $125/week, and it may unlock standard mileage
+
+**Confirmed 2026-08-11.** The `TRUCK` adjustment was $0.00 on the first six
+invoices and **−$125.00 on the week ending 2026-07-18**. He says it will keep
+showing. `import_van_charges()` now pulls it off the invoices into the ledger as
+category `lease`, keyed on the period so it cannot double, marked reviewed
+because an invoice IS the documentary evidence. The fetcher runs it
+automatically. **This is the best-substantiated expense in the file** — a third
+party issues it weekly with the amount and period on its face.
+
+**Rev. Proc. 2019-46, verified verbatim from the IRS PDF:**
+- §4.01 — the rate is for "an automobile that a taxpayer either owns **or
+  leases**". A genuine lease qualifies; he does not have to own it.
+- §4.02 — the rate is *in lieu of* "depreciation or **lease payments**;
+  maintenance and repairs; tires; **gasoline**, including all taxes thereon;
+  oil; insurance; and license and registration fees". **Either/or, not both.**
+- §4.05(2) — may not use the rate on a leased automobile "unless the taxpayer
+  uses either the business standard mileage rate or FAVR allowance … **for the
+  entire lease period**", and §3.05: "lease period" includes renewals.
+
+**The arithmetic on his numbers** (23 weeks of charges left in 2026, ~4.43
+days/week, 42 business miles/day, ~20 mpg at $3.75/gal):
+
+| | deduction |
+|---|---|
+| Actual: ($2,875 van + $1,204 fuel) × 67% | $2,719 |
+| Standard mileage: 4,279 business miles × 76¢ | **$3,252** |
+
+**Standard mileage wins by ~$533 of deduction (~$127 of tax)** — and that gap
+grows with every mile, because the van charge is fixed while mileage is not.
+
+**Two conditions, neither settled:**
+1. **Is the TRUCK charge a true lease?** Substance governs. A fixed weekly fee
+   for exclusive use of a specific vehicle looks like one, but it could equally
+   be a cost-sharing or equipment charge. **A written agreement or anything from
+   Koscom describing it would settle it** — worth asking for casually, since
+   unlike a reimbursement request it costs him no goodwill.
+2. **He has no mileage log**, and §274(d) will not accept an estimate.
+
+**Nothing is elected until he files**, so both doors are open — but only if he
+starts logging now. **The MILES habit is worth ~$127/yr today and much more once
+he owns a van.** That is the argument for starting it, not the audit risk.
 
 **Orvis risk, stated honestly:** Koscom demonstrably has a reimbursement channel
 (TRUCK line), and *Orvis v. Commissioner*, 788 F.2d 1406 (9th Cir. 1986) denies
