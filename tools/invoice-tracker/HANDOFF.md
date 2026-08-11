@@ -442,13 +442,46 @@ three modes driven by `owns_vehicle`:
 | `standard` | his own van, default | miles × rate; running costs excluded |
 | `actual` | his own van, elected | costs × business-use share |
 
-An adversarial verification of the `company` position (apportionment for any
-commuting use, §274(d) substantiation of fuel for listed property he does not
-own, the rental-vehicle case, and whether a Koscom reimbursement would beat the
-deduction outright) ran 2026-08-10 — **check the results against this section
-and reconcile before relying on it.** First real receipt: Murphy USA,
-2026-07-14, $33.19, filed. His fills since June are on his Visa debit statement
-and are candidates for reconstruction.
+### 5c. The company-fuel position, adversarially verified 2026-08-10
+
+Both research findings **survived attack**. What holds, and what is still open:
+
+**Confirmed (primary sources, quoted in the workflow output):**
+- Standard mileage needs a vehicle he owns or leases — **Rev. Proc. 2019-46
+  §4.01** (not §4.02 as first cited). Actual fuel costs are the correct method
+  for the company van, on Schedule C line 9.
+- **No taint on the future van.** Every Rev. Proc. 2019-46 limit is
+  per-automobile. When he buys his own: **claim standard mileage in year one**
+  to preserve both options; a lease locks standard for the whole lease term.
+- **Past fills are reconstructible.** Fuel under $75 needs no paper receipt
+  (Reg. §1.274-5(c)(2)(iii)) — the Visa debit statement (amount/date/vendor)
+  plus the invoice workdays (business purpose) is a defensible package. Fills
+  that might have gone into the rental or a personal car are **dropped, not
+  estimated** — Cohan is barred for vehicles.
+
+**The two facts that decide "claim in full", still UNANSWERED:**
+1. **Does the van go home with him at night, or stay at Koscom's shop?**
+   Home↔work fuel is personal (§262, Rev. Rul. 99-7) unless an exception
+   applies; at his geometry (~24 mi/day commute vs ~39 between jobs) that is
+   roughly a third of the fuel. Shop-kept van → 100% stands. Also worth
+   developing: if the shop is a "regular work location", Rev. Rul. 99-7
+   exception (2) makes home→temporary-site trips deductible anyway.
+2. **Is the van branded with permanent racking?** §274(i)/Reg. §1.274-5(k):
+   a "qualified nonpersonal use vehicle" (the reg's own example is a company
+   van with front bench seat, permanent shelving, company livery) is exempt
+   from §274(d) strict substantiation entirely. **Photos of the inside and
+   outside of the van settle it.**
+
+**Orvis risk, stated honestly:** Koscom demonstrably has a reimbursement channel
+(TRUCK line), and *Orvis v. Commissioner*, 788 F.2d 1406 (9th Cir. 1986) denies
+"necessary" to expenses a taxpayer could have had reimbursed — but every
+confirmed application is an EMPLOYEE case; extension to a Schedule C contractor
+is examiner-analogy, not settled law. He has decided not to ask Koscom for fuel
+reimbursement (reasonable — two months in, only client). If written confirmation
+that "techs buy their own fuel" ever arrives naturally, keep it; it converts the
+deduction from grey to solid. Do not push him to ask.
+
+First real receipt: Murphy USA, 2026-07-14, $33.19, filed.
 
 **Both keywords also work as plus-addresses** — `raddenisenko+rcpt@gmail.com`
 and `raddenisenko+miles@gmail.com` — because his iPhone's Send Email action

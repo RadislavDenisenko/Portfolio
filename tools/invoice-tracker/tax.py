@@ -491,13 +491,24 @@ def summarize(ledger: dict, year: int | None = None) -> dict:
     business_share = (miles / total_miles) if total_miles else 0.0
     actual_cents = round(vehicle_cents * business_share)
 
-    # Whose vehicle decides everything. Rev. Proc. 2019-46 limits the standard
-    # mileage rate to a car the taxpayer OWNS OR LEASES, so for Koscom's van (or
-    # a rental) there is no per-mile claim at all - but the gas he buys for it
-    # out of pocket, unreimbursed, is an ordinary §162 business expense and is
-    # claimed in full. He has said plainly: every gas receipt he sends is for
-    # the work vehicle. The old model silently excluded that gas as "covered by
-    # mileage" when no mileage claim existed or ever could.
+    # Whose vehicle decides everything. Rev. Proc. 2019-46 §4.01 limits the
+    # standard mileage rate to "an automobile that a taxpayer either owns or
+    # leases", so for Koscom's van (or a rental) there is no per-mile claim at
+    # all - but the gas he buys for it out of pocket, unreimbursed, is an
+    # ordinary §162 business expense (§4.01's own fallback: actual costs
+    # "allocable to traveling those business miles"). He has said plainly:
+    # every gas receipt he sends is for the work vehicle. The old model
+    # silently excluded that gas as "covered by mileage" when no mileage claim
+    # existed or ever could.
+    #
+    # VERIFIED 2026-08-10, two edges that survive adversarial review:
+    # - If the van COMMUTES (goes home with him), the fuel for those miles is
+    #   personal under §262 / Rev. Rul. 99-7 and must be allocated out by the
+    #   mileage ratio. If the van stays at the shop, 100% stands. UNRESOLVED -
+    #   see HANDOFF 5c before filing a return on this.
+    # - §274(d) substantiation attaches to fuel for listed property he does not
+    #   own; a receipt alone lacks the business-use element. Escape hatch:
+    #   §274(i) qualified nonpersonal use vehicle (branded, permanent racking).
     if not ledger.get("owns_vehicle", False):
         mode = "company"
         claimed_vehicle, alternative = vehicle_cents, 0
