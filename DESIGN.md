@@ -161,24 +161,26 @@ Full-viewport section per project, scroll-snap proximity (never JS-hijacked):
    framed navy stage, whose backdrop glow is a CSS gradient rather than a disc
    in the scene: a disc has a silhouette, and it cut a hard arc across the
    stage corner. Palette: navy room + aqua + mint.
-3. **Roomly** — a **top-down move-in scene**, replacing the swipe-card deck
-   (owner direction). Seen from above: three people sit on their phones,
-   swipe through listings until one sticks, swipe again and match with *each
-   other*, then leave their chairs, walk to the middle, and a roofless room
-   fades in around them — Sims-style — where they settle and wave. About 7.6s.
-   Top-down is the whole reason it is affordable: no faces to animate, no limbs
-   to rig, and a seated person and a standing one are nearly the same shape from
-   above, so it is circles and rounded rectangles in inline SVG at roughly 6KB
-   against the 133KB gzipped that the 3D hand's three.js costs. It says what the
-   card stack could only imply — match a place, then match the people.
-   **It plays once, on arrival, and holds.** A story with an ending that restarts
-   every few seconds behind someone's reading is a distraction, not a delight.
-   The CSS **rests on the final frame**, so reduced-motion visitors and anyone
-   whose JS never runs get the finished scene standing still rather than a frozen
-   first frame; `.play` rewinds it. Character bodies carry three of the four card
-   colours and the listings they swipe carry the fourth. Honest copy: first
-   working draft, being reworked, not launched — the button says "Follow the
-   build", never "coming soon". Palette: fern + brick on a loam ground.
+3. **Roomly** — a **top-down move-in scene** (owner's storyboard, refined
+   twice by him and once by a 25-finding critic pass). Three toy figures sit
+   apart with their backs to each other, each under a chat bubble showing their
+   phone screen. They **heart** an apartment — a house pictogram, the bubble
+   swiped away — then heart *each other*; that second bubble pops as they stand,
+   because a match is kept, not flicked off like a rejected listing. They turn
+   around (the back of a head cross-fades to a face; figures never rotate past
+   ~20°, past ~25° a three-quarter figure reads upside-down), then walk three
+   different curved arcs — footprints trailing and fading behind them — into a
+   roofless Sims-style house that lands BEFORE they arrive. It has a door and a
+   mat, and the third figure actually enters through it. Inside, they sit down
+   together and wave: one arm each, shoulder pivots buried inside the torso, and
+   every arm ends at rest so no frame ever shows a detached limb. 6.8s, plays
+   once on arrival, holds. The DEFAULT state is the END of the story, so
+   reduced-motion and no-JS visitors get the finished scene standing still.
+   Inline SVG + CSS keyframes only; per-figure walk/leg/bob/arm timelines so
+   nobody marches in sync and velocity never hits zero mid-path. The heart is
+   Candy `#FF4F79` — the section's third accent, within the 2–3 rule. Honest
+   copy: first working draft, being reworked, not launched — the button says
+   "Follow the build", never "coming soon". Palette: fern + brick on loam.
 4. **Contact** — short, cobalt CTA. On cobalt/navy surfaces the focus ring is
    white with a dark halo; body text on cobalt is ≥ .95 white.
 

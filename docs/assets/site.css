@@ -597,23 +597,20 @@ section{position:relative}
    back so the visual inset stays 16px top / 24px sides — the card fades to
    zero inside the clip instead of being sliced by it. */
 /* ------------------- roomly: the move-in scene ----------------------------
-   6.8s, seen from a high three-quarter view. Three toy figures sit apart with
-   their backs to each other, swipe a HOUSE card (ticked while fully visible,
-   then it flicks away), swipe a PERSON card, match with each other — lines at
-   chest height, behind the bodies — turn around, stand, walk three different
-   arcs to the middle, and a roofless room fades in around them where one of
-   each waves an arm that stays attached to the torso.
+   6.8s, seen from a high three-quarter view, per the owner's storyboard.
+   Three toy figures sit apart with their backs to each other, each under a
+   chat bubble showing their phone screen. They HEART an apartment (bubble
+   swiped away), then HEART each other (that bubble pops as they stand — a
+   match is kept, not flicked off like a rejected listing). They turn around,
+   walk three different arcs — footprints trailing, fading behind them — into
+   a roofless Sims-style house that lands BEFORE they arrive (it has a door
+   and a mat, and the third figure actually enters through it), where they
+   sit down together and wave.
 
-   Rebuilt against a 25-finding critic pass. Load-bearing decisions:
-   - Shoulder pivots are INSIDE the torso and every arm ends at rotate(0), so
-     no frame — including the permanent final one — shows a detached limb.
-   - Each figure runs its own walk/leg/bob/arm keyframes with its own start
-     time, waypoints and phase: no marching, and velocity never hits zero
-     mid-path.
-   - The tick lives beside the card, not inside it, so it cannot inherit the
-     card's opacity and play invisibly.
-   - The DEFAULT state is the END of the story; `.play` rewinds it. Reduced
-     motion and no-JS visitors get the finished scene standing still. */
+   Still inline SVG + CSS keyframes. Per-figure walk/leg/bob/arm timelines;
+   shoulder pivots inside the torso; arms end at rest. The DEFAULT state is
+   the END of the story — seated together in the house — so reduced-motion
+   and no-JS visitors get the finished scene; `.play` rewinds it. */
 .scene-move{width:100%;--T:6.8s}
 .scene-move svg{width:100%;height:auto;display:block}
 .chair{fill:none;stroke:#C9D1BF;stroke-width:3}
@@ -622,11 +619,10 @@ section{position:relative}
 .fig,.cardA,.cardB,.tickA,.tickB,.room{transform-box:fill-box;transform-origin:center}
 .legL,.legR{transform-box:fill-box;transform-origin:top center}
 .armL,.armR{transform-box:fill-box;transform-origin:50% 12%}
-/* default = the end of the story: standing in the room, facing us, arms at rest */
-/* chairs end faded in the played version, so they start faded here too —
-   the rest frame and the played final frame must be the same picture */
-.cardA,.cardB,.tickA,.tickB,.link,.vback,.phone,.chair{opacity:0} .vfront{opacity:1}
-.legL,.legR{transform:none}
+/* default = the end of the story: seated together in the house, facing us */
+.cardA,.cardB,.tickA,.tickB,.link,.vback,.phone,.chair,.step{opacity:0} .vfront{opacity:1}
+.legL,.legR{transform:translateY(-7px) scaleY(.58)}
+.fig{transform:translateY(2px)}
 .ch1{transform:translate(274px,192px) rotate(9deg)}
 .play .ch1{animation:mv-walk1 var(--T) linear forwards}
 @keyframes mv-walk1{
@@ -651,7 +647,8 @@ section{position:relative}
   70.0%{transform:rotate(15deg)}
   73.0%{transform:rotate(-15deg)}
   76.0%{transform:rotate(0deg)}
-  100%{transform:rotate(0)}
+  78%{transform:rotate(0)}
+  81%,100%{transform:translateY(-7px) scaleY(.58)}
 }
 @keyframes mv-legR1{
   0%,44%{transform:translateY(-7px) scaleY(.58)}
@@ -666,7 +663,8 @@ section{position:relative}
   70.0%{transform:rotate(-15deg)}
   73.0%{transform:rotate(15deg)}
   76.0%{transform:rotate(0deg)}
-  100%{transform:rotate(0)}
+  78%{transform:rotate(0)}
+  81%,100%{transform:translateY(-7px) scaleY(.58)}
 }
 .play .ch1 .fig{animation:mv-fig1 var(--T) linear forwards}
 @keyframes mv-fig1{
@@ -687,7 +685,8 @@ section{position:relative}
   70.0%{transform:translateY(-3px)}
   73.0%{transform:translateY(0px)}
   76.0%{transform:translateY(0px)}
-  100%{transform:translateY(0)}
+  79%{transform:translateY(-2px)}
+  81%,100%{transform:translateY(2px)}
 }
 .play .ch1 .armL{animation:mv-armL1 var(--T) linear forwards}
 .play .ch1 .armR{animation:mv-armR1 var(--T) linear forwards}
@@ -704,6 +703,14 @@ section{position:relative}
   96%{transform:rotate(-40deg)}
   100%{transform:rotate(0deg)}
 }
+.play .s10{animation:mv-s10 var(--T) linear forwards}
+@keyframes mv-s10{0%,56.3%{opacity:0}58.3%{opacity:1}67.3%,100%{opacity:0}}
+.play .s11{animation:mv-s11 var(--T) linear forwards}
+@keyframes mv-s11{0%,61.1%{opacity:0}63.1%{opacity:1}72.1%,100%{opacity:0}}
+.play .s12{animation:mv-s12 var(--T) linear forwards}
+@keyframes mv-s12{0%,65.9%{opacity:0}67.9%{opacity:1}76.9%,100%{opacity:0}}
+.play .s13{animation:mv-s13 var(--T) linear forwards}
+@keyframes mv-s13{0%,70.7%{opacity:0}72.7%{opacity:1}81.7%,100%{opacity:0}}
 .ch2{transform:translate(396px,194px) rotate(-9deg)}
 .play .ch2{animation:mv-walk2 var(--T) linear forwards}
 @keyframes mv-walk2{
@@ -728,7 +735,8 @@ section{position:relative}
   73.0%{transform:rotate(-15deg)}
   76.0%{transform:rotate(15deg)}
   79.0%{transform:rotate(0deg)}
-  100%{transform:rotate(0)}
+  81%{transform:rotate(0)}
+  84%,100%{transform:translateY(-7px) scaleY(.58)}
 }
 @keyframes mv-legR2{
   0%,44%{transform:translateY(-7px) scaleY(.58)}
@@ -743,7 +751,8 @@ section{position:relative}
   73.0%{transform:rotate(15deg)}
   76.0%{transform:rotate(-15deg)}
   79.0%{transform:rotate(0deg)}
-  100%{transform:rotate(0)}
+  81%{transform:rotate(0)}
+  84%,100%{transform:translateY(-7px) scaleY(.58)}
 }
 .play .ch2 .fig{animation:mv-fig2 var(--T) linear forwards}
 @keyframes mv-fig2{
@@ -764,7 +773,8 @@ section{position:relative}
   73.0%{transform:translateY(0px)}
   76.0%{transform:translateY(-3px)}
   79.0%{transform:translateY(0px)}
-  100%{transform:translateY(0)}
+  82%{transform:translateY(-2px)}
+  84%,100%{transform:translateY(2px)}
 }
 .play .ch2 .armL{animation:mv-armL2 var(--T) linear forwards}
 .play .ch2 .armR{animation:mv-armR2 var(--T) linear forwards}
@@ -781,6 +791,14 @@ section{position:relative}
   97%{transform:rotate(40deg)}
   100%{transform:rotate(0deg)}
 }
+.play .s20{animation:mv-s20 var(--T) linear forwards}
+@keyframes mv-s20{0%,59.3%{opacity:0}61.3%{opacity:1}70.3%,100%{opacity:0}}
+.play .s21{animation:mv-s21 var(--T) linear forwards}
+@keyframes mv-s21{0%,64.1%{opacity:0}66.1%{opacity:1}75.1%,100%{opacity:0}}
+.play .s22{animation:mv-s22 var(--T) linear forwards}
+@keyframes mv-s22{0%,68.9%{opacity:0}70.9%{opacity:1}79.9%,100%{opacity:0}}
+.play .s23{animation:mv-s23 var(--T) linear forwards}
+@keyframes mv-s23{0%,73.7%{opacity:0}75.7%{opacity:1}84.7%,100%{opacity:0}}
 .ch3{transform:translate(334px,262px) rotate(0deg)}
 .play .ch3{animation:mv-walk3 var(--T) linear forwards}
 @keyframes mv-walk3{
@@ -805,7 +823,8 @@ section{position:relative}
   68.0%{transform:rotate(15deg)}
   71.0%{transform:rotate(-15deg)}
   74.0%{transform:rotate(0deg)}
-  100%{transform:rotate(0)}
+  76%{transform:rotate(0)}
+  79%,100%{transform:translateY(-7px) scaleY(.58)}
 }
 @keyframes mv-legR3{
   0%,44%{transform:translateY(-7px) scaleY(.58)}
@@ -820,7 +839,8 @@ section{position:relative}
   68.0%{transform:rotate(-15deg)}
   71.0%{transform:rotate(15deg)}
   74.0%{transform:rotate(0deg)}
-  100%{transform:rotate(0)}
+  76%{transform:rotate(0)}
+  79%,100%{transform:translateY(-7px) scaleY(.58)}
 }
 .play .ch3 .fig{animation:mv-fig3 var(--T) linear forwards}
 @keyframes mv-fig3{
@@ -841,7 +861,8 @@ section{position:relative}
   68.0%{transform:translateY(-3px)}
   71.0%{transform:translateY(0px)}
   74.0%{transform:translateY(0px)}
-  100%{transform:translateY(0)}
+  77%{transform:translateY(-2px)}
+  79%,100%{transform:translateY(2px)}
 }
 .play .ch3 .armL{animation:mv-armL3 var(--T) linear forwards}
 .play .ch3 .armR{animation:mv-armR3 var(--T) linear forwards}
@@ -858,6 +879,14 @@ section{position:relative}
   98%{transform:rotate(-40deg)}
   100%{transform:rotate(0deg)}
 }
+.play .s30{animation:mv-s30 var(--T) linear forwards}
+@keyframes mv-s30{0%,54.3%{opacity:0}56.3%{opacity:1}65.3%,100%{opacity:0}}
+.play .s31{animation:mv-s31 var(--T) linear forwards}
+@keyframes mv-s31{0%,59.1%{opacity:0}61.1%{opacity:1}70.1%,100%{opacity:0}}
+.play .s32{animation:mv-s32 var(--T) linear forwards}
+@keyframes mv-s32{0%,63.9%{opacity:0}65.9%{opacity:1}74.9%,100%{opacity:0}}
+.play .s33{animation:mv-s33 var(--T) linear forwards}
+@keyframes mv-s33{0%,68.7%{opacity:0}70.7%{opacity:1}79.7%,100%{opacity:0}}
 /* shared beats (per-figure motion lives in the mv-*N keyframes) */
 .play .cardA{animation:mv-cardA var(--T) linear forwards}
 .play .cardB{animation:mv-cardB var(--T) linear forwards}
@@ -870,7 +899,7 @@ section{position:relative}
 .play .phone{animation:mv-phone var(--T) linear forwards}
 .play .chair{animation:mv-chair var(--T) linear forwards}
 
-/* card one: the apartment. Ticked at FULL opacity, then it leaves. */
+/* bubble one: the apartment. Hearted at FULL opacity, then swiped away. */
 @keyframes mv-cardA{
   0%,3%{opacity:0;transform:translateY(14px) scale(.85)}
   7%,17%{opacity:1;transform:translateY(0) scale(1);animation-timing-function:cubic-bezier(.34,1.56,.64,1)}
@@ -878,20 +907,21 @@ section{position:relative}
   23%,100%{opacity:0}}
 @keyframes mv-tickA{
   0%,10%{opacity:0;transform:scale(.3)}
-  12.5%{opacity:1;transform:scale(1.22)}
+  12.5%{opacity:1;transform:scale(1.35)}
   14%,17%{opacity:1;transform:scale(1)}
   21%,100%{opacity:0;transform:scale(.8)}}
-/* card two: the person */
+/* bubble two: the person. Hearted, then it POPS away as they stand up —
+   the second match is kept, not discarded, so it shrinks out instead of
+   being flicked off like a rejected listing. */
 @keyframes mv-cardB{
   0%,23%{opacity:0;transform:translateY(14px) scale(.85)}
-  27%,39%{opacity:1;transform:translateY(0) scale(1);animation-timing-function:cubic-bezier(.34,1.56,.64,1)}
-  44%{opacity:0;transform:translate(30px,-16px) rotate(14deg)}
-  45%,100%{opacity:0}}
+  27%,42%{opacity:1;transform:translateY(0) scale(1);animation-timing-function:cubic-bezier(.34,1.56,.64,1)}
+  46%,100%{opacity:0;transform:scale(.5)}}
 @keyframes mv-tickB{
   0%,30%{opacity:0;transform:scale(.3)}
-  32.5%{opacity:1;transform:scale(1.22)}
-  34%,39%{opacity:1;transform:scale(1)}
-  43%,100%{opacity:0;transform:scale(.8)}}
+  32.5%{opacity:1;transform:scale(1.35)}
+  34%,42%{opacity:1;transform:scale(1)}
+  46%,100%{opacity:0;transform:scale(.5)}}
 /* the match: lines at chest height, behind the bodies, gone before a step */
 @keyframes mv-link{0%,33%{opacity:0}36%,44%{opacity:.8}48%,100%{opacity:0}}
 /* they turn around when they match with each other */
@@ -899,11 +929,11 @@ section{position:relative}
 @keyframes mv-front{0%,42%{opacity:0}47%,100%{opacity:1}}
 @keyframes mv-phone{0%,42%{opacity:1}46%,100%{opacity:0}}
 @keyframes mv-chair{0%,52%{opacity:1}62%,100%{opacity:0}}
-/* room: scales about itself, overshoot finishes while opacity still climbs */
+/* the house lands BEFORE anyone arrives, so we watch them walk into it */
 @keyframes mv-room{
-  0%,68%{opacity:0;transform:scale(.94)}
-  78%{opacity:.85;transform:scale(1.025);animation-timing-function:cubic-bezier(.34,1.5,.64,1)}
-  84%,100%{opacity:1;transform:scale(1)}}
+  0%,56%{opacity:0;transform:scale(.94)}
+  64%{opacity:.9;transform:scale(1.025);animation-timing-function:cubic-bezier(.34,1.5,.64,1)}
+  70%,100%{opacity:1;transform:scale(1)}}
 
 /* ------------------------------ about ------------------------------------- */
 .about{
