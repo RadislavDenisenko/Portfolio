@@ -615,9 +615,11 @@ silently.
   standard mileage — the rate does not include them. `tax.py` now has a `tolls`
   category flagged `vehicle: False` for exactly this reason; do not "fix" it to
   True.
-- **The van repair reimbursement never arrived.** The `TRUCK` adjustment is
-  **$0.00 on all seven invoices**, including the two issued after Ashley approved
-  it on 2026-07-24. Still owed.
+- **The van repair reimbursement: PAID, closed 2026-08-10.** He confirmed he got
+  the money — outside the invoices, since `TRUCK` shows $0.00 on all seven.
+  Do not chase it again. **And do not let that repair into the ledger:** a
+  reimbursed expense is not deductible, so if a repair receipt from ~July 2026
+  ever arrives through the photo pipeline, it gets skipped, not filed.
 
 ---
 
