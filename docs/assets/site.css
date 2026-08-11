@@ -597,111 +597,313 @@ section{position:relative}
    back so the visual inset stays 16px top / 24px sides — the card fades to
    zero inside the clip instead of being sliced by it. */
 /* ------------------- roomly: the move-in scene ----------------------------
-   Three people sit apart with their backs to each other, swipe through
-   listings until one sticks, swipe again and match with EACH OTHER, then get
-   up, take three different curved paths to the middle — one swings wide — and
-   a roofless room fades in around them where they turn to face each other and
-   wave.
+   6.8s, seen from a high three-quarter view. Three toy figures sit apart with
+   their backs to each other, swipe a HOUSE card (ticked while fully visible,
+   then it flicks away), swipe a PERSON card, match with each other — lines at
+   chest height, behind the bodies — turn around, stand, walk three different
+   arcs to the middle, and a roofless room fades in around them where one of
+   each waves an arm that stays attached to the torso.
 
-   The figures are built to read as toys: one connected silhouette (arms and
-   legs overlap the torso rather than floating beside it), hair, a lit side, a
-   soft contact shadow. Facing is carried by swapping the back of a head for a
-   face at the moment they match, not by spinning the figure — past about 25
-   degrees a three-quarter figure reads upside down.
-
-   Still inline SVG and CSS: no library, no sprite sheet, no video. The DEFAULT
-   state is the END of the story, so reduced-motion visitors and anyone whose
-   JS never runs get the finished scene standing still; `.play` rewinds it. */
-.scene-move{width:100%;--T:8s}
+   Rebuilt against a 25-finding critic pass. Load-bearing decisions:
+   - Shoulder pivots are INSIDE the torso and every arm ends at rotate(0), so
+     no frame — including the permanent final one — shows a detached limb.
+   - Each figure runs its own walk/leg/bob/arm keyframes with its own start
+     time, waypoints and phase: no marching, and velocity never hits zero
+     mid-path.
+   - The tick lives beside the card, not inside it, so it cannot inherit the
+     card's opacity and play invisibly.
+   - The DEFAULT state is the END of the story; `.play` rewinds it. Reduced
+     motion and no-JS visitors get the finished scene standing still. */
+.scene-move{width:100%;--T:6.8s}
 .scene-move svg{width:100%;height:auto;display:block}
 .chair{fill:none;stroke:#C9D1BF;stroke-width:3}
 .shadow{fill:rgba(58,66,48,.13)}
 .ch{transform-box:view-box}
-.fig,.card,.tick,.armL,.armR,.legL,.legR{transform-box:fill-box;transform-origin:center}
-.armL,.armR{transform-origin:top center}
-/* default = the end of the story, so reduced motion and no-JS land on it */
-.card,.link{opacity:0} .vback{opacity:0} .vfront{opacity:1}
-.ch1{transform:translate(270px,176px) rotate(11deg)}
+.fig,.cardA,.cardB,.tickA,.tickB,.room{transform-box:fill-box;transform-origin:center}
+.legL,.legR{transform-box:fill-box;transform-origin:top center}
+.armL,.armR{transform-box:fill-box;transform-origin:50% 12%}
+/* default = the end of the story: standing in the room, facing us, arms at rest */
+/* chairs end faded in the played version, so they start faded here too —
+   the rest frame and the played final frame must be the same picture */
+.cardA,.cardB,.tickA,.tickB,.link,.vback,.phone,.chair{opacity:0} .vfront{opacity:1}
+.legL,.legR{transform:none}
+.ch1{transform:translate(274px,192px) rotate(9deg)}
 .play .ch1{animation:mv-walk1 var(--T) linear forwards}
 @keyframes mv-walk1{
-  0%,60%{transform:translate(118px,252px) rotate(-17deg)}
-  71%{transform:translate(200px,214px) rotate(-3deg);animation-timing-function:cubic-bezier(.45,0,.55,1)}
-  84%{transform:translate(270px,176px) rotate(11deg);animation-timing-function:cubic-bezier(.34,1.5,.64,1)}
-  100%{transform:translate(270px,176px) rotate(11deg)}
+  0%,52%{transform:translate(150px,252px) rotate(-14deg)}
+  58.0%{transform:translate(170px,210px) rotate(-2deg);animation-timing-function:linear}
+  64.0%{transform:translate(206px,186px) rotate(-2deg);animation-timing-function:linear}
+  70.0%{transform:translate(244px,180px) rotate(-2deg);animation-timing-function:cubic-bezier(.22,.9,.44,1)}
+  76.0%,100%{transform:translate(274px,192px) rotate(9deg)}
 }
-
-.ch2{transform:translate(392px,178px) rotate(-11deg)}
+.play .ch1 .legL{animation:mv-legL1 var(--T) linear forwards}
+.play .ch1 .legR{animation:mv-legR1 var(--T) linear forwards}
+@keyframes mv-legL1{
+  0%,44%{transform:translateY(-7px) scaleY(.58)}
+  47%{transform:translateY(1px) scaleY(1.05)}
+  49%,52%{transform:translateY(0) scaleY(1)}
+  52.0%{transform:rotate(15deg)}
+  55.0%{transform:rotate(-15deg)}
+  58.0%{transform:rotate(15deg)}
+  61.0%{transform:rotate(-15deg)}
+  64.0%{transform:rotate(15deg)}
+  67.0%{transform:rotate(-15deg)}
+  70.0%{transform:rotate(15deg)}
+  73.0%{transform:rotate(-15deg)}
+  76.0%{transform:rotate(0deg)}
+  100%{transform:rotate(0)}
+}
+@keyframes mv-legR1{
+  0%,44%{transform:translateY(-7px) scaleY(.58)}
+  47.5%{transform:translateY(1px) scaleY(1.05)}
+  49.5%,52%{transform:translateY(0) scaleY(1)}
+  52.0%{transform:rotate(-15deg)}
+  55.0%{transform:rotate(15deg)}
+  58.0%{transform:rotate(-15deg)}
+  61.0%{transform:rotate(15deg)}
+  64.0%{transform:rotate(-15deg)}
+  67.0%{transform:rotate(15deg)}
+  70.0%{transform:rotate(-15deg)}
+  73.0%{transform:rotate(15deg)}
+  76.0%{transform:rotate(0deg)}
+  100%{transform:rotate(0)}
+}
+.play .ch1 .fig{animation:mv-fig1 var(--T) linear forwards}
+@keyframes mv-fig1{
+  0%,10%{transform:translateY(0) scaleY(1)}
+  15%{transform:translateY(-1.5px) scaleY(1.012)}
+  20%{transform:translateY(0) scaleY(1)}
+  25%{transform:translateY(-1.5px) scaleY(1.012)}
+  30%,44%{transform:translateY(0) scaleY(1)}
+  46%{transform:translateY(3px) scaleY(.94)}
+  48%{transform:translateY(-7px) scaleY(1.06);animation-timing-function:cubic-bezier(.34,1.6,.64,1)}
+  50%,52%{transform:translateY(0) scaleY(1)}
+  52.0%{transform:translateY(-3px)}
+  55.0%{transform:translateY(0px)}
+  58.0%{transform:translateY(-3px)}
+  61.0%{transform:translateY(0px)}
+  64.0%{transform:translateY(-3px)}
+  67.0%{transform:translateY(0px)}
+  70.0%{transform:translateY(-3px)}
+  73.0%{transform:translateY(0px)}
+  76.0%{transform:translateY(0px)}
+  100%{transform:translateY(0)}
+}
+.play .ch1 .armL{animation:mv-armL1 var(--T) linear forwards}
+.play .ch1 .armR{animation:mv-armR1 var(--T) linear forwards}
+@keyframes mv-armL1{
+  0%,44%{transform:rotate(18deg)}
+  50%,100%{transform:rotate(0)}
+}
+@keyframes mv-armR1{
+  0%,44%{transform:rotate(-18deg)}
+  50%,80%{transform:rotate(0)}
+  84%{transform:rotate(-52deg)}
+  88%{transform:rotate(-38deg)}
+  92%{transform:rotate(-52deg)}
+  96%{transform:rotate(-40deg)}
+  100%{transform:rotate(0deg)}
+}
+.ch2{transform:translate(396px,194px) rotate(-9deg)}
 .play .ch2{animation:mv-walk2 var(--T) linear forwards}
 @keyframes mv-walk2{
-  0%,62%{transform:translate(502px,240px) rotate(17deg)}
-  74%{transform:translate(430px,176px) rotate(3deg);animation-timing-function:cubic-bezier(.45,0,.55,1)}
-  87%{transform:translate(392px,178px) rotate(-11deg);animation-timing-function:cubic-bezier(.34,1.5,.64,1)}
-  100%{transform:translate(392px,178px) rotate(-11deg)}
+  0%,55%{transform:translate(502px,240px) rotate(14deg)}
+  61.0%{transform:translate(478px,196px) rotate(2deg);animation-timing-function:linear}
+  67.0%{transform:translate(448px,178px) rotate(2deg);animation-timing-function:linear}
+  73.0%{transform:translate(420px,180px) rotate(2deg);animation-timing-function:cubic-bezier(.22,.9,.44,1)}
+  79.0%,100%{transform:translate(396px,194px) rotate(-9deg)}
 }
-
-.ch3{transform:translate(331px,244px) rotate(0deg)}
+.play .ch2 .legL{animation:mv-legL2 var(--T) linear forwards}
+.play .ch2 .legR{animation:mv-legR2 var(--T) linear forwards}
+@keyframes mv-legL2{
+  0%,44%{transform:translateY(-7px) scaleY(.58)}
+  47%{transform:translateY(1px) scaleY(1.05)}
+  49%,55%{transform:translateY(0) scaleY(1)}
+  55.0%{transform:rotate(-15deg)}
+  58.0%{transform:rotate(15deg)}
+  61.0%{transform:rotate(-15deg)}
+  64.0%{transform:rotate(15deg)}
+  67.0%{transform:rotate(-15deg)}
+  70.0%{transform:rotate(15deg)}
+  73.0%{transform:rotate(-15deg)}
+  76.0%{transform:rotate(15deg)}
+  79.0%{transform:rotate(0deg)}
+  100%{transform:rotate(0)}
+}
+@keyframes mv-legR2{
+  0%,44%{transform:translateY(-7px) scaleY(.58)}
+  47.5%{transform:translateY(1px) scaleY(1.05)}
+  49.5%,55%{transform:translateY(0) scaleY(1)}
+  55.0%{transform:rotate(15deg)}
+  58.0%{transform:rotate(-15deg)}
+  61.0%{transform:rotate(15deg)}
+  64.0%{transform:rotate(-15deg)}
+  67.0%{transform:rotate(15deg)}
+  70.0%{transform:rotate(-15deg)}
+  73.0%{transform:rotate(15deg)}
+  76.0%{transform:rotate(-15deg)}
+  79.0%{transform:rotate(0deg)}
+  100%{transform:rotate(0)}
+}
+.play .ch2 .fig{animation:mv-fig2 var(--T) linear forwards}
+@keyframes mv-fig2{
+  0%,13%{transform:translateY(0) scaleY(1)}
+  18%{transform:translateY(-1.5px) scaleY(1.012)}
+  23%{transform:translateY(0) scaleY(1)}
+  28%{transform:translateY(-1.5px) scaleY(1.012)}
+  33%,44%{transform:translateY(0) scaleY(1)}
+  46%{transform:translateY(3px) scaleY(.94)}
+  48%{transform:translateY(-7px) scaleY(1.06);animation-timing-function:cubic-bezier(.34,1.6,.64,1)}
+  50%,55%{transform:translateY(0) scaleY(1)}
+  55.0%{transform:translateY(0px)}
+  58.0%{transform:translateY(-3px)}
+  61.0%{transform:translateY(0px)}
+  64.0%{transform:translateY(-3px)}
+  67.0%{transform:translateY(0px)}
+  70.0%{transform:translateY(-3px)}
+  73.0%{transform:translateY(0px)}
+  76.0%{transform:translateY(-3px)}
+  79.0%{transform:translateY(0px)}
+  100%{transform:translateY(0)}
+}
+.play .ch2 .armL{animation:mv-armL2 var(--T) linear forwards}
+.play .ch2 .armR{animation:mv-armR2 var(--T) linear forwards}
+@keyframes mv-armR2{
+  0%,44%{transform:rotate(-18deg)}
+  50%,100%{transform:rotate(0)}
+}
+@keyframes mv-armL2{
+  0%,44%{transform:rotate(18deg)}
+  50%,81%{transform:rotate(0)}
+  85%{transform:rotate(52deg)}
+  89%{transform:rotate(38deg)}
+  93%{transform:rotate(52deg)}
+  97%{transform:rotate(40deg)}
+  100%{transform:rotate(0deg)}
+}
+.ch3{transform:translate(334px,262px) rotate(0deg)}
 .play .ch3{animation:mv-walk3 var(--T) linear forwards}
 @keyframes mv-walk3{
-  0%,58%{transform:translate(302px,336px) rotate(6deg)}
-  70%{transform:translate(248px,300px) rotate(3deg);animation-timing-function:cubic-bezier(.45,0,.55,1)}
-  83%{transform:translate(331px,244px) rotate(0deg);animation-timing-function:cubic-bezier(.34,1.5,.64,1)}
-  100%{transform:translate(331px,244px) rotate(0deg)}
+  0%,50%{transform:translate(302px,336px) rotate(4deg)}
+  56.0%{transform:translate(258px,318px) rotate(2deg);animation-timing-function:linear}
+  62.0%{transform:translate(240px,282px) rotate(2deg);animation-timing-function:linear}
+  68.0%{transform:translate(272px,258px) rotate(2deg);animation-timing-function:cubic-bezier(.22,.9,.44,1)}
+  74.0%,100%{transform:translate(334px,262px) rotate(0deg)}
 }
-
-.play .card{animation:mv-card var(--T) linear forwards}
-.play .thumbA{animation:mv-thumbA var(--T) linear forwards}
-.play .thumbP{animation:mv-thumbP var(--T) linear forwards}
-.play .tick{animation:mv-tick var(--T) linear forwards}
+.play .ch3 .legL{animation:mv-legL3 var(--T) linear forwards}
+.play .ch3 .legR{animation:mv-legR3 var(--T) linear forwards}
+@keyframes mv-legL3{
+  0%,44%{transform:translateY(-7px) scaleY(.58)}
+  47%{transform:translateY(1px) scaleY(1.05)}
+  49%,50%{transform:translateY(0) scaleY(1)}
+  50.0%{transform:rotate(15deg)}
+  53.0%{transform:rotate(-15deg)}
+  56.0%{transform:rotate(15deg)}
+  59.0%{transform:rotate(-15deg)}
+  62.0%{transform:rotate(15deg)}
+  65.0%{transform:rotate(-15deg)}
+  68.0%{transform:rotate(15deg)}
+  71.0%{transform:rotate(-15deg)}
+  74.0%{transform:rotate(0deg)}
+  100%{transform:rotate(0)}
+}
+@keyframes mv-legR3{
+  0%,44%{transform:translateY(-7px) scaleY(.58)}
+  47.5%{transform:translateY(1px) scaleY(1.05)}
+  49.5%,50%{transform:translateY(0) scaleY(1)}
+  50.0%{transform:rotate(-15deg)}
+  53.0%{transform:rotate(15deg)}
+  56.0%{transform:rotate(-15deg)}
+  59.0%{transform:rotate(15deg)}
+  62.0%{transform:rotate(-15deg)}
+  65.0%{transform:rotate(15deg)}
+  68.0%{transform:rotate(-15deg)}
+  71.0%{transform:rotate(15deg)}
+  74.0%{transform:rotate(0deg)}
+  100%{transform:rotate(0)}
+}
+.play .ch3 .fig{animation:mv-fig3 var(--T) linear forwards}
+@keyframes mv-fig3{
+  0%,16%{transform:translateY(0) scaleY(1)}
+  21%{transform:translateY(-1.5px) scaleY(1.012)}
+  26%{transform:translateY(0) scaleY(1)}
+  31%{transform:translateY(-1.5px) scaleY(1.012)}
+  36%,44%{transform:translateY(0) scaleY(1)}
+  46%{transform:translateY(3px) scaleY(.94)}
+  48%{transform:translateY(-7px) scaleY(1.06);animation-timing-function:cubic-bezier(.34,1.6,.64,1)}
+  50%,50%{transform:translateY(0) scaleY(1)}
+  50.0%{transform:translateY(-3px)}
+  53.0%{transform:translateY(0px)}
+  56.0%{transform:translateY(-3px)}
+  59.0%{transform:translateY(0px)}
+  62.0%{transform:translateY(-3px)}
+  65.0%{transform:translateY(0px)}
+  68.0%{transform:translateY(-3px)}
+  71.0%{transform:translateY(0px)}
+  74.0%{transform:translateY(0px)}
+  100%{transform:translateY(0)}
+}
+.play .ch3 .armL{animation:mv-armL3 var(--T) linear forwards}
+.play .ch3 .armR{animation:mv-armR3 var(--T) linear forwards}
+@keyframes mv-armL3{
+  0%,44%{transform:rotate(18deg)}
+  50%,100%{transform:rotate(0)}
+}
+@keyframes mv-armR3{
+  0%,44%{transform:rotate(-18deg)}
+  50%,82%{transform:rotate(0)}
+  86%{transform:rotate(-52deg)}
+  90%{transform:rotate(-38deg)}
+  94%{transform:rotate(-52deg)}
+  98%{transform:rotate(-40deg)}
+  100%{transform:rotate(0deg)}
+}
+/* shared beats (per-figure motion lives in the mv-*N keyframes) */
+.play .cardA{animation:mv-cardA var(--T) linear forwards}
+.play .cardB{animation:mv-cardB var(--T) linear forwards}
+.play .tickA{animation:mv-tickA var(--T) linear forwards}
+.play .tickB{animation:mv-tickB var(--T) linear forwards}
 .play .room{animation:mv-room var(--T) linear forwards}
 .play .link{animation:mv-link var(--T) linear forwards}
 .play .vback{animation:mv-back var(--T) linear forwards}
 .play .vfront{animation:mv-front var(--T) linear forwards}
-.play .fig{animation:mv-bob var(--T) linear forwards}
-.play .legL{animation:mv-legL var(--T) linear forwards}
-.play .legR{animation:mv-legR var(--T) linear forwards}
-.play .armL{animation:mv-armL var(--T) linear forwards}
-.play .armR{animation:mv-armR var(--T) linear forwards}
+.play .phone{animation:mv-phone var(--T) linear forwards}
+.play .chair{animation:mv-chair var(--T) linear forwards}
 
-/* they start with their backs to us and to each other; they turn around only
-   once they have matched, which is the moment the whole scene exists for */
-@keyframes mv-back {0%,50%{opacity:1}56%,100%{opacity:0}}
-@keyframes mv-front{0%,50%{opacity:0}56%,100%{opacity:1}}
-@keyframes mv-card{
-  0%{opacity:0;transform:translateY(14px) scale(.86)}
-  7%,15%{opacity:1;transform:translateY(0) scale(1);animation-timing-function:cubic-bezier(.34,1.56,.64,1)}
-  22%{opacity:0;transform:translate(30px,-14px) rotate(14deg)}
-  23%{opacity:0;transform:translate(-18px,8px) scale(.88)}
-  30%,42%{opacity:1;transform:translateY(0) scale(1)}
-  49%{opacity:0;transform:translate(30px,-14px) rotate(14deg)}
-  50%,100%{opacity:0}}
-@keyframes mv-thumbA{0%,27%{opacity:1}29%,100%{opacity:0}}
-@keyframes mv-thumbP{0%,27%{opacity:0}29%,100%{opacity:1}}
-@keyframes mv-tick{0%,18%{opacity:0;transform:scale(.3)}
-  21%{opacity:1;transform:scale(1.2)}24%,45%{opacity:1;transform:scale(1)}
-  48%{opacity:1;transform:scale(1.2)}53%{opacity:1;transform:scale(1)}
-  57%,100%{opacity:0;transform:scale(.6)}}
-@keyframes mv-room{0%,74%{opacity:0;transform:scale(.94)}
-  88%{opacity:1;transform:scale(1.02);animation-timing-function:cubic-bezier(.34,1.5,.64,1)}
-  93%,100%{opacity:1;transform:scale(1)}}
-@keyframes mv-link{0%,45%{opacity:0}52%,62%{opacity:.8}68%,100%{opacity:0}}
-/* stand-up pops, then a walk bounce, then a settle */
-@keyframes mv-bob{0%,53%{transform:translateY(0) scaleY(1)}
-  56%{transform:translateY(-6px) scaleY(1.06);animation-timing-function:cubic-bezier(.34,1.6,.64,1)}
-  60%{transform:translateY(0) scaleY(1)}
-  64%{transform:translateY(-4px)}68%{transform:translateY(0)}
-  72%{transform:translateY(-4px)}76%{transform:translateY(0)}
-  80%{transform:translateY(-4px)}84%{transform:translateY(0)}
-  100%{transform:translateY(0)}}
-@keyframes mv-legL{0%,60%{transform:translateY(0)}
-  66%{transform:translateY(-4px)}72%{transform:translateY(0)}
-  78%{transform:translateY(-4px)}84%,100%{transform:translateY(0)}}
-@keyframes mv-legR{0%,63%{transform:translateY(0)}
-  69%{transform:translateY(-4px)}75%{transform:translateY(0)}
-  81%{transform:translateY(-4px)}86%,100%{transform:translateY(0)}}
-@keyframes mv-armL{0%,86%{transform:rotate(0)}
-  91%{transform:rotate(48deg)}95%{transform:rotate(-22deg)}100%{transform:rotate(28deg)}}
-@keyframes mv-armR{0%,88%{transform:rotate(0)}
-  93%{transform:rotate(-44deg)}97%{transform:rotate(20deg)}100%{transform:rotate(-24deg)}}
+/* card one: the apartment. Ticked at FULL opacity, then it leaves. */
+@keyframes mv-cardA{
+  0%,3%{opacity:0;transform:translateY(14px) scale(.85)}
+  7%,17%{opacity:1;transform:translateY(0) scale(1);animation-timing-function:cubic-bezier(.34,1.56,.64,1)}
+  22%{opacity:0;transform:translate(30px,-16px) rotate(14deg)}
+  23%,100%{opacity:0}}
+@keyframes mv-tickA{
+  0%,10%{opacity:0;transform:scale(.3)}
+  12.5%{opacity:1;transform:scale(1.22)}
+  14%,17%{opacity:1;transform:scale(1)}
+  21%,100%{opacity:0;transform:scale(.8)}}
+/* card two: the person */
+@keyframes mv-cardB{
+  0%,23%{opacity:0;transform:translateY(14px) scale(.85)}
+  27%,39%{opacity:1;transform:translateY(0) scale(1);animation-timing-function:cubic-bezier(.34,1.56,.64,1)}
+  44%{opacity:0;transform:translate(30px,-16px) rotate(14deg)}
+  45%,100%{opacity:0}}
+@keyframes mv-tickB{
+  0%,30%{opacity:0;transform:scale(.3)}
+  32.5%{opacity:1;transform:scale(1.22)}
+  34%,39%{opacity:1;transform:scale(1)}
+  43%,100%{opacity:0;transform:scale(.8)}}
+/* the match: lines at chest height, behind the bodies, gone before a step */
+@keyframes mv-link{0%,33%{opacity:0}36%,44%{opacity:.8}48%,100%{opacity:0}}
+/* they turn around when they match with each other */
+@keyframes mv-back{0%,42%{opacity:1}47%,100%{opacity:0}}
+@keyframes mv-front{0%,42%{opacity:0}47%,100%{opacity:1}}
+@keyframes mv-phone{0%,42%{opacity:1}46%,100%{opacity:0}}
+@keyframes mv-chair{0%,52%{opacity:1}62%,100%{opacity:0}}
+/* room: scales about itself, overshoot finishes while opacity still climbs */
+@keyframes mv-room{
+  0%,68%{opacity:0;transform:scale(.94)}
+  78%{opacity:.85;transform:scale(1.025);animation-timing-function:cubic-bezier(.34,1.5,.64,1)}
+  84%,100%{opacity:1;transform:scale(1)}}
 
 /* ------------------------------ about ------------------------------------- */
 .about{

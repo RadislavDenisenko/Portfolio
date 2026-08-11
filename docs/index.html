@@ -124,17 +124,22 @@
     <div class="wrap proj-grid proj-grid-flip">
       <figure class="proj-visual" data-reveal>
         <div class="scene-move" id="move-scene">
-          <svg viewBox="60 60 540 330" role="img" aria-label="Seen from above: three people sit apart on their phones, match with a place and then with each other, then leave their chairs and move in together.">
+          <svg viewBox="40 52 560 340" role="img" aria-label="Seen from above: three people sit apart on their phones, match with an apartment and then with each other, then leave their chairs and move in together.">
   <g class="room">
-    <rect x="212" y="58" width="236" height="220" rx="24" fill="#E9EEDF" stroke="#C9D1BF" stroke-width="3"/>
-    <rect x="232" y="76" width="72" height="20" rx="8" fill="#CFD8C2"/>
-    <rect x="356" y="76" width="70" height="20" rx="8" fill="#CFD8C2"/>
-    <rect x="300" y="255" width="60" height="16" rx="7" fill="#CFD8C2"/>
+    <rect x="216" y="92" width="238" height="204" rx="24" fill="#E9EEDF" stroke="#C9D1BF" stroke-width="3"/>
+    <rect x="238" y="112" width="72" height="20" rx="8" fill="#CFD8C2"/>
+    <rect x="360" y="112" width="70" height="20" rx="8" fill="#CFD8C2"/>
+    <rect x="306" y="270" width="58" height="15" rx="7" fill="#CFD8C2"/>
   </g>
   <g class="seats">
-    <rect class="chair" x="87" y="218" width="62" height="44" rx="15"/>
+    <rect class="chair" x="119" y="218" width="62" height="44" rx="15"/>
     <rect class="chair" x="471" y="206" width="62" height="44" rx="15"/>
     <rect class="chair" x="271" y="302" width="62" height="44" rx="15"/>
+  </g>
+  <g class="links">
+    <line class="link" x1="150" y1="207" x2="502" y2="195" stroke="#2F6F4A" stroke-width="3" stroke-linecap="round"/>
+    <line class="link" x1="150" y1="207" x2="302" y2="291" stroke="#2F6F4A" stroke-width="3" stroke-linecap="round"/>
+    <line class="link" x1="502" y1="195" x2="302" y2="291" stroke="#2F6F4A" stroke-width="3" stroke-linecap="round"/>
   </g>
     <g class="ch ch1">
       <g class="fig">
@@ -143,17 +148,18 @@
           <rect class="legL" x="-15" y="-25" width="13" height="28" rx="6.5" fill="#2F5F45"/>
           <rect class="legR" x="2"   y="-25" width="13" height="28" rx="6.5" fill="#2F5F45"/>
         </g>
-        <rect class="armL" x="-28" y="-55" width="10" height="29" rx="5" fill="#3E7D5A"/>
-        <rect class="armR" x="18"  y="-55" width="10" height="29" rx="5" fill="#3E7D5A"/>
+        <rect class="armL" x="-26" y="-52" width="10" height="29" rx="5" fill="#3E7D5A"/>
+        <rect class="armR" x="16"  y="-52" width="10" height="29" rx="5" fill="#3E7D5A"/>
         <rect x="-21" y="-59" width="42" height="43" rx="17" fill="#3E7D5A"/>
         <path d="M-4,-59 h-0.5 a17,17 0 0 0 -16.5,17 v9 a17,17 0 0 0 17,17 h0 z" fill="#55A075" opacity=".5"/>
+        <rect class="phone" x="-9" y="-44" width="18" height="13" rx="4" fill="#2B2E33"/>
         <circle cx="0" cy="-71" r="18" fill="#F0D9C2"/>
         <g class="vback">
           <circle cx="0" cy="-71" r="18.6" fill="#3A2A20"/>
           <ellipse cx="0" cy="-62" rx="13" ry="8.5" fill="#3A2A20"/>
         </g>
         <g class="vfront">
-          <path d="M-18.4,-73 a18.4,18.4 0 0 1 36.8,0 q-18.4,-10 -36.8,0 z" fill="#3A2A20"/>
+          <path d="M-18.4,-73 a18.4,18.4 0 0 1 36.8,0 q-8,-9 -20,-6 q-10,1 -16.8,6 z" fill="#3A2A20"/><ellipse cx="9" cy="-87" rx="5.5" ry="3.4" fill="#3A2A20" transform="rotate(14 9 -87)"/>
           <circle cx="-6.4" cy="-68" r="2.4" fill="#2B2119"/>
           <circle cx="6.4"  cy="-68" r="2.4" fill="#2B2119"/>
           <ellipse cx="-11.5" cy="-63" rx="3.4" ry="2.1" fill="#E08E7E" opacity=".5"/>
@@ -161,14 +167,22 @@
           <path d="M-3.5,-62 q3.5,3 7,0" stroke="#8A5A48" stroke-width="1.7" fill="none" stroke-linecap="round"/>
         </g>
       </g>
-      <g class="card">
-        <rect x="-30" y="-152" width="60" height="68" rx="11" fill="#fff" stroke="#DCE2D2" stroke-width="2"/>
-        <rect class="thumbA" x="-23" y="-145" width="46" height="34" rx="7" fill="#5A4A26"/>
-        <rect class="thumbP" x="-23" y="-145" width="46" height="34" rx="7" fill="#D8BFA0"/>
-        <rect x="-23" y="-104" width="30" height="6" rx="3" fill="#DCE2D2"/>
-        <g class="tick"><circle cx="24" cy="-148" r="12" fill="#2F6F4A"/>
-          <path d="M18,-148 l5,5 8,-9" stroke="#fff" stroke-width="2.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+      <g class="cardA">
+        <rect x="-30" y="-168" width="60" height="64" rx="11" fill="#fff" stroke="#DCE2D2" stroke-width="2"/>
+        <rect x="-23" y="-161" width="46" height="34" rx="7" fill="#5A4A26"/>
+        <g transform="translate(0,-146)"><path d="M-11,2 l11,-9 l11,9 z" fill="#fff"/><rect x="-8" y="2" width="16" height="10" fill="#fff"/><rect x="-2.6" y="5.5" width="5.2" height="6.5" fill="#5A4A26"/><rect x="3.5" y="4" width="3.6" height="3.4" fill="#5A4A26"/></g>
+        <rect x="-23" y="-122" width="30" height="6" rx="3" fill="#DCE2D2"/>
       </g>
+      <g class="cardB">
+        <rect x="-30" y="-168" width="60" height="64" rx="11" fill="#fff" stroke="#DCE2D2" stroke-width="2"/>
+        <rect x="-23" y="-161" width="46" height="34" rx="7" fill="#C9B79B"/>
+        <g transform="translate(0,-146)"><circle cx="0" cy="-2.5" r="4.6" fill="#fff"/><path d="M-8,10 a8,7 0 0 1 16,0 z" fill="#fff"/></g>
+        <rect x="-23" y="-122" width="30" height="6" rx="3" fill="#DCE2D2"/>
+      </g>
+      <g class="tickA"><circle cx="25" cy="-164" r="12" fill="#2F6F4A"/>
+        <path d="M19,-164 l5,5 8,-9" stroke="#fff" stroke-width="2.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+      <g class="tickB"><circle cx="25" cy="-164" r="12" fill="#2F6F4A"/>
+        <path d="M19,-164 l5,5 8,-9" stroke="#fff" stroke-width="2.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
     </g>
     <g class="ch ch2">
       <g class="fig">
@@ -177,17 +191,18 @@
           <rect class="legL" x="-15" y="-25" width="13" height="28" rx="6.5" fill="#83433A"/>
           <rect class="legR" x="2"   y="-25" width="13" height="28" rx="6.5" fill="#83433A"/>
         </g>
-        <rect class="armL" x="-28" y="-55" width="10" height="29" rx="5" fill="#B0604F"/>
-        <rect class="armR" x="18"  y="-55" width="10" height="29" rx="5" fill="#B0604F"/>
+        <rect class="armL" x="-26" y="-52" width="10" height="29" rx="5" fill="#B0604F"/>
+        <rect class="armR" x="16"  y="-52" width="10" height="29" rx="5" fill="#B0604F"/>
         <rect x="-21" y="-59" width="42" height="43" rx="17" fill="#B0604F"/>
         <path d="M-4,-59 h-0.5 a17,17 0 0 0 -16.5,17 v9 a17,17 0 0 0 17,17 h0 z" fill="#C9765F" opacity=".5"/>
+        <rect class="phone" x="-9" y="-44" width="18" height="13" rx="4" fill="#2B2E33"/>
         <circle cx="0" cy="-71" r="18" fill="#F5E3CE"/>
         <g class="vback">
           <circle cx="0" cy="-71" r="18.6" fill="#E8B54B"/>
           <ellipse cx="0" cy="-62" rx="13" ry="8.5" fill="#E8B54B"/>
         </g>
         <g class="vfront">
-          <path d="M-18.4,-73 a18.4,18.4 0 0 1 36.8,0 q-18.4,-10 -36.8,0 z" fill="#E8B54B"/>
+          <path d="M-18.4,-73 a18.4,18.4 0 0 1 36.8,0 q-18.4,-11.5 -36.8,0 z" fill="#E8B54B"/><ellipse cx="-15" cy="-64" rx="4.4" ry="7.5" fill="#E8B54B"/><ellipse cx="15" cy="-64" rx="4.4" ry="7.5" fill="#E8B54B"/>
           <circle cx="-6.4" cy="-68" r="2.4" fill="#2B2119"/>
           <circle cx="6.4"  cy="-68" r="2.4" fill="#2B2119"/>
           <ellipse cx="-11.5" cy="-63" rx="3.4" ry="2.1" fill="#E08E7E" opacity=".5"/>
@@ -195,14 +210,22 @@
           <path d="M-3.5,-62 q3.5,3 7,0" stroke="#8A5A48" stroke-width="1.7" fill="none" stroke-linecap="round"/>
         </g>
       </g>
-      <g class="card">
-        <rect x="-30" y="-152" width="60" height="68" rx="11" fill="#fff" stroke="#DCE2D2" stroke-width="2"/>
-        <rect class="thumbA" x="-23" y="-145" width="46" height="34" rx="7" fill="#1C4247"/>
-        <rect class="thumbP" x="-23" y="-145" width="46" height="34" rx="7" fill="#D8BFA0"/>
-        <rect x="-23" y="-104" width="30" height="6" rx="3" fill="#DCE2D2"/>
-        <g class="tick"><circle cx="24" cy="-148" r="12" fill="#2F6F4A"/>
-          <path d="M18,-148 l5,5 8,-9" stroke="#fff" stroke-width="2.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+      <g class="cardA">
+        <rect x="-30" y="-168" width="60" height="64" rx="11" fill="#fff" stroke="#DCE2D2" stroke-width="2"/>
+        <rect x="-23" y="-161" width="46" height="34" rx="7" fill="#1C4247"/>
+        <g transform="translate(0,-146)"><path d="M-11,2 l11,-9 l11,9 z" fill="#fff"/><rect x="-8" y="2" width="16" height="10" fill="#fff"/><rect x="-2.6" y="5.5" width="5.2" height="6.5" fill="#1C4247"/><rect x="3.5" y="4" width="3.6" height="3.4" fill="#1C4247"/></g>
+        <rect x="-23" y="-122" width="30" height="6" rx="3" fill="#DCE2D2"/>
       </g>
+      <g class="cardB">
+        <rect x="-30" y="-168" width="60" height="64" rx="11" fill="#fff" stroke="#DCE2D2" stroke-width="2"/>
+        <rect x="-23" y="-161" width="46" height="34" rx="7" fill="#C9B79B"/>
+        <g transform="translate(0,-146)"><circle cx="0" cy="-2.5" r="4.6" fill="#fff"/><path d="M-8,10 a8,7 0 0 1 16,0 z" fill="#fff"/></g>
+        <rect x="-23" y="-122" width="30" height="6" rx="3" fill="#DCE2D2"/>
+      </g>
+      <g class="tickA"><circle cx="25" cy="-164" r="12" fill="#2F6F4A"/>
+        <path d="M19,-164 l5,5 8,-9" stroke="#fff" stroke-width="2.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+      <g class="tickB"><circle cx="25" cy="-164" r="12" fill="#2F6F4A"/>
+        <path d="M19,-164 l5,5 8,-9" stroke="#fff" stroke-width="2.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
     </g>
     <g class="ch ch3">
       <g class="fig">
@@ -211,17 +234,18 @@
           <rect class="legL" x="-15" y="-25" width="13" height="28" rx="6.5" fill="#2E5A62"/>
           <rect class="legR" x="2"   y="-25" width="13" height="28" rx="6.5" fill="#2E5A62"/>
         </g>
-        <rect class="armL" x="-28" y="-55" width="10" height="29" rx="5" fill="#3F757E"/>
-        <rect class="armR" x="18"  y="-55" width="10" height="29" rx="5" fill="#3F757E"/>
+        <rect class="armL" x="-26" y="-52" width="10" height="29" rx="5" fill="#3F757E"/>
+        <rect class="armR" x="16"  y="-52" width="10" height="29" rx="5" fill="#3F757E"/>
         <rect x="-21" y="-59" width="42" height="43" rx="17" fill="#3F757E"/>
         <path d="M-4,-59 h-0.5 a17,17 0 0 0 -16.5,17 v9 a17,17 0 0 0 17,17 h0 z" fill="#569AA4" opacity=".5"/>
+        <rect class="phone" x="-9" y="-44" width="18" height="13" rx="4" fill="#2B2E33"/>
         <circle cx="0" cy="-71" r="18" fill="#E8C9A8"/>
         <g class="vback">
           <circle cx="0" cy="-71" r="18.6" fill="#241C18"/>
           <ellipse cx="0" cy="-62" rx="13" ry="8.5" fill="#241C18"/>
         </g>
         <g class="vfront">
-          <path d="M-18.4,-73 a18.4,18.4 0 0 1 36.8,0 q-18.4,-10 -36.8,0 z" fill="#241C18"/>
+          <path d="M-18.4,-72 a18.4,18.4 0 0 1 36.8,0 q-6,-11 -18.4,-8.5 q-12.4,-2.5 -18.4,8.5 z" fill="#241C18"/><circle cx="0" cy="-91" r="4.6" fill="#241C18"/>
           <circle cx="-6.4" cy="-68" r="2.4" fill="#2B2119"/>
           <circle cx="6.4"  cy="-68" r="2.4" fill="#2B2119"/>
           <ellipse cx="-11.5" cy="-63" rx="3.4" ry="2.1" fill="#E08E7E" opacity=".5"/>
@@ -229,20 +253,23 @@
           <path d="M-3.5,-62 q3.5,3 7,0" stroke="#8A5A48" stroke-width="1.7" fill="none" stroke-linecap="round"/>
         </g>
       </g>
-      <g class="card">
-        <rect x="-30" y="-152" width="60" height="68" rx="11" fill="#fff" stroke="#DCE2D2" stroke-width="2"/>
-        <rect class="thumbA" x="-23" y="-145" width="46" height="34" rx="7" fill="#1A4630"/>
-        <rect class="thumbP" x="-23" y="-145" width="46" height="34" rx="7" fill="#D8BFA0"/>
-        <rect x="-23" y="-104" width="30" height="6" rx="3" fill="#DCE2D2"/>
-        <g class="tick"><circle cx="24" cy="-148" r="12" fill="#2F6F4A"/>
-          <path d="M18,-148 l5,5 8,-9" stroke="#fff" stroke-width="2.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+      <g class="cardA">
+        <rect x="-30" y="-168" width="60" height="64" rx="11" fill="#fff" stroke="#DCE2D2" stroke-width="2"/>
+        <rect x="-23" y="-161" width="46" height="34" rx="7" fill="#1A4630"/>
+        <g transform="translate(0,-146)"><path d="M-11,2 l11,-9 l11,9 z" fill="#fff"/><rect x="-8" y="2" width="16" height="10" fill="#fff"/><rect x="-2.6" y="5.5" width="5.2" height="6.5" fill="#1A4630"/><rect x="3.5" y="4" width="3.6" height="3.4" fill="#1A4630"/></g>
+        <rect x="-23" y="-122" width="30" height="6" rx="3" fill="#DCE2D2"/>
       </g>
+      <g class="cardB">
+        <rect x="-30" y="-168" width="60" height="64" rx="11" fill="#fff" stroke="#DCE2D2" stroke-width="2"/>
+        <rect x="-23" y="-161" width="46" height="34" rx="7" fill="#C9B79B"/>
+        <g transform="translate(0,-146)"><circle cx="0" cy="-2.5" r="4.6" fill="#fff"/><path d="M-8,10 a8,7 0 0 1 16,0 z" fill="#fff"/></g>
+        <rect x="-23" y="-122" width="30" height="6" rx="3" fill="#DCE2D2"/>
+      </g>
+      <g class="tickA"><circle cx="25" cy="-164" r="12" fill="#2F6F4A"/>
+        <path d="M19,-164 l5,5 8,-9" stroke="#fff" stroke-width="2.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+      <g class="tickB"><circle cx="25" cy="-164" r="12" fill="#2F6F4A"/>
+        <path d="M19,-164 l5,5 8,-9" stroke="#fff" stroke-width="2.9" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
     </g>
-  <g class="links">
-    <line class="link" x1="118" y1="222" x2="502" y2="210" stroke="#2F6F4A" stroke-width="3" stroke-linecap="round"/>
-    <line class="link" x1="118" y1="222" x2="302" y2="306" stroke="#2F6F4A" stroke-width="3" stroke-linecap="round"/>
-    <line class="link" x1="502" y1="210" x2="302" y2="306" stroke="#2F6F4A" stroke-width="3" stroke-linecap="round"/>
-  </g>
 </svg>
         </div>
         <figcaption class="stage-cap">The idea, from above: swipe a place, swipe the people, move in.</figcaption>
