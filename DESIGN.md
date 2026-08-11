@@ -161,23 +161,24 @@ Full-viewport section per project, scroll-snap proximity (never JS-hijacked):
    framed navy stage, whose backdrop glow is a CSS gradient rather than a disc
    in the scene: a disc has a silhouette, and it cut a hard arc across the
    stage corner. Palette: navy room + aqua + mint.
-3. **Roomly** — a **top-down move-in scene** (owner's storyboard, refined
-   twice by him and once by a 25-finding critic pass). Three toy figures sit
-   apart with their backs to each other, each under a chat bubble showing their
-   phone screen. They **heart** an apartment — a house pictogram, the bubble
-   swiped away — then heart *each other*; that second bubble pops as they stand,
-   because a match is kept, not flicked off like a rejected listing. They turn
-   around (the back of a head cross-fades to a face; figures never rotate past
-   ~20°, past ~25° a three-quarter figure reads upside-down), then walk three
-   different curved arcs — footprints trailing and fading behind them — into a
-   roofless Sims-style house that lands BEFORE they arrive. It has a door and a
-   mat, and the third figure actually enters through it. Inside, they sit down
-   together and wave: one arm each, shoulder pivots buried inside the torso, and
-   every arm ends at rest so no frame ever shows a detached limb. 6.8s, plays
-   once on arrival, holds. The DEFAULT state is the END of the story, so
-   reduced-motion and no-JS visitors get the finished scene standing still.
-   Inline SVG + CSS keyframes only; per-figure walk/leg/bob/arm timelines so
-   nobody marches in sync and velocity never hits zero mid-path. The heart is
+3. **Roomly** — a **top-down move-in scene**, the owner's storyboard beat for
+   beat. Three toy figures sit apart, backs turned, each under a chat bubble
+   showing their phone screen (a tail ties each bubble to its owner). They
+   **heart** an apartment — house pictogram, bubble swiped away — then heart
+   *each other*; that bubble pops as they stand, because a match is kept, not
+   flicked off. The roofless Sims-style house lands while they turn, BEFORE
+   anyone walks: thick walls, windows, two couches, a rug, a table, a plant,
+   and one doorway with a mat and a door on a hinge. All three converge on that
+   single door — the nearest arrives first, swings it open, stands clear
+   holding it while the other two walk in, enters last, and the door closes
+   behind him. Dashed **pirate-map trails** draw behind each walker along the
+   real path geometry and fade before the wave. Inside they sit — two on the
+   couches, one on the rug — and wave one arm each, shoulder pivots buried in
+   the torso, every arm ending at rest: no frame ever shows a detached limb.
+   8s, plays once on arrival, holds; the DEFAULT state is the END of the story,
+   so reduced-motion and no-JS visitors get the finished scene standing still.
+   Inline SVG + CSS keyframes only; every per-figure motion is generated from
+   one keyframe table per character so nothing can drift out of sync. Heart is
    Candy `#FF4F79` — the section's third accent, within the 2–3 rule. Honest
    copy: first working draft, being reworked, not launched — the button says
    "Follow the build", never "coming soon". Palette: fern + brick on loam.
