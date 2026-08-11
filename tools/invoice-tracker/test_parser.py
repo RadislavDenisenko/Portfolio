@@ -64,6 +64,7 @@ def check_tax() -> None:
     assert tax.BRACKETS[1] == (5_040_000, 0.12)
 
     ledger = tax.load()
+    ledger["owns_vehicle"] = True     # these scenarios are about HIS van
     tax.add_miles(ledger, 100, "2026-06-30", "job sites", "business", "a to b")
     tax.add_miles(ledger, 100, "2026-07-01", "job sites", "business", "a to b")
     tax.add_miles(ledger, 500, "2026-07-02", "school run", "other", "home")
@@ -96,6 +97,7 @@ def check_tax() -> None:
     # With no business miles at all, actual costs are worth 0% - never 100% -
     # and the "you should switch" hint must not fire on imaginary upside.
     empty = tax.load()
+    empty["owns_vehicle"] = True
     tax.add_expense(empty, 30000, "Wawa", "gas", "2026-07-03")
     assert tax.summarize(empty, 2026)["alternative_cents"] == 0
     assert "would be worth" not in tax.report(empty, 2026)
@@ -103,12 +105,30 @@ def check_tax() -> None:
     # Van insurance and the tag are covered by the standard rate (Topic 510), so
     # they must be EXCLUDED, not stacked on top of the mileage deduction.
     van = tax.load()
+    van["owns_vehicle"] = True
     tax.add_miles(van, 63, "2026-07-01", "cable jobs", "business", "80000-80063")
     tax.add_expense(van, 128400, "Progressive", "van_insurance", "2026-08-01")
     tax.add_expense(van, 32500, "FL Tax Collector", "registration", "2026-07-06")
     sv = tax.summarize(van, 2026)
+    assert sv["mode"] == "standard"
     assert sv["excluded_cents"] == 160900, sv["excluded_cents"]
     assert sv["total_deduction_cents"] == sv["mileage_cents"], sv
+
+    # THE COMPANY VAN - his actual situation. Rev. Proc. 2019-46 limits the
+    # standard rate to a vehicle he owns or leases, so there is no per-mile
+    # claim - but the gas he buys for Koscom's van out of pocket, unreimbursed,
+    # is an ordinary §162 expense and must be claimed IN FULL, not excluded as
+    # "covered by mileage" when no mileage claim exists or ever could.
+    company = tax.load()                       # owns_vehicle absent -> False
+    tax.add_expense(company, 3319, "Murphy USA 7360", "gas", "2026-07-14")
+    sc = tax.summarize(company, 2026)
+    assert sc["mode"] == "company"
+    assert sc["claimed_vehicle_cents"] == 3319, sc
+    assert sc["excluded_cents"] == 0
+    assert sc["total_deduction_cents"] == 3319
+    assert not sc["by_category"]["gas"].get("excluded")
+    assert "covered by mileage" not in tax.report(company, 2026)
+    assert "would be worth" not in tax.report(company, 2026)
 
     # QBI: 20% of profit, but capped at 20% of what is left after the standard
     # deduction. At his income the cap is what binds, so a flat 20% is wrong.

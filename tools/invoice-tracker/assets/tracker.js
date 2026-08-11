@@ -438,9 +438,9 @@
         (miss.length > 6 ? '…' : ''));
     }
     if (!d.miles && !tax.owns_vehicle) {
-      todo.push('You drive the company van, so there is no mileage to claim and ' +
-        'nothing to log. The day you buy your own is the day this becomes the ' +
-        'biggest deduction you have — tell Claude and it switches on.');
+      todo.push('Company van: no mileage to claim, but the gas YOU pay for it ' +
+        'is deductible — photograph every fill-up (double-tap, shoot, done). ' +
+        'The day you buy your own van, tell Claude and mileage switches on.');
     } else if (!d.miles) {
       todo.push('No mileage logged yet. Email yourself the odometer twice a day ' +
         'with the subject MILES — leaving, and getting home.');

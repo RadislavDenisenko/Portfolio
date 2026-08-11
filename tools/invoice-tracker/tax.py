@@ -491,11 +491,25 @@ def summarize(ledger: dict, year: int | None = None) -> dict:
     business_share = (miles / total_miles) if total_miles else 0.0
     actual_cents = round(vehicle_cents * business_share)
 
-    if method == "standard":
+    # Whose vehicle decides everything. Rev. Proc. 2019-46 limits the standard
+    # mileage rate to a car the taxpayer OWNS OR LEASES, so for Koscom's van (or
+    # a rental) there is no per-mile claim at all - but the gas he buys for it
+    # out of pocket, unreimbursed, is an ordinary §162 business expense and is
+    # claimed in full. He has said plainly: every gas receipt he sends is for
+    # the work vehicle. The old model silently excluded that gas as "covered by
+    # mileage" when no mileage claim existed or ever could.
+    if not ledger.get("owns_vehicle", False):
+        mode = "company"
+        claimed_vehicle, alternative = vehicle_cents, 0
+        excluded = mileage_cents          # miles in a van that isn't his
+    elif method == "standard":
+        mode = "standard"
         claimed_vehicle, alternative = mileage_cents, actual_cents
+        excluded = vehicle_cents
     else:
+        mode = "actual"
         claimed_vehicle, alternative = actual_cents, mileage_cents
-    excluded = vehicle_cents if method == "standard" else mileage_cents
+        excluded = mileage_cents
 
     non_vehicle = sum(
         slot["deductible_cents"]
@@ -505,6 +519,7 @@ def summarize(ledger: dict, year: int | None = None) -> dict:
 
     return {
         "method": method,
+        "mode": mode,
         "by_category": by_category,
         "miles": round(miles, 1),
         "miles_by_kind": {k: round(v, 1) for k, v in miles_by_kind.items()},
@@ -793,7 +808,7 @@ def snapshot(ledger: dict, year: int | None = None) -> dict:
                     "line": CATEGORIES[name]["line"],
                     "cents": slot["deductible_cents"],
                     "count": slot["count"],
-                    "excluded": CATEGORIES[name]["vehicle"] and stats["method"] == "standard",
+                    "excluded": CATEGORIES[name]["vehicle"] and stats["mode"] == "standard",
                 }
                 for name, slot in stats["by_category"].items()
             },
@@ -830,7 +845,7 @@ def report(ledger: dict, year: int | None = None, gross_cents: int = 0) -> str:
         stats["by_category"].items(), key=lambda kv: -kv[1]["deductible_cents"]
     ):
         info = CATEGORIES[name]
-        excluded = info["vehicle"] and stats["method"] == "standard"
+        excluded = info["vehicle"] and stats["mode"] == "standard"
         tag = "  (covered by mileage)" if excluded else ""
         out.append(
             f"  {info['label']:<34}{money(slot['deductible_cents']):>10}"
@@ -862,7 +877,7 @@ def report(ledger: dict, year: int | None = None, gross_cents: int = 0) -> str:
             "    A vehicle is listed property: an incomplete log is disallowed in\n"
             "    full, not reduced. Add where you went and why."
         )
-    if stats["method"] == "standard" and stats["vehicle_expense_cents"]:
+    if stats["mode"] == "standard" and stats["vehicle_expense_cents"]:
         out.append(
             f"  Van costs of {money(stats['vehicle_expense_cents'])} are NOT claimed "
             "separately -\n  standard mileage already covers fuel, repairs and "
@@ -879,7 +894,7 @@ def report(ledger: dict, year: int | None = None, gross_cents: int = 0) -> str:
     # would have destroyed.
     gap = stats["alternative_cents"] - stats["claimed_vehicle_cents"]
     if gap > 0 and stats["miles"]:
-        other = "actual van costs" if stats["method"] == "standard" else "standard mileage"
+        other = "actual van costs" if stats["mode"] == "standard" else "standard mileage"
         out.append("")
         out.append(
             f"  ! Claiming {other} instead would be worth {money(gap)} more this year.\n"

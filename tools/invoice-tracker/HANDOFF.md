@@ -426,6 +426,30 @@ receipt photos in the same login, so it stays one double-click.
 - The image is written once and never edited or deleted; every ledger entry
   points back at it by filename. Rev. Proc. 97-22 needs the image to survive.
 
+### Company-van fuel — the third vehicle mode, added 2026-08-10
+
+**He pays for the Koscom van's gas himself and is not reimbursed.** His words:
+"any gas receipt I send you is gonna be for the work car, either mine or the
+rental." That broke the old two-mode model: standard mileage is limited to a
+vehicle the taxpayer owns or leases (Rev. Proc. 2019-46 §4.02), so for a company
+van there is no per-mile claim — and the old code excluded his gas as "covered
+by mileage" when no mileage claim existed or ever could. `summarize()` now has
+three modes driven by `owns_vehicle`:
+
+| mode | when | vehicle deduction |
+|---|---|---|
+| `company` | `owns_vehicle: false` (now) | out-of-pocket costs in full, §162 |
+| `standard` | his own van, default | miles × rate; running costs excluded |
+| `actual` | his own van, elected | costs × business-use share |
+
+An adversarial verification of the `company` position (apportionment for any
+commuting use, §274(d) substantiation of fuel for listed property he does not
+own, the rental-vehicle case, and whether a Koscom reimbursement would beat the
+deduction outright) ran 2026-08-10 — **check the results against this section
+and reconcile before relying on it.** First real receipt: Murphy USA,
+2026-07-14, $33.19, filed. His fills since June are on his Visa debit statement
+and are candidates for reconstruction.
+
 **Both keywords also work as plus-addresses** — `raddenisenko+rcpt@gmail.com`
 and `raddenisenko+miles@gmail.com` — because his iPhone's Send Email action
 showed no Subject field. Gmail delivers user+anything@ to the same inbox, so
