@@ -46,6 +46,36 @@ RECEIPT_INDEX = DATA / "receipts.json"
 # the subject. The iPhone Shortcut fills it in, so normally he types nothing.
 RECEIPT_SUBJECT = "RCPT"
 
+def _keyword_search(box, since: str, keyword: str):
+    """Messages carrying a keyword in the subject OR sent to user+keyword@.
+
+    The plus-address form exists because iOS's Send Email action would not show
+    him a Subject field. Gmail delivers user+anything@gmail.com to the same
+    inbox, so "raddenisenko+rcpt@gmail.com" needs no subject at all - the
+    address IS the marker, and it is harder to forget than a subject line.
+    """
+    return box.search(
+        None, "SINCE", since,
+        "OR", "SUBJECT", f'"{keyword}"', "TO", f'"+{keyword.lower()}@"',
+    )
+
+
+def _matches_keyword(subject_line: str, to_field: str, keyword: str) -> bool:
+    """Is this genuinely one of his, and not a promotion that happens to rhyme?
+
+    IMAP's SUBJECT search is a substring match, so searching MILES also returned
+    "Earn 60 Miles today!" from a mailing house - and its 60 was recorded as an
+    odometer reading the first time this ran. The subject must therefore START
+    with the keyword (Re:/Fwd: allowed, for the day he forwards one), or the
+    message must be addressed to the +keyword form, which no marketer has.
+    """
+    if f"+{keyword.lower()}@" in (to_field or "").lower():
+        return True
+    return bool(re.match(
+        rf"\s*((re|fwd?|fw):\s*)*{re.escape(keyword)}\b", subject_line or "", re.I
+    ))
+
+
 # Odometer readings, mailed the same way. Two a day: leaving, and home again.
 #
 # Pub 463's delivery-route example is why this is enough and why no address list
@@ -258,7 +288,7 @@ def fetch_odometer(box, since: str, subject: str) -> int:
     """
     import tax
 
-    status, data = box.search(None, "SUBJECT", f'"{subject}"', "SINCE", since)
+    status, data = _keyword_search(box, since, subject)
     if status != "OK":
         print("odometer search failed", file=sys.stderr)
         return 0
@@ -281,6 +311,8 @@ def fetch_odometer(box, since: str, subject: str) -> int:
             continue
 
         subject_line = subject_of(message)
+        if not _matches_keyword(subject_line, message.get("To", ""), subject):
+            continue
         # Strip the keyword before hunting for digits, so a keyword that ever
         # gains a number in it cannot be misread as an odometer reading.
         stripped = re.sub(re.escape(subject), " ", subject_line, flags=re.I)
@@ -361,7 +393,7 @@ def fetch_receipts(box, since: str, subject: str) -> int:
     Deduplicated on the bytes, so mailing the same photo twice - which he will,
     on a bad signal - costs nothing.
     """
-    status, data = box.search(None, "SUBJECT", f'"{subject}"', "SINCE", since)
+    status, data = _keyword_search(box, since, subject)
     if status != "OK":
         print("receipt search failed", file=sys.stderr)
         return 0
@@ -376,6 +408,10 @@ def fetch_receipts(box, since: str, subject: str) -> int:
         if status != "OK" or not raw or not raw[0]:
             continue
         message = email.message_from_bytes(raw[0][1])
+        # Same gate as the odometer: a newsletter with the keyword buried
+        # mid-subject must not have its banner images filed as receipts.
+        if not _matches_keyword(subject_of(message), message.get("To", ""), subject):
+            continue
         for filename, payload in image_attachments(message):
             digest = hashlib.sha256(payload).hexdigest()[:12]
             if digest in known:

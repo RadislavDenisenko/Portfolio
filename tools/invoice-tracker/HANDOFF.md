@@ -426,6 +426,13 @@ receipt photos in the same login, so it stays one double-click.
 - The image is written once and never edited or deleted; every ledger entry
   points back at it by filename. Rev. Proc. 97-22 needs the image to survive.
 
+**Both keywords also work as plus-addresses** — `raddenisenko+rcpt@gmail.com`
+and `raddenisenko+miles@gmail.com` — because his iPhone's Send Email action
+showed no Subject field. Gmail delivers user+anything@ to the same inbox, so
+the address is the marker and no subject is needed. And the subject match is a
+*prefix* match (Re:/Fwd: allowed), never a substring: IMAP's substring SUBJECT
+search once turned "Earn 60 Miles today!" into a phantom odometer reading of 60.
+
 Still to do: the iPhone-side Shortcut, and the dashboard review queue.
 
 ## 5b. The mileage log — BUILT 2026-08-09, and it is the bigger money

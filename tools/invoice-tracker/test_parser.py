@@ -250,6 +250,20 @@ def check_audit_fixes() -> None:
     receipts.main(["ok", "dup1"])          # the re-run a nervous user makes
     assert len(tax.load()["expenses"]) == before + 1, "same receipt filed twice"
 
+    # A marketing email with the keyword mid-subject must never be treated as
+    # his. "Earn 60 Miles today!" put a phantom reading of 60 in the real
+    # ledger the first time the search ran live.
+    ok = fetch_invoices._matches_keyword
+    assert not ok("Earn 60 Miles today!", "raddenisenko@gmail.com", "MILES")
+    assert not ok("Your SkyMiles statement", "raddenisenko@gmail.com", "MILES")
+    assert ok("MILES 84213", "raddenisenko@gmail.com", "MILES")
+    assert ok("miles", "raddenisenko@gmail.com", "MILES")
+    assert ok("Fwd: MILES 84213", "raddenisenko@gmail.com", "MILES")
+    # The subject-free path: the +keyword address is the marker.
+    assert ok("", "raddenisenko+miles@gmail.com", "MILES")
+    assert ok("anything at all", "Rad <raddenisenko+rcpt@gmail.com>", "RCPT")
+    assert not ok("", "raddenisenko@gmail.com", "RCPT")
+
     print("audit fixes OK")
 
 
