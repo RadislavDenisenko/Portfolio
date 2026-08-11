@@ -82,6 +82,7 @@ marathon        = gas
 bp              = gas
 sunoco          = gas
 speedway        = gas
+murphy          = gas
 buc-ee          = gas
 
 sunpass         = tolls
