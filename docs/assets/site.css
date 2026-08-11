@@ -621,7 +621,7 @@ section{position:relative}
 .armL,.armR{transform-box:fill-box;transform-origin:50% 12%}
 .door{transform-box:view-box;transform-origin:318px 295.5px}
 /* default = the end of the story: seated together in the house, door closed */
-.cardA,.cardB,.tickA,.tickB,.link,.vback,.phone,.chair,.dash{opacity:0} .vfront{opacity:1}
+.cardA,.cardB,.tickA,.tickB,.link,.vside,.phone,.chair,.dash{opacity:0} .vfront{opacity:1}
 .legL,.legR{transform:translateY(-7px) scaleY(.58)}
 .fig{transform:translateY(2px)}
 .ch1{transform:translate(285px,186px) rotate(9deg)}
@@ -744,6 +744,10 @@ section{position:relative}
 @keyframes mv-d1x18{0%,69.4%{opacity:0}70.9%,93%{opacity:1}96.5%,100%{opacity:0}}
 .play .d1x19{animation:mv-d1x19 var(--T) linear forwards}
 @keyframes mv-d1x19{0%,71.1%{opacity:0}72.6%,93%{opacity:1}96.5%,100%{opacity:0}}
+.play .ch1 .vside{animation:mv-side1 var(--T) linear forwards}
+.play .ch1 .vfront{animation:mv-face1 var(--T) linear forwards}
+@keyframes mv-side1{0%,38%{opacity:1}43%,100%{opacity:0}}
+@keyframes mv-face1{0%,38%{opacity:0}43%,100%{opacity:1}}
 .ch2{transform:translate(390px,188px) rotate(-9deg)}
 .play .ch2{animation:mv-walk2 var(--T) linear forwards}
 @keyframes mv-walk2{
@@ -865,6 +869,10 @@ section{position:relative}
 @keyframes mv-d2x17{0%,78.8%{opacity:0}80.2%,93%{opacity:1}96.5%,100%{opacity:0}}
 .play .d2x18{animation:mv-d2x18 var(--T) linear forwards}
 @keyframes mv-d2x18{0%,80.2%{opacity:0}81.8%,93%{opacity:1}96.5%,100%{opacity:0}}
+.play .ch2 .vside{animation:mv-side2 var(--T) linear forwards}
+.play .ch2 .vfront{animation:mv-face2 var(--T) linear forwards}
+@keyframes mv-side2{0%,38%{opacity:1}43%,100%{opacity:0}}
+@keyframes mv-face2{0%,38%{opacity:0}43%,100%{opacity:1}}
 .ch3{transform:translate(335px,252px) rotate(0deg)}
 .play .ch3{animation:mv-walk3 var(--T) linear forwards}
 @keyframes mv-walk3{
@@ -971,8 +979,6 @@ section{position:relative}
 .play .tickB{animation:mv-tickB var(--T) linear forwards}
 .play .room{animation:mv-room var(--T) linear forwards}
 .play .link{animation:mv-link var(--T) linear forwards}
-.play .vback{animation:mv-back var(--T) linear forwards}
-.play .vfront{animation:mv-front var(--T) linear forwards}
 .play .phone{animation:mv-phone var(--T) linear forwards}
 .play .chair{animation:mv-chair var(--T) linear forwards}
 .play .door{animation:mv-door var(--T) linear forwards}
@@ -999,8 +1005,6 @@ section{position:relative}
   31%,40%{opacity:1;transform:scale(1)}
   44%,100%{opacity:0;transform:scale(.5)}}
 @keyframes mv-link{0%,30%{opacity:0}33%,41%{opacity:.8}45%,100%{opacity:0}}
-@keyframes mv-back{0%,38%{opacity:1}43%,100%{opacity:0}}
-@keyframes mv-front{0%,38%{opacity:0}43%,100%{opacity:1}}
 @keyframes mv-phone{0%,42%{opacity:1}45%,100%{opacity:0}}
 @keyframes mv-chair{0%,50%{opacity:1}60%,100%{opacity:0}}
 /* the house lands while they are turning, BEFORE anyone walks */
