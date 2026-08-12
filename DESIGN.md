@@ -181,7 +181,15 @@ Full-viewport section per project, scroll-snap proximity (never JS-hijacked):
    one keyframe table per character so nothing can drift out of sync. Heart is
    Candy `#FF4F79` — the section's third accent, within the 2–3 rule. Honest
    copy: first working draft, being reworked, not launched — the button says
-   "Follow the build", never "coming soon". Palette: fern + brick on loam.
+   "Follow the build", never "coming soon". Below the scene, one compact row of
+   three product cards carries the pitch the animation can only hint at: the
+   awkward-questions form (real example questions with answered chips — food,
+   guests), verification (ID + background check, with a checked chip row), and
+   place-first matching (three numbered steps ending in a roommate-match score
+   pill). The section ground is **architect's graph paper** — a faint fern
+   blueprint grid, minor line every 28px, major every 140px — because a flat
+   wash read as an empty sheet, and a blueprint is what you sketch an apartment
+   on: the texture does thematic work. Palette: fern + brick on loam.
 4. **Contact** — short, cobalt CTA. On cobalt/navy surfaces the focus ring is
    white with a dark halo; body text on cobalt is ≥ .95 white.
 

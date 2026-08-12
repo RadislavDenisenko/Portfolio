@@ -402,10 +402,74 @@ section{position:relative}
    brick note kept to a low warm bloom in the corner. Still a bright ground —
    the dark-scene exception belongs to AirMouse alone. */
 #roomly{
+  /* A flat wash read as an empty sheet. The ground is now architect's graph
+     paper — a fine blueprint grid with a heavier line every fifth square —
+     which is what you sketch an apartment on, so the texture is doing
+     thematic work, not just filling space. Kept faint enough that the cards
+     and the scene stay the subject. */
   background:
     radial-gradient(120% 80% at 88% 8%, color-mix(in srgb, var(--brick) 8%, transparent), transparent 60%),
     radial-gradient(90% 70% at 6% 96%, color-mix(in srgb, var(--fern) 10%, transparent), transparent 62%),
+    repeating-linear-gradient(0deg,  color-mix(in srgb, var(--fern) 10%, transparent) 0 1px, transparent 1px 140px),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--fern) 10%, transparent) 0 1px, transparent 1px 140px),
+    repeating-linear-gradient(0deg,  color-mix(in srgb, var(--fern) 5%, transparent) 0 1px, transparent 1px 28px),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--fern) 5%, transparent) 0 1px, transparent 1px 28px),
     var(--loam);
+}
+
+/* ---- roomly feature cards: the product pitch, one compact row ------------ */
+.roomly-feats{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:clamp(14px,1.6vw,22px);
+  margin-top:clamp(28px,4.5svh,52px);
+}
+.feat{
+  background:var(--white);
+  border:1px solid var(--line);
+  border-radius:var(--r-md);
+  padding:22px 22px 20px;
+  box-shadow:0 10px 26px -18px rgba(26,70,48,.25);
+}
+.feat-k{font-size:16px;letter-spacing:-.015em;margin-bottom:12px}
+.feat-p{font-size:14px;line-height:1.55;color:var(--soft)}
+/* the mini questionnaire: the awkward questions, already answered */
+.feat-form{margin-bottom:14px}
+.fq{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--soft);margin-bottom:6px}
+.fq + .fchips{margin-bottom:12px}
+.fchips{display:flex;flex-wrap:wrap;gap:6px}
+.fchips span{
+  font-size:12.5px;font-weight:500;line-height:1;
+  padding:6px 11px;border-radius:999px;
+  border:1px solid var(--line);color:var(--soft);background:var(--white);
+}
+.fchips .on{background:var(--fern);border-color:var(--fern);color:#fff}
+.feat-shield{margin-bottom:12px}
+.feat-vrow{margin-top:14px}
+.feat-steps{
+  margin:0 0 14px;padding:0;list-style:none;
+  font-size:14px;line-height:1.5;color:var(--soft);
+  counter-reset:step;
+}
+.feat-steps li{
+  counter-increment:step;position:relative;
+  padding-left:30px;margin-bottom:8px;
+}
+.feat-steps li::before{
+  content:counter(step);
+  position:absolute;left:0;top:1px;
+  width:20px;height:20px;border-radius:50%;
+  display:grid;place-items:center;
+  background:color-mix(in srgb, var(--fern) 14%, transparent);
+  color:var(--fern);font-size:11.5px;font-weight:700;
+}
+.feat-score{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--mono);font-size:12px;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--soft);
+}
+.feat-score em{
+  font-style:normal;font-family:var(--sans);font-weight:700;font-size:15px;
+  color:#fff;background:var(--fern);border-radius:999px;padding:5px 11px;
 }
 .proj-grid{
   display:grid;grid-template-columns:1.02fr 1fr;
@@ -1072,6 +1136,7 @@ section{position:relative}
 
 /* ------------------------------ responsive -------------------------------- */
 @media (max-width:960px){
+  .roomly-feats{grid-template-columns:1fr;gap:14px}
   .proj-grid{grid-template-columns:1fr;gap:32px}
   .proj{align-content:start;padding-top:96px}
   .proj-grid-flip .proj-visual{order:2}
