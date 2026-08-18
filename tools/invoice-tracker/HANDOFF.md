@@ -548,6 +548,27 @@ grows with every mile, because the van charge is fixed while mileage is not.
 starts logging now. **The MILES habit is worth ~$127/yr today and much more once
 he owns a van.** That is the argument for starting it, not the audit risk.
 
+### 5e. The phone — Mint Mobile, $30/month paid ANNUALLY, renews September
+
+Cash basis, so the payment date governs: his current year was paid ~Sept 2025
+(pre-Koscom, not claimable for 2026), and **the ~Sept 2026 renewal (~$360 +
+fees) IS a 2026 deduction at the business share** — the 12-month prepay rule
+lets the whole payment land in the year paid. `summarize()` applies
+`phone_business_share` (ledger key, default 0.5) to the `phone` category;
+meals stay on their own statutory 50%. **When the Mint renewal receipt arrives
+in September, capture it** — he can forward the email with subject RCPT.
+At 50% that is ~$180 of deduction. Raise the share only with usage evidence.
+
+### Things he asked about that are NOT deductible — answered 2026-08-17, keep saying no
+
+- **Local meals**: *U.S. v. Correll* — overnight-travel only, then 50%. The
+  validator already flags every meals receipt.
+- **Ordinary clothes** "because I wear clothes for work": *Pevsner v.
+  Commissioner* — deductible only if **unsuitable for everyday wear**. Jeans,
+  shirts, sneakers: never. **Safety gear yes**: steel-toe boots, hi-vis, hard
+  hat, work gloves.
+- His friends are the source of these ideas. Correct kindly, do not budge.
+
 **Orvis risk, stated honestly:** Koscom demonstrably has a reimbursement channel
 (TRUCK line), and *Orvis v. Commissioner*, 788 F.2d 1406 (9th Cir. 1986) denies
 "necessary" to expenses a taxpayer could have had reimbursed — but every

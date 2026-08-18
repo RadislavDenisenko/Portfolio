@@ -218,6 +218,21 @@ def check_tax() -> None:
     covered = tax.safe_harbor(495_329, 87_300, withheld_cents=90_000)
     assert covered["pay_by_sept_15_cents"] == 0, covered
 
+    # The phone: business share only, half by default, his number if set.
+    # Cash basis note lives in HANDOFF - the Sept 2025 annual payment is not a
+    # 2026 deduction; the Sept 2026 renewal is.
+    ph = tax.load()
+    tax.add_expense(ph, 36_000, "Mint Mobile", "phone", "2026-09-15")
+    s = tax.summarize(ph, 2026)
+    assert s["by_category"]["phone"]["deductible_cents"] == 18_000, s["by_category"]["phone"]
+    ph["phone_business_share"] = 0.6
+    s = tax.summarize(ph, 2026)
+    assert s["by_category"]["phone"]["deductible_cents"] == 21_600
+    # And meals stay at 50% regardless - a different rule, not the same knob.
+    tax.add_expense(ph, 2_000, "Diner", "meals", "2026-09-15")
+    s = tax.summarize(ph, 2026)
+    assert s["by_category"]["meals"]["deductible_cents"] == 1_000
+
     print("tax math OK")
 
 

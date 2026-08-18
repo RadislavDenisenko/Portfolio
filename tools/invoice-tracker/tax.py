@@ -115,6 +115,20 @@ CATEGORIES = {
 # Meals are half deductible; everything else here is fully deductible.
 DEDUCTIBLE_FRACTION = {"meals": 0.5}
 
+# His personal phone doubles as the work phone - dispatch, job photos, the
+# receipt pipeline itself. Cell phones stopped being listed property in 2010
+# (Notice 2011-72 era), so the business share of the bill deducts without
+# strict substantiation. 50% is the conservative, defensible default for a
+# phone that is genuinely half a work tool; raise it only with usage evidence.
+# Stored per-ledger so it is his number, not a constant.
+PHONE_BUSINESS_SHARE_DEFAULT = 0.5
+
+
+def _fraction_for(category: str, ledger: dict) -> float:
+    if category == "phone":
+        return ledger.get("phone_business_share", PHONE_BUSINESS_SHARE_DEFAULT)
+    return DEDUCTIBLE_FRACTION.get(category, 1.0)
+
 SE_TAX_RATE = 0.153          # 12.4% Social Security + 2.9% Medicare
 SE_TAXABLE_FRACTION = 0.9235  # SE tax applies to 92.35% of net earnings
 SE_DEDUCTION = 0.5            # half of SE tax is an income-tax deduction
@@ -502,7 +516,7 @@ def summarize(ledger: dict, year: int | None = None) -> dict:
         slot = by_category.setdefault(
             expense["category"], {"cents": 0, "count": 0, "deductible_cents": 0}
         )
-        fraction = DEDUCTIBLE_FRACTION.get(expense["category"], 1.0)
+        fraction = _fraction_for(expense["category"], ledger)
         slot["cents"] += expense["cents"]
         slot["count"] += 1
         slot["deductible_cents"] += round(expense["cents"] * fraction)
