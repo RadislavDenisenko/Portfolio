@@ -449,9 +449,40 @@ def fetch_receipts(box, since: str, subject: str) -> int:
     return added
 
 
+# IMAP wants dates like 01-Jan-2026, and wants them in English regardless of
+# the machine's locale - strftime("%b") is not safe here.
+_MONTHS = ("Jan", "Feb", "Mar", "Apr", "May", "Jun",
+           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+
+def _imap_date(day: "dt.date") -> str:
+    return f"{day.day:02d}-{_MONTHS[day.month - 1]}-{day.year}"
+
+
+def rolling_since(store: dict) -> str:
+    """Where to start searching: a few days before the last successful fetch.
+
+    Searching SINCE 01-Jan meant every run re-downloaded seven months of
+    matching mail just to throw almost all of it away as already-seen - tens of
+    seconds of sifting to find nothing. The window now starts four days before
+    the last good run: long enough that mail delayed over a weekend cannot slip
+    past, short enough that a normal run examines one or two messages. The
+    dedup layers (seen_messages, sha256, Message-ID) make the overlap harmless.
+    `--since` still forces a full rescan when one is ever needed.
+    """
+    last = store.get("last_fetch")
+    if not last:
+        return "01-Jan-2026"
+    try:
+        day = dt.date.fromisoformat(last) - dt.timedelta(days=4)
+    except ValueError:
+        return "01-Jan-2026"
+    return _imap_date(day)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--since", default="01-Jan-2026", help="IMAP date, e.g. 01-Jun-2026")
+    ap.add_argument("--since", default=None, help="IMAP date, e.g. 01-Jun-2026 (forces a full rescan)")
     ap.add_argument("--query", default="INVOICE", help="text to match in the subject")
     ap.add_argument(
         "--receipt-subject", default=RECEIPT_SUBJECT,
@@ -472,6 +503,10 @@ def main(argv: list[str] | None = None) -> int:
     user, password = credentials()
     store = invoice_parser.load_store(STORE)
     seen = set(store.get("seen_messages", []))
+
+    if args.since is None:
+        args.since = rolling_since(store)
+        print(f"checking mail since {args.since}")
 
     try:
         # Without a timeout an unreachable host hangs until the user gives up.
@@ -561,6 +596,9 @@ def main(argv: list[str] | None = None) -> int:
             pass
 
     store["seen_messages"] = sorted(seen)
+    # Only after everything above succeeded - a crash mid-run must not advance
+    # the window past mail that was never actually examined.
+    store["last_fetch"] = dt.date.today().isoformat()
     invoice_parser.save_store(STORE, store)
 
     # The van charge rides in on the invoice, so fold it into the ledger the
